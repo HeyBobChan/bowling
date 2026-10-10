@@ -33,6 +33,11 @@ balance checks in Chrome.
 links and asset references after a build. The roster content lives in each game's
 `lobby` field in `games.json` and is rendered to static HTML by Vite.
 
+Performance regressions also exercise the real renderer: skiing caps its drawing
+buffer at 2× pixel density, including rotation and display changes. The forest
+game reuses its six fighter models across waves and restarts so graphics memory
+and outline bookkeeping stay bounded; match state and physics bodies still reset.
+
 ## Controls
 
 - **One player:** arrows or WASD to move · **Space** = the action (shoot / head / punch) ·
