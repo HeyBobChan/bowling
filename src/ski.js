@@ -92,7 +92,14 @@ const app = document.getElementById('app');
 const canvas = document.createElement('canvas');
 canvas.tabIndex = 0;
 app.appendChild(canvas);
-const engine = SIM ? new BABYLON.NullEngine() : new BABYLON.Engine(canvas, true, { stencil: false, antialias: true, adaptToDeviceRatio: true });
+const engine = SIM ? new BABYLON.NullEngine() : new BABYLON.Engine(canvas, true, { stencil: false, antialias: true });
+function resizeEngine() {
+  // Keep high-density phones at 2x, including after orientation or display changes.
+  // setHardwareScalingLevel also resizes the drawing buffer.
+  if (!SIM) engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+  else engine.resize();
+}
+resizeEngine();
 const scene = new BABYLON.Scene(engine);
 scene.clearColor = new BABYLON.Color4(0.80, 0.87, 0.95, 1);
 scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
@@ -932,7 +939,7 @@ function syncVisuals(dt) {
 
 // ------------------------------------------------------------------ boot
 hud.bind({ start: startRun, restart: startRun });
-window.addEventListener('resize', () => engine.resize());
+window.addEventListener('resize', resizeEngine);
 resetRun();
 loadDog().catch((err) => {
   console.error('dog failed to load', err);
