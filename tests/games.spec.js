@@ -430,3 +430,228 @@ test.describe('Kelpie Downhill', () => {
   });
 });
 
+test.describe('Jump Over the Bad Guys', () => {
+  test('flips land feet-down, you walk both ways, the three characters differ, towers never trap you, and only three bites end a run', async ({ page }) => {
+    const errors = [];
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await load(page, '/jump.html', '__jump');
+    const r = await page.evaluate(() => {
+      const J = window.__jump, P = J.P, st = J.st, dt = 1 / 60, TAU = J.TAU, out = {};
+      const run = (sec, until) => { for (let i = 0; i < Math.round(sec * 60); i++) { J.step(dt); if (until && until()) return true; } return false; };
+      const scene = (kind) => { J.start(kind, 1); J.clear(); P.invuln = 999; J.walk(1); };
+      const whole = (a) => Math.abs(a / TAU - Math.round(a / TAU)) < 1e-6;
+
+      // a held jump: apex ≈ 2.3 blocks and one whole flip, feet down on landing
+      scene('cute');
+      let apex = 0;
+      J.press(); run(0.45, () => { apex = Math.max(apex, P.y); }); J.release();
+      run(2, () => { apex = Math.max(apex, P.y); return P.ground; }); run(0.3);
+      out.fullApex = apex; out.fullTurns = P.angle / TAU; out.flipForward = P.flipDir;
+      // a tap: lower, still clear of a bad guy, and still lands upright
+      apex = 0;
+      J.press(); run(dt); J.release();
+      run(2, () => { apex = Math.max(apex, P.y); return P.ground; }); run(0.3);
+      out.tapApex = apex; out.tapUpright = whole(P.angle);
+      // both ways: walking back turns you round, and a jump that way flips backwards
+      const xr = P.x;
+      J.walk(-1); run(1);
+      out.walkedBack = xr - P.x; out.facing = P.facing;
+      J.press(); run(0.3); J.release(); run(1.5, () => P.ground);
+      out.flipBack = P.flipDir;
+      J.walk(0); run(0.5);
+      out.stops = Math.abs(P.vx) < 0.01;
+      // …but not forever: 45 blocks behind your best distance is as far back as it goes
+      st.maxX = 200; P.x = 160; J.walk(-1); run(2);
+      out.backLimit = P.x;
+
+      // standing still gets you eaten (one heart), then spat out with a moment of safety
+      scene('cute'); P.invuln = 0; J.walk(0);
+      J.spawnFoe('runner', 6);
+      run(8, () => !!st.eat);
+      out.heartsAfterBite = st.hearts;
+      run(2);
+      out.spatOut = !st.eat && st.mode === 'play' && P.invuln > 0;
+
+      // jumping over one scores 10 — coming from in front, or chasing you from behind
+      scene('cute');
+      const f = J.spawnFoe('runner', 8);
+      run(3, () => f.x - P.x < 2.4);
+      out.mouthOpen = f.mouth;
+      J.press(); run(0.25); J.release(); run(2);
+      out.onePoints = st.points; out.overs = st.overs;
+      scene('cute');
+      P.x = 12; st.maxX = 12; J.walk(-1);
+      const b = J.spawnFoe('runner', 5);
+      run(3, () => P.x - b.x < 2.4);
+      J.press(); run(0.25); J.release(); run(2);
+      out.backwardsPoints = st.points;
+
+      // the regular character glides over two in one jump: the second counts double
+      scene('regular');
+      J.spawnFoe('runner', 7); J.spawnFoe('runner', 8.1);
+      run(3, () => J.foes[0].x - P.x < 2.3);
+      J.press(); run(0.9); J.release(); run(2);
+      out.comboPoints = st.points; out.bestCombo = st.bestCombo;
+
+      // cute: a second press in the air jumps again; a third does nothing
+      scene('cute');
+      J.press(); run(0.2); J.release(); run(0.3);
+      J.press(); run(dt); J.release();
+      out.doubleVy = P.vy;
+      run(0.1); const vy3 = P.vy; J.press(); run(dt); J.release();
+      out.thirdIgnored = P.vy < vy3;
+      // regular: holding while falling floats
+      scene('regular');
+      J.press(); run(0.9);
+      out.glideVy = P.vy; out.glideAirborne = !P.ground;
+      J.release();
+      // scary: a second press slams down, and the landing roar sends bad guys running
+      scene('scary');
+      const near = J.spawnFoe('runner', 5);
+      J.press(); run(0.1); J.release(); run(0.15);
+      J.press(); run(dt); J.release();
+      out.slamVy = P.vy;
+      run(1, () => P.ground);
+      out.scared = near.scared > 0;
+
+      // towers: hop onto a one-box tower; a three-box wall stops you but a jump scrambles up it
+      scene('cute');
+      J.addTower(4, 1, 1);
+      run(2, () => P.x > 2.6); J.press(); run(dt); J.release();
+      out.onTower = run(1.5, () => P.ground && P.y === 1);
+      scene('cute');
+      J.addTower(3, 3, 1);
+      run(1.5);
+      out.wallBlocked = P.blocked && P.x < 3;
+      J.press(); run(dt); J.release(); run(1.5);
+      out.wallClimbed = P.x > 4.2;
+      // a bad guy dropping onto your head boinks off instead of biting
+      scene('cute'); P.invuln = 0;
+      J.addTower(3, 3, 1);
+      run(1);
+      const drop = J.spawnFoe('runner', P.x, 2.6);
+      drop.ground = false;
+      run(0.35);
+      out.heartsAfterDrop = st.hearts; out.dropKnocked = drop.knockT > 0 || Math.abs(drop.x - P.x) > 0.3;
+
+      // the monster king stomps in, plants himself and won't let you past
+      scene('cute');
+      J.summonKing(0.5);
+      run(5);
+      const K = J.king;
+      out.kingHere = !!K && K.phase !== 'enter';
+      out.kingBlocks = !!K && P.x < K.x - 1.2;
+      // stand still and one of his hands catches you: a heart, then he spits you back out
+      J.walk(0); P.invuln = 0;
+      run(20, () => !!st.eat);
+      out.kingCaught = !!(st.eat && st.eat.king);
+      out.heartsAfterKing = st.hearts;
+      run(1.5);
+      out.kingSpat = !st.eat && P.invuln > 0 && st.mode === 'play';
+      // one heart a visit: caught again, he's full and just tosses you away
+      P.invuln = 0;
+      run(20, () => !!st.eat);
+      out.secondCatch = !!(st.eat && st.eat.king);
+      out.heartsAfterSecond = st.hearts;
+      run(1.5);
+      // his hands are the danger, not the rest of him: once a slam falls asleep, walk into the hand,
+      // up the arm, and his head springs you over him — land on his other side and he runs off
+      P.invuln = 999; st.hearts = 2;
+      run(30, () => J.king && J.king.phase === 'rest');
+      J.walk(J.king.near.x >= P.x ? 1 : -1);
+      let rodeArm = false, flew = false, topY = 0;
+      run(6, () => {
+        if (P.arm) { rodeArm = true; J.walk(1); }
+        if (P.kingFly) { flew = true; J.walk(1); }
+        topY = Math.max(topY, P.y);
+        return !J.king || J.king.passed;
+      });
+      out.rodeArm = rodeArm; out.flewOver = flew; out.flightTop = topY;
+      out.kingsPassed = st.kingsPassed;
+      out.heartBack = st.hearts;
+      J.walk(1);
+      run(8, () => !J.king);
+      out.kingGone = !J.king;
+      out.noWallLeft = J.towers.every((t) => !t.wall);
+      // his arms are one-way: jumping up from under one passes through it
+      scene('cute');
+      J.summonKing(0.5);
+      run(4);
+      const K2 = J.king;
+      J.walk(0);
+      run(30, () => K2.phase === 'rest');
+      const armX = (K2.near.x + K2.x) / 2;
+      P.x = armX; P.y = 0; P.vx = 0; P.vy = 0; P.ground = true; P.invuln = 999;
+      J.press(); run(0.2); J.release();
+      out.upThrough = P.y > 0.5 && !P.arm;
+      // leave him alone and he gets bored and stomps off by himself
+      scene('cute');
+      J.summonKing(0.5);
+      J.walk(-1);
+      run(J.KING_TIME + 12, () => !J.king && st.t > 3);
+      out.kingLeftAlone = !J.king;
+      // and he never takes your last heart
+      scene('cute');
+      st.hearts = 1;
+      J.summonKing(0.5);
+      run(5);
+      J.walk(0); P.invuln = 0;
+      run(20, () => !!st.eat);
+      out.lastHeartCaught = !!(st.eat && st.eat.king);
+      run(2);
+      out.lastHeartKept = st.hearts === 1 && st.mode === 'play';
+
+      // a player who never moves is eaten three times inside a minute; the card follows
+      J.start('cute', 3); st.bot = false;
+      let t = 0;
+      while (st.mode === 'play' && t < 90) { J.step(dt); t += dt; }
+      out.idleSeconds = t; out.idleMode = st.mode;
+      run(2.5);
+      out.overCard = !document.getElementById('gameover').classList.contains('hidden');
+      // a careful player (the look-ahead autopilot) keeps going for minutes and gets over the king
+      J.start('cute', 3); st.bot = true;
+      t = 0;
+      while (st.mode === 'play' && t < 120) { J.step(dt); t += dt; }
+      out.botSeconds = t; out.botMeters = st.maxX; out.botOvers = st.overs; out.botKings = st.kingsPassed;
+      out.finite = [P.x, P.y, P.vx, P.vy, P.angle, st.score].every(Number.isFinite);
+      out.bounded = J.towers.length < 80 && J.foes.length < 30;
+      J.render();
+      return out;
+    });
+    expect(r.fullApex).toBeGreaterThan(2.1); expect(r.fullApex).toBeLessThan(2.5);
+    expect(r.fullTurns).toBeCloseTo(1, 5); expect(r.flipForward).toBe(1);
+    expect(r.tapApex).toBeGreaterThan(1.2); expect(r.tapApex).toBeLessThan(r.fullApex);
+    expect(r.tapUpright).toBe(true);
+    expect(r.walkedBack).toBeGreaterThan(4); expect(r.facing).toBe(-1); expect(r.flipBack).toBe(-1);
+    expect(r.stops).toBe(true);
+    expect(r.backLimit).toBeGreaterThanOrEqual(155); expect(r.backLimit).toBeLessThan(156);
+    expect(r.heartsAfterBite).toBe(2);
+    expect(r.spatOut).toBe(true);
+    expect(r.mouthOpen).toBeGreaterThan(0.5);
+    expect(r.onePoints).toBe(10); expect(r.overs).toBe(1);
+    expect(r.backwardsPoints).toBe(10);
+    expect(r.comboPoints).toBe(30); expect(r.bestCombo).toBe(2);
+    expect(r.doubleVy).toBeGreaterThan(10);
+    expect(r.thirdIgnored).toBe(true);
+    expect(r.glideVy).toBeGreaterThanOrEqual(-2.31); expect(r.glideAirborne).toBe(true);
+    expect(r.slamVy).toBeLessThan(-20);
+    expect(r.scared).toBe(true);
+    expect(r.onTower).toBe(true);
+    expect(r.wallBlocked).toBe(true); expect(r.wallClimbed).toBe(true);
+    expect(r.heartsAfterDrop).toBe(3); expect(r.dropKnocked).toBe(true);
+    expect(r.kingHere).toBe(true); expect(r.kingBlocks).toBe(true);
+    expect(r.kingCaught).toBe(true); expect(r.heartsAfterKing).toBe(2); expect(r.kingSpat).toBe(true);
+    expect(r.secondCatch).toBe(true); expect(r.heartsAfterSecond).toBe(2);
+    expect(r.rodeArm).toBe(true); expect(r.flewOver).toBe(true); expect(r.flightTop).toBeLessThan(7.2);
+    expect(r.kingsPassed).toBe(1); expect(r.heartBack).toBe(3);
+    expect(r.kingGone).toBe(true); expect(r.noWallLeft).toBe(true); expect(r.upThrough).toBe(true);
+    expect(r.kingLeftAlone).toBe(true);
+    expect(r.lastHeartCaught).toBe(true); expect(r.lastHeartKept).toBe(true);
+    expect(r.idleSeconds).toBeLessThan(60); expect(r.idleMode).toBe('over');
+    expect(r.overCard).toBe(true);
+    expect(r.botSeconds).toBeGreaterThan(90); expect(r.botMeters).toBeGreaterThan(300); expect(r.botKings).toBeGreaterThanOrEqual(1);
+    expect(r.finite).toBe(true); expect(r.bounded).toBe(true);
+    expect(errors).toEqual([]);
+  });
+});

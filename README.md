@@ -1,8 +1,8 @@
-# 🎳⚽🦖🥊🎿 המשחקייה של ב׳3 (The Marker Games)
+# 🎳⚽🦖🥊🎿🤸 המשחקייה של ב׳3 (The Marker Games)
 
 The game roster is at `/` (index.html), with original artwork and links to every game.
 
-Five games designed by kids, drawn with markers, and brought to life. Every
+Six games designed by kids, drawn with markers, and brought to life. Every
 game is a page of the same little kit: cel-shaded "marker on paper" rendering, one
 keyboard or a touch pad, one or two players, and a headless test that drives it.
 
@@ -13,6 +13,7 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 | 🦖 **דינו במבוך** (Dino Maze) | `/dino.html` | Eat fifteen little dinos in an endless maze, dodge the dragon's flame, find the exit before the dragons get angry. |
 | 🥊 **חתול ביער** (Punch Game) | `/punch.html` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
 | 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski.html` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
+| 🤸 **קופצים מעל הרעים** (Jump Over the Bad Guys) | `/jump.html` | Pick one of three box characters, walk both ways and jump over the bad guys who want to eat you — flipping feet, head, feet, head. Climb the green towers; the cute one double-jumps, the scary one slams down with a roar, the regular one glides on its wing. Once in a while the monster king stomps in and blocks the way: dodge his hands, then climb his sleeping hand and arm and bounce off his head to get over him. A 2D canvas game, not three.js. |
 
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
@@ -60,6 +61,10 @@ links and asset references after a build. The roster content lives in each game'
 - `src/main.js`, `pendel.js`, `dino.js`, `punch.js` — one file per game; `src/track.js` is
   the bowling game's endless winding lane (straights and bends, lane coordinates, the
   brown edge-line ribbons).
+- `src/jump.js` + `src/jump-art.js` — the jump game, the one 2D page: a Canvas 2D side-scroller
+  whose marker art (wobbly boxes, scribble fills, line boil, the pencil-scribble background) is
+  drawn in code from the five `drawings/jump-game-*` pages; it uses the kit's HUD, input and audio
+  but not `app.js`/three.js.
 - `src/ski.js` — the ski game; Babylon.js (`@babylonjs/core`) instead of three.js because the dog
   model (`src/assets/dog.glb`, see `design/ski.md`) was exported for Babylon, but it uses the kit's
   HUD, input, audio and `?sim` hook like every other page.

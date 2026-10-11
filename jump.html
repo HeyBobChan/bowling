@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>קופצים מעל הרעים!</title>
+  <link rel="icon" href="data:,">
+  <style>
+    #app canvas { width: 100%; height: 100%; touch-action: none; }
+    body:not(.playing) .hud.badge { visibility: hidden; }
+    #hearts { letter-spacing: 3px; direction: ltr; }
+    #hearts .lost, #kingbar .lost { opacity: .22; filter: grayscale(1); }
+    #kingbar { top: 74px; left: 50%; transform: translateX(-50%) rotate(1deg); color: var(--accent-dark); border-color: var(--accent-dark); letter-spacing: 2px; }
+    @media (max-width: 720px) { #kingbar { top: 16px; } }
+    #intro { background: rgba(248, 245, 236, .8); padding-top: 84px; gap: 8px; }
+    #picks { display: flex; gap: clamp(8px, 2.4vw, 26px); justify-content: center; flex-wrap: wrap; margin: 2px 0 6px; }
+    .pick {
+      background: rgba(248, 245, 236, .92); border: 3px solid var(--ink); border-radius: 18px 14px 20px 15px;
+      padding: 4px 10px 8px; cursor: pointer; color: var(--ink); transition: transform .12s ease-out;
+      display: flex; flex-direction: column; align-items: center; min-width: 110px; outline: none;
+    }
+    .pick canvas { width: clamp(92px, 15vw, 148px); height: clamp(92px, 15vw, 148px); display: block; }
+    .pick b { font-size: clamp(16px, 2.3vw, 20px); }
+    .pick span { font-size: clamp(12px, 1.7vw, 15px); color: #6b5d4a; max-width: 150px; }
+    .pick[aria-checked="true"] {
+      border-color: var(--accent); border-width: 4px; transform: rotate(-2deg) scale(1.07);
+      box-shadow: 0 5px 0 rgba(42, 33, 24, .22); background: #fff;
+    }
+    .pick:focus-visible { box-shadow: 0 0 0 4px var(--accent); }
+    .overlay button:disabled { opacity: .5; }
+    #hint {
+      bottom: 14px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(13px, 2vw, 17px); font-weight: 700; color: #6b5d4a;
+      background: rgba(248, 245, 236, .86); border-radius: 12px; padding: 4px 14px; white-space: nowrap;
+    }
+    .portrait-tip { display: none; }
+    @media (max-width: 720px) {
+      #intro { padding-top: 132px; }
+      #hint { bottom: 70px; white-space: normal; text-align: center; width: 88vw; }
+    }
+    @media (orientation: portrait) and (max-width: 720px) { .portrait-tip { display: block; } }
+  </style>
+</head>
+<body>
+  <div id="app"><canvas id="game"></canvas></div>
+
+  <div id="score" class="hud badge tr">⭐ 0</div>
+  <div id="dist" class="hud badge tl">📏 0 מ׳</div>
+  <div id="hearts" class="hud badge tc"></div>
+  <div id="kingbar" class="hud badge hidden"></div>
+  <div id="msg" class="hud msg"></div>
+  <div id="hint" class="hud hidden"></div>
+
+  <div id="intro" class="overlay">
+    <h1>🤸 קופצים מעל הרעים! 🤸</h1>
+    <p>הרעים רוצים <b>לאכול אתכם</b> — קופצים מעליהם!</p>
+    <p class="tip">⬅️ ➡️ <b>החצים</b> = הולכים לשני הכיוונים · <b>רווח</b> = קפיצה (מחזיקים = גבוהה) · עולים על <b>המגדלים הירוקים</b> · הדמויות מתהפכות באוויר!</p>
+    <p class="tip">⭐ כל רע שקפצתם מעליו <bdi dir="ltr">+10</bdi> · כמה רעים בקפיצה אחת = כפול! · ❤️ לבבות מחכים על המגדלים הגבוהים</p>
+    <p class="tip">👑 מדי פעם מגיע <b>מלך המפלצות</b>: לא נוגעים <b>בידיים</b> שלו! כשהיד הגדולה נרדמת על הרצפה — עולים עליה, מטפסים על הזרוע, וקופצים מעל הראש שלו!</p>
+    <p class="tip"><b>בוחרים דמות:</b></p>
+    <div id="picks" role="radiogroup" aria-label="בחירת דמות">
+      <div class="pick" role="radio" tabindex="0" data-char="cute" aria-checked="true"><canvas></canvas><b>דמות חמודה</b><span>קופצת פעמיים באוויר</span></div>
+      <div class="pick" role="radio" tabindex="0" data-char="scary" aria-checked="false"><canvas></canvas><b>דמות מפחידה</b><span>נוחתת בשאגה!</span></div>
+      <div class="pick" role="radio" tabindex="0" data-char="regular" aria-checked="false"><canvas></canvas><b>דמות רגילה</b><span>דואה עם הכנף</span></div>
+    </div>
+    <button id="startBtn">יאללה, קופצים!</button>
+    <p class="tip portrait-tip">📱 עדיף לסובב את הטלפון לרוחב — רואים רחוק יותר קדימה</p>
+    <p class="tip keys">בחירה: <kbd>←</kbd> <kbd>→</kbd> או לחיצה · הולכים: <kbd>←</kbd> <kbd>→</kbd> · קפיצה: <kbd>רווח</kbd> / <kbd>↑</kbd> · בטלפון: ג׳ויסטיק וכפתור ⤒</p>
+    <p class="tip other-game"></p>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <h1 id="goTitle">😋 נאכלתם!</h1>
+    <p class="big-score" id="finalScore"></p>
+    <p id="goDetail"></p>
+    <p id="bestScore"></p>
+    <div class="row">
+      <button id="restartBtn">עוד פעם!</button>
+      <button class="alt" data-action="pick">להחליף דמות</button>
+    </div>
+    <p class="tip other-game"></p>
+  </div>
+
+  <script type="module" src="/src/jump.js"></script>
+</body>
+</html>

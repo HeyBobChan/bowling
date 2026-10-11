@@ -92,6 +92,25 @@
         "tint": "#c7e5ff",
         "action": "יוצאים לגלוש"
       }
+    },
+    {
+      "id": "jump",
+      "page": "jump.html",
+      "path": "/jump.html",
+      "emoji": "🤸",
+      "title": "קופצים מעל הרעים",
+      "short": "קופצים מעל הרעים",
+      "accent": "#c9302c",
+      "accentDark": "#8f1f1b",
+      "artifact": "https://claude.ai/artifact/9AC786qvWzEUkVmKdNkfj5",
+      "lobby": {
+        "genre": "קפיצות והתהפכויות",
+        "description": "בוחרים דמות וקופצים מעל הרעים שרוצים לאכול אתכם! מתהפכים באוויר, עולים על המגדלים הירוקים ואוספים לבבות.",
+        "image": "/drawings/jump-game-1-characters.webp",
+        "imageAlt": "הציור המקורי: החוקים של המשחק ושלוש הדמויות — חמודה, מפחידה ורגילה",
+        "tint": "#ffe6e1",
+        "action": "יאללה, קופצים"
+      }
     }
   ]
 }
