@@ -200,17 +200,84 @@ test.describe('Punch Game', () => {
 });
 
 test.describe('Kelpie Downhill', () => {
-  test('the slope, the skiing and the scoring behave as the design sheet says', async ({ page }) => {
+  // helpers that run in the page: teleporting, finding things ahead, a course-following skier and a
+  // line-of-sight check against the pines as they are drawn (a ducked tree is drawn smaller)
+  const installHelpers = () => {
+    const S = window.__ski, st = S.state, inp = S.input, dt = 1 / 60, L = S.T.chunkLen;
+    const H = {};
+    H.settle = (x, z, speed) => { Object.assign(st, { x, z, speed, heading: 0, lean: 0, leanVel: 0, kick: 0, prevTurn: 0, air: false, jumpBuf: 0 }); st.y = S.terrainH(x, z); };
+    H.next = (kind, dz) => () => {
+      for (const c of [...S.chunks.values()].sort((a, b) => a.i - b.i)) {
+        for (const o of (kind === 'gold' ? [c.gold].filter(Boolean) : c[kind])) if (o.z > st.z + dz && !o.done && !o.taken) return o;
+      }
+      return null;
+    };
+    H.seek = (pick) => {                                                    // teleport down the line until one turns up
+      for (let guard = 0; guard < 30; guard++) { const o = pick(); if (o) return o; H.settle(S.courseX(st.z + 100), st.z + 100, 14); S.step(dt); }
+      return null;
+    };
+    H.occluded = (a, b, drawn) => {
+      for (const c of S.chunks.values()) for (const t of c.trees) {
+        const s = t.s * (drawn ? t.vis : 1), w = t.w;
+        if (s < 0.05 || t.x < Math.min(a.x, b.x) - 3 || t.x > Math.max(a.x, b.x) + 3 || t.z < Math.min(a.z, b.z) - 3 || t.z > Math.max(a.z, b.z) + 3) continue;
+        const gy = S.terrainH(t.x, t.z) - 0.15;
+        for (let k = 1; k < 24; k++) {                                      // the canopy as one cone, 2.6 s wide at 1.2 s, tip at 8.7 s
+          const u = k / 24, px = a.x + (b.x - a.x) * u, py = a.y + (b.y - a.y) * u, pz = a.z + (b.z - a.z) * u, h = py - gy;
+          if (h < 1.2 * s || h > 8.7 * s) continue;
+          const r = (2.6 * s * w * (8.7 * s - h)) / (7.5 * s);
+          if ((px - t.x) ** 2 + (pz - t.z) ** 2 < r * r) return true;
+        }
+      }
+      return false;
+    };
+    // a skier who aims a little down the course line, reacts `delay` frames late and jumps the logs
+    H.ski = ({ delay = 0, gain = 3, maxT = 300, toZ = 1e9, watch = false } = {}) => {
+      S.start();
+      const queue = [], jumped = new Set(), zoneAt = {}, out = { hits: [], dogHidden: 0, gateHidden: 0, looks: 0, gateLooks: 0 };
+      let t = 0, lives = st.lives, n = 0;
+      while (t < maxT && !st.over && st.z < toZ) {
+        const look = Math.max(5, Math.min(12, st.speed * 0.5));
+        queue.push(Math.max(-1, Math.min(1, (Math.atan2(S.courseX(st.z + look) - st.x, look) - st.heading) * gain)));
+        inp.steer = queue.length > delay ? queue.shift() : 0;
+        const ci = Math.floor(st.z / L);
+        for (const c of [S.chunks.get(ci), S.chunks.get(ci + 1)]) if (c) for (const lg of c.logs) {
+          const d = lg.z - st.z;
+          if (!jumped.has(lg) && d > 1 && d < st.speed * 0.45 && Math.abs(st.x - lg.x) < lg.half + 0.5) { jumped.add(lg); inp.jumpQueued = true; }
+        }
+        S.step(dt); t += dt; n++;
+        if (watch) S.syncVisuals(dt);
+        if (!(st.zone in zoneAt)) zoneAt[st.zone] = t;
+        if (st.lives < lives) out.hits.push({ t, z: st.z });
+        lives = st.lives;
+        if (watch && n % 5 === 0) {
+          const cam = S.camera.position;
+          out.looks++; if (H.occluded(cam, { x: st.x, y: st.y + 0.45, z: st.z }, true)) out.dogHidden++;
+          const g = H.next('gates', 5)();
+          if (g && g.z - st.z < 45) { out.gateLooks++; if (H.occluded(cam, { x: g.x, y: S.terrainH(g.x, g.z) + 2.2, z: g.z }, true)) out.gateHidden++; }
+        }
+      }
+      inp.steer = 0;
+      return { ...out, t, z: st.z, over: st.over, lives: st.lives, gates: st.gates, bestStreak: st.bestStreak, logs: st.logs, zoneAt };
+    };
+    window.__skiTest = H;
+  };
+  const open = async (page) => {
     const errors = [];
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(String(e)));
     await load(page, '/ski.html', '__ski');
     await page.waitForFunction(() => window.__ski.state.ready, null, { timeout: 60_000 });
+    await page.evaluate(installHelpers);
+    return errors;
+  };
+
+  test('the slope, the skiing and the scoring behave as the design sheet says', async ({ page }) => {
+    const errors = await open(page);
     const r = await page.evaluate(() => {
-      const S = window.__ski, st = S.state, inp = S.input, dt = 1 / 60, out = {};
+      const S = window.__ski, H = window.__skiTest, st = S.state, inp = S.input, dt = 1 / 60, out = {};
       out.slopeDrop = S.terrainH(0, 0) - S.terrainH(0, 100);
-      S.start(); st.inv = 999;                                              // no accidental tree hits during the movement phases
-      for (let i = 0; i < 12 * 60; i++) S.step(dt);                     // straight run
+      S.start(); st.inv = 999;                                              // no accidental hits during the movement phases
+      for (let i = 0; i < 12 * 60; i++) S.step(dt);                     // straight run on the open slope
       out.speedStraight = st.speed; out.dist12 = st.dist;
       const x0 = st.x; inp.right = true;                                   // carve
       for (let i = 0; i < 3 * 60; i++) S.step(dt);
@@ -223,42 +290,143 @@ test.describe('Kelpie Downhill', () => {
       const scoreBefore = st.score; inp.jumpQueued = true; inp.right = true;   // spin trick
       for (let i = 0; i < 3 * 60; i++) S.step(dt);
       inp.right = false; out.trickGain = st.score - scoreBefore;
-      const cs = [...S.chunks.values()].sort((a, b) => a.i - b.i);
-      let gate = null;
-      for (const c of cs) for (const g of c.gates) if (!g.done && g.z > st.z + 20 && !gate) gate = g;
-      const settle = () => { st.heading = 0; st.lean = 0; st.leanVel = 0; st.kick = 0; st.prevTurn = 0; st.air = false; st.inv = 6; st.y = S.terrainH(st.x, st.z); };
-      const gatesBefore = st.gates; st.x = gate.x; st.z = gate.z - 6; st.speed = 16; settle();
-      for (let i = 0; i < 60; i++) S.step(dt);
-      out.gatePassed = st.gates - gatesBefore;
+      // three gates in a row: the streak multiplies them (50 + 100 + 150)
+      const gatesBefore = st.gates, gateScore = st.score; st.streak = 0;
+      for (let k = 0; k < 3; k++) { const g = H.seek(H.next('gates', 12)); H.settle(g.x, g.z - 6, 16); st.inv = 6; for (let i = 0; i < 40; i++) S.step(dt); }
+      out.gatesPassed = st.gates - gatesBefore; out.gateStreak = st.streak; out.gatePoints = st.score - gateScore;
+      // a tree costs one bone and ends the streak
       let tree = null;
-      for (const c of cs) for (const t of c.trees) if (Math.abs(t.x) < 40 && t.z > st.z + 15 && !tree) tree = t;
-      const lives = st.lives; st.x = tree.x; st.z = tree.z - 3; st.speed = 15; settle(); st.inv = 0;
+      for (const c of S.chunks.values()) for (const t of c.trees) if (!tree && Math.abs(t.x) < 40 && t.z > st.z + 15) tree = t;
+      const lives = st.lives; H.settle(tree.x, tree.z - 3, 15); st.inv = 0;
       for (let i = 0; i < 40; i++) S.step(dt);
-      out.livesLostOnTree = lives - st.lives; st.inv = 999;
-      let kicker = null;                                                    // a kicker launches the dog at speed
-      for (const c of cs) for (const k of c.ramps) if (k.z > st.z + 20 && !kicker) kicker = k;
-      st.x = kicker.x; st.z = kicker.z - 12; st.speed = 21; settle(); st.inv = 999;
-      let kickAir = 0;
-      for (let i = 0; i < 120; i++) { S.step(dt); if (st.air) kickAir++; }
+      out.livesLostOnTree = lives - st.lives; out.streakAfterHit = st.streak; st.inv = 999;
+      // into the forest: kickers, logs and golden bones on the line
+      H.settle(S.courseX(1400), 1400, 18); S.step(dt);
+      out.zoneAt1400 = st.zone;
+      const kicker = H.seek(H.next('ramps', 20));                           // a kicker launches the dog at speed
+      H.settle(kicker.x, kicker.z - 12, 21);
+      let kickAir = 0; for (let i = 0; i < 120; i++) { S.step(dt); if (st.air) kickAir++; }
       out.kickerAirFrames = kickAir;
+      let log = H.seek(H.next('logs', 12));                                 // skiing into a log costs a bone…
+      H.settle(log.x, log.z - 5, 16); st.inv = 0; st.lives = 3;
+      for (let i = 0; i < 40; i++) S.step(dt);
+      out.livesLostOnLog = 3 - st.lives; st.inv = 999;
+      log = H.seek(H.next('logs', 12));                                     // …jumping it scores
+      H.settle(log.x, log.z - 8, 16); st.inv = 0; st.lives = 3;
+      const logScore = st.score, logsBefore = st.logs;
+      inp.jumpQueued = true; for (let i = 0; i < 60; i++) S.step(dt);
+      out.logJump = { lost: 3 - st.lives, cleared: st.logs - logsBefore, points: st.score - logScore }; st.inv = 999;
+      const gold = H.seek(H.next('gold', 5));                               // a golden bone gives a lost bone back
+      H.settle(gold.x, gold.z - 4, 10); st.lives = 2;
+      for (let i = 0; i < 40; i++) S.step(dt);
+      out.livesAfterGold = st.lives;
+      // the zones: a gentle open slope, then faster, narrower, busier
+      out.zones = [0, 600, 1400, 2700, 4300].map((z) => { const lv = S.level(z); return { zone: lv.zone, vTerm: lv.vTerm, corridor: lv.corridor, trees: lv.trees, logs: lv.logs }; });
       for (let i = 0; i < 40 * 60; i++) { if (i % 90 === 0) { inp.left = Math.random() < 0.4; inp.right = !inp.left && Math.random() < 0.5; } S.step(dt); }
       out.finiteState = [st.x, st.y, st.z, st.speed, st.heading, st.score].every(Number.isFinite);
       out.livesNeverNegative = st.lives >= 0; out.chunkCount = S.chunks.size;
       return out;
     });
     expect(r.slopeDrop).toBeGreaterThan(20); expect(r.slopeDrop).toBeLessThan(30);
-    expect(r.speedStraight * 3.6).toBeGreaterThan(55); expect(r.speedStraight * 3.6).toBeLessThan(100);
-    expect(r.dist12).toBeGreaterThan(150);
+    // the open slope is slower than the forest: ~55 km/h, not the old 80 straight away
+    expect(r.speedStraight * 3.6).toBeGreaterThan(45); expect(r.speedStraight * 3.6).toBeLessThan(65);
+    expect(r.dist12).toBeGreaterThan(120);
     expect(r.carveDx).toBeGreaterThan(5);
     expect(r.headingStraightens).toBeLessThan(0.15);
     expect(r.airFrames).toBeGreaterThan(15); expect(r.maxAir).toBeGreaterThan(0.6); expect(r.airAtEnd).toBe(false);
     expect(r.trickGain).toBeGreaterThanOrEqual(100);
-    expect(r.gatePassed).toBe(1);
-    expect(r.livesLostOnTree).toBe(1);
+    expect(r.gatesPassed).toBe(3); expect(r.gateStreak).toBe(3); expect(r.gatePoints).toBeGreaterThanOrEqual(300);
+    expect(r.livesLostOnTree).toBe(1); expect(r.streakAfterHit).toBe(0);
+    expect(r.zoneAt1400).toBe(2);
     expect(r.kickerAirFrames).toBeGreaterThan(20);
+    expect(r.livesLostOnLog).toBe(1);
+    expect(r.logJump.lost).toBe(0); expect(r.logJump.cleared).toBe(1); expect(r.logJump.points).toBeGreaterThanOrEqual(25);
+    expect(r.livesAfterGold).toBe(3);
+    expect(r.zones.map((z) => z.zone)).toEqual([0, 1, 2, 3, 4]);
+    for (let k = 1; k < r.zones.length; k++) {
+      expect(r.zones[k].vTerm).toBeGreaterThan(r.zones[k - 1].vTerm);
+      expect(r.zones[k].corridor).toBeLessThan(r.zones[k - 1].corridor);
+      expect(r.zones[k].trees).toBeGreaterThan(r.zones[k - 1].trees);
+    }
+    expect(r.zones[0].logs).toBe(0);
     expect(r.finiteState).toBe(true);
     expect(r.livesNeverNegative).toBe(true);
     expect(r.chunkCount).toBeGreaterThanOrEqual(5); expect(r.chunkCount).toBeLessThanOrEqual(8);
     expect(errors).toEqual([]);
   });
+
+  test('the forest follows the course: its line is always clear, a straight line is not', async ({ page }) => {
+    const errors = await open(page);
+    const r = await page.evaluate(() => {
+      const S = window.__ski, H = window.__skiTest, st = S.state, T = S.T, dt = 1 / 60, L = T.chunkLen, out = {};
+      // walk 4.5 km of course: no tree or rock on the line, no tree in the lane, nothing in the lane on the open slope
+      S.start(); st.inv = 1e9;
+      let worst = 99, treesInLane = 0, openSlopeHazards = 0;
+      for (let ci = 0; ci < 75; ci++) {
+        H.settle(S.courseX(ci * L + 1), ci * L + 1, 10); S.step(dt);
+        const c = S.chunks.get(ci), near = [ci - 1, ci, ci + 1].map((k) => S.chunks.get(k)).filter(Boolean);
+        const trees = near.flatMap((k) => k.trees), rocks = near.flatMap((k) => k.rocks);
+        for (let z = ci * L; z < (ci + 1) * L; z += 0.5) {
+          const x = S.courseX(z);
+          for (const o of trees) worst = Math.min(worst, Math.hypot(o.x - x, o.z - z) - (T.treeR * o.s + T.dogR));
+          for (const o of rocks) worst = Math.min(worst, Math.hypot(o.x - x, o.z - z) - (T.rockR * o.s + T.dogR));
+        }
+        treesInLane += c.trees.filter((t) => Math.abs(t.x - S.courseX(t.z)) < S.laneAt(t.z) - 0.01).length;
+        if (S.level(ci * L + L).zone === 0) openSlopeHazards += c.logs.length + c.ramps.length + c.rocks.length;
+      }
+      out.worstClearance = worst; out.treesInLane = treesInLane; out.openSlopeHazards = openSlopeHazards;
+      // hands off from the top: fine on the open slope, into the trees once the forest starts
+      S.start();
+      let t = 0, lives = st.lives; out.handsOffHits = [];
+      while (t < 240 && !st.over) { S.step(dt); t += dt; if (st.lives < lives) out.handsOffHits.push(t); lives = st.lives; }
+      out.handsOffOver = st.over; out.handsOffEnd = t;
+      return out;
+    });
+    expect(r.worstClearance).toBeGreaterThan(0.3);
+    expect(r.treesInLane).toBe(0);
+    expect(r.openSlopeHazards).toBe(0);
+    expect(r.handsOffHits.length).toBeGreaterThan(0);
+    expect(r.handsOffHits[0]).toBeGreaterThan(25);                        // the open slope is safe…
+    expect(r.handsOffHits[0]).toBeLessThan(60);                           // …the forest is not
+    expect(r.handsOffOver).toBe(true); expect(r.handsOffEnd).toBeLessThan(120);
+    expect(errors).toEqual([]);
+  });
+
+  test('a skier who follows the course climbs through the zones and keeps the dog in view', async ({ page }) => {
+    const errors = await open(page);
+    const r = await page.evaluate(() => {
+      const S = window.__ski, H = window.__skiTest, st = S.state, inp = S.input, dt = 1 / 60, out = {};
+      out.clean = H.ski({ maxT: 260, watch: true });                        // on the line, no reaction delay
+      out.kid = H.ski({ delay: 12, gain: 2.2, maxT: 260 });                 // 0.2 s late and a softer hand
+      // a wanderer who ignores the lane: the pines it passes must get out of the camera's way
+      S.start();
+      let n = 0, looks = 0, hidden = 0, hiddenUndrawn = 0;
+      while (st.z < 2400 && n++ < 60 * 300) {
+        inp.steer = Math.sin(st.t * 0.45) * 0.55 + Math.sin(st.t * 1.3) * 0.25; st.inv = 999;
+        S.step(dt); S.syncVisuals(dt);
+        if (n % 6) continue;
+        const cam = S.camera.position, dog = { x: st.x, y: st.y + 0.45, z: st.z };
+        looks++; if (H.occluded(cam, dog, true)) hidden++; if (H.occluded(cam, dog, false)) hiddenUndrawn++;
+      }
+      inp.steer = 0;
+      out.wander = { hidden: hidden / looks, withoutDucking: hiddenUndrawn / looks };
+      return out;
+    });
+    // the climb is gradual: the forest edge after ~35 s, the forest after ~1.5 min, the deep forest after ~3
+    expect(r.clean.zoneAt[1]).toBeGreaterThan(25); expect(r.clean.zoneAt[1]).toBeLessThan(50);
+    expect(r.clean.zoneAt[2]).toBeGreaterThan(70); expect(r.clean.zoneAt[2]).toBeLessThan(120);
+    expect(r.clean.zoneAt[3]).toBeGreaterThan(150);
+    // following the line is safe and pays: no hits, a long streak, every log cleared
+    expect(r.clean.hits.length).toBe(0); expect(r.clean.over).toBe(false);
+    expect(r.clean.bestStreak).toBeGreaterThan(10); expect(r.clean.logs).toBeGreaterThan(5);
+    // a slower, sloppier skier still reaches the deep forest
+    expect(r.kid.over).toBe(false); expect(r.kid.z).toBeGreaterThan(2600);
+    // the dog and the next gate stay in view
+    expect(r.clean.dogHidden / r.clean.looks).toBeLessThan(0.02);
+    expect(r.clean.gateHidden / r.clean.gateLooks).toBeLessThan(0.05);
+    expect(r.wander.hidden).toBeLessThan(0.08);
+    expect(r.wander.hidden).toBeLessThan(r.wander.withoutDucking / 2);
+    expect(errors).toEqual([]);
+  });
 });
+

@@ -1,10 +1,12 @@
 // 🎿 רוקרוק בשלג — Kelpie Downhill. Design sheet: design/ski.md (asked for in chat, no drawing).
 //
 // The black-and-tan kelpie (a real photo turned into a 3D model, see design/ski.md) skis an
-// endless 14° snow slope: carve through slalom gates, collect bones, launch off kickers and
-// spin in the air; trees and rocks cost one of three bones. Babylon.js instead of three.js —
-// the model was exported for Babylon/Godot — but the page is a normal marker-games page:
-// kit HUD, kit input, kit audio, `?sim` + window.__ski for the balance test.
+// endless 14° snow slope: follow the groomed lane through slalom gates, collect bones, jump the
+// fallen logs, launch off kickers and spin in the air; trees, rocks and logs cost one of three
+// bones, a golden bone gives one back. The mountain gets harder in named zones (open slope →
+// forest edge → forest → deep forest) over about three minutes. Babylon.js instead of three.js —
+// the model was exported for Babylon/Godot — but the page is a normal marker-games page: kit HUD,
+// kit input, kit audio, `?sim` + window.__ski for the balance test.
 import BABYLON from './kit/babylon.js';
 import './kit/shell.css';
 import { createHud } from './kit/hud.js';
@@ -17,15 +19,42 @@ const V3 = BABYLON.Vector3;
 
 // ------------------------------------------------------------------ knobs
 const T = {
-  slopeDeg: 14, halfWidth: 48, chunkLen: 60, chunkHalfW: 68, gridX: 46, gridZ: 24, ahead: 5, behind: 1,
-  g: 9.81, drag: 0.0047, dragTuck: 0.0030, carveDrag: 0.32, startSpeed: 7, minSpeed: 3,
+  slopeDeg: 14, halfWidth: 48, chunkLen: 60, chunkHalfW: 68, gridX: 92, gridZ: 40, ahead: 5, behind: 1,
+  g: 9.81, tuckDrag: 0.64, carveDrag: 0.32, startSpeed: 7, minSpeed: 3,
   maxHeading: 1.15, leanSpring: 95, leanDamp: 13, leanBase: 0.45, leanPerSpeed: 0.03, leanMax: 1.05, grip: 1.7,
   kickTime: 0.11, kickLean: 0.14, recentre: 1.1, skidSteer: 1.1, jumpV: 4.6, lives: 3, kneeDrop: 0.09,
-  treeR: 0.55, rockR: 0.95, dogR: 0.34, boneR: 1.3, gateHalf: 2.4,
+  treeR: 0.55, rockR: 0.95, dogR: 0.34, boneR: 1.3, goldR: 1.7, logR: 0.3, logTop: 0.5, logMaxHalf: 7,
+  streakMax: 5, goldEvery: 8, camBack: 5.0, camHeight: 2.7, camLook: 10,
 };
 const SLOPE = (T.slopeDeg * Math.PI) / 180;
 const TAN_SLOPE = Math.tan(SLOPE);
+const G_SLOPE = T.g * Math.sin(SLOPE);
 const L = T.chunkLen;
+
+// ------------------------------------------------------------------ the climb: named zones by distance
+// Each zone starts at `z` (metres down the mountain) with these values and blends into the next
+// zone's; the black run keeps climbing slowly to the last key, then the mountain holds. The open slope has nothing in the lane — rocks, logs
+// and kickers start at the forest edge. corridor = half-width of the groomed lane kept clear of trees
+// around the course line; trees / rocks (in the lane) / logs / kickers are per 60 m chunk; vTerm = the
+// straight-run top speed in m/s (tucking adds a quarter); amp = how far the gates swing to each side.
+const ZONES = [
+  { z: 0, name: '🏔️ המדרון הפתוח', corridor: 20, trees: 10, rocks: 0, logs: 0, kickers: 0, vTerm: 15.5, gateHalf: 3.3, amp: 3, twoGates: 0 },
+  { z: 500, name: '🌲 שולי היער', corridor: 13, trees: 34, rocks: 0.6, logs: 0.6, kickers: 0.5, vTerm: 17.5, gateHalf: 3.0, amp: 6, twoGates: 0.25 },
+  { z: 1300, name: '🌲🌲 היער', corridor: 8.5, trees: 52, rocks: 1.4, logs: 0.85, kickers: 0.6, vTerm: 20, gateHalf: 2.7, amp: 8.5, twoGates: 0.4 },
+  { z: 2600, name: '🌲🌲🌲 היער העבות', corridor: 6, trees: 64, rocks: 2.2, logs: 1.0, kickers: 0.7, vTerm: 22, gateHalf: 2.5, amp: 10, twoGates: 0.5 },
+  { z: 4200, name: '⚫ המסלול השחור', corridor: 5.5, trees: 70, rocks: 2.6, logs: 1.1, kickers: 0.7, vTerm: 22.5, gateHalf: 2.4, amp: 11, twoGates: 0.5 },
+  { z: 7000, corridor: 4.8, trees: 74, rocks: 3.2, logs: 1.2, kickers: 0.7, vTerm: 24, gateHalf: 2.3, amp: 12, twoGates: 0.55 },
+];
+const LEVEL_KEYS = ['corridor', 'trees', 'rocks', 'logs', 'kickers', 'vTerm', 'gateHalf', 'amp', 'twoGates'];
+function level(z, out = {}) {
+  let k = 0;
+  while (k < ZONES.length - 2 && z >= ZONES[k + 1].z) k++;
+  const a = ZONES[k], b = ZONES[k + 1], u = clamp((z - a.z) / (b.z - a.z), 0, 1);
+  for (const key of LEVEL_KEYS) out[key] = lerp(a[key], b[key], u);
+  if (k === 0) out.rocks = out.logs = out.kickers = 0;
+  out.zone = k;
+  return out;
+}
 
 // ------------------------------------------------------------------ state
 const state = {
@@ -34,9 +63,11 @@ const state = {
   lives: T.lives, score: 0, dist: 0, bones: 0, gates: 0, tuck: false, inv: 0, shake: 0, landBounce: 0,
   crouch: 0, overTimer: 0,
   lean: 0, leanVel: 0, kick: 0, kickSign: 0, prevTurn: 0, aLat: 0, skid: 0,
+  zone: -1, streak: 0, bestStreak: 0, logs: 0, golds: 0, logHint: false, goldHint: false, jumpBuf: 0,
 };
 // the test hook drives these directly; play reads them from the kit input every frame
-const ctrl = { left: false, right: false, tuck: false, jumpQueued: false, turn: 0 };
+// (`steer` is an analog turn in -1..1 for the test bot, added to the keys)
+const ctrl = { left: false, right: false, tuck: false, jumpQueued: false, turn: 0, steer: 0 };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -177,15 +208,15 @@ function makeRock() {
   colorMesh(r, 0, 0, 0, (px, py) => { const s = smooth(0.25, 0.6, py); return [lerp(0.36, 0.95, s), lerp(0.37, 0.96, s), lerp(0.40, 1.0, s)]; });
   return merge([r], 'rock');
 }
-function makeBone() {
-  const shaft = colorMesh(BABYLON.MeshBuilder.CreateCylinder('s', { height: 0.7, diameter: 0.16, tessellation: 8 }, scene), 0.96, 0.92, 0.80);
+function makeBone(name, col) {
+  const shaft = colorMesh(BABYLON.MeshBuilder.CreateCylinder('s', { height: 0.7, diameter: 0.16, tessellation: 8 }, scene), ...col);
   shaft.rotation.z = Math.PI / 2;
   const knobs = [];
   for (const [x, y] of [[-0.36, 0.09], [-0.36, -0.09], [0.36, 0.09], [0.36, -0.09]]) {
-    const k = colorMesh(BABYLON.MeshBuilder.CreateSphere('k', { diameter: 0.24, segments: 6 }, scene), 0.96, 0.92, 0.80);
+    const k = colorMesh(BABYLON.MeshBuilder.CreateSphere('k', { diameter: 0.24, segments: 6 }, scene), ...col);
     k.position.set(x, y, 0); knobs.push(k);
   }
-  return merge([shaft, ...knobs], 'bone');
+  return merge([shaft, ...knobs], name);
 }
 function makeGate(red) {
   const pole = colorMesh(BABYLON.MeshBuilder.CreateCylinder('p', { height: 2.6, diameter: 0.09, tessellation: 6 }, scene), 0.2, 0.2, 0.22);
@@ -195,7 +226,33 @@ function makeGate(red) {
   colorMesh(flag, ...(red ? [0.84, 0.27, 0.25] : [0.18, 0.42, 0.84]));
   return merge([pole, flag], red ? 'gateRed' : 'gateBlue');
 }
-const baseTree = makeTree(), baseRock = makeRock(), baseBone = makeBone(), baseRed = makeGate(true), baseBlue = makeGate(false);
+function makeLog() {
+  // one metre of fallen trunk along x with snow on top; instances stretch it across the lane
+  const log = BABYLON.MeshBuilder.CreateCylinder('lg', { height: 1, diameter: T.logR * 2, tessellation: 12 }, scene);
+  log.rotation.z = Math.PI / 2;
+  log.bakeCurrentTransformIntoVertices();
+  colorMesh(log, 0, 0, 0, (px, py) => (py > T.logR * 0.8 ? [0.96, 0.97, 1.0] : [0.36 + 0.06 * Math.random(), 0.22, 0.12]));
+  return merge([log], 'log');
+}
+function makeMarker() {
+  // the orange poles either side of a kicker's lip
+  const pole = colorMesh(BABYLON.MeshBuilder.CreateCylinder('mp', { height: 1.8, diameter: 0.09, tessellation: 6 }, scene), 0.96, 0.44, 0.10);
+  pole.position.y = 0.9;
+  const pennant = BABYLON.MeshBuilder.CreateDisc('pn', { radius: 0.36, tessellation: 3, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+  pennant.position.set(0.28, 1.55, 0);
+  colorMesh(pennant, 1.0, 0.62, 0.12);
+  return merge([pole, pennant], 'marker');
+}
+const goldMat = new BABYLON.StandardMaterial('gold', scene);
+goldMat.diffuseColor = new BABYLON.Color3(1.0, 0.78, 0.22); goldMat.emissiveColor = new BABYLON.Color3(0.42, 0.28, 0.04);
+goldMat.specularColor = new BABYLON.Color3(1.0, 0.9, 0.6); goldMat.specularPower = 24;
+const lipMat = new BABYLON.StandardMaterial('lip', scene);
+lipMat.diffuseColor = new BABYLON.Color3(1.0, 0.45, 0.12); lipMat.emissiveColor = new BABYLON.Color3(0.45, 0.16, 0.03);
+lipMat.specularColor = BABYLON.Color3.Black(); lipMat.backFaceCulling = false;
+const baseTree = makeTree(), baseRock = makeRock(), baseRed = makeGate(true), baseBlue = makeGate(false);
+const baseBone = makeBone('bone', [0.98, 0.88, 0.66]), baseGold = makeBone('goldBone', [1, 1, 1]);
+baseGold.material = goldMat;
+const baseLog = makeLog(), baseMarker = makeMarker();
 
 // sky dome, sun disc, far peaks
 const sky = BABYLON.MeshBuilder.CreateSphere('sky', { diameter: 1700, segments: 10, sideOrientation: BABYLON.Mesh.BACKSIDE }, scene);
@@ -262,78 +319,172 @@ puff.minEmitPower = 1; puff.maxEmitPower = 3; puff.updateSpeed = 0.016;
 puff.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
 if (!SIM) { snowfall.start(); spray.start(); puff.start(); }
 
-// ------------------------------------------------------------------ chunks
+// ------------------------------------------------------------------ the course
+// The course line runs from gate to gate (a smoothstep from each gate's predecessor into it). The
+// forest keeps a groomed lane of `corridor` metres either side of that line, so the line is always
+// skiable and skiing straight down the middle is not: once the forest starts, the lane wanders off.
 const courseCache = new Map();
-// the gates of chunk i (none in chunk 0): deterministic, each placed within reach of the previous gate
-// so the course stays skiable; `prev` is the waypoint the bone trail leads in from
+// the slalom swings around a centre line that starts drifting across the slope at the forest edge
+const courseCentre = (z) => 17 * smooth(450, 800, z) * Math.sin((z - 450) / 380);
+// the gates of chunk i (none in chunk 0): deterministic, alternating sides of the centre line, each
+// within reach of the previous gate so the course stays skiable; `prev` is where the line comes from
 function gatesFor(i) {
   if (i <= 0) return [];
   if (courseCache.has(i)) return courseCache.get(i);
   const rng = mulberry32(0x51ED270B ^ (i * 104729 + 3));
-  const z0 = i * L, nG = rng() < 0.5 ? 2 : 1, out = [];
-  let prev = gatesFor(i - 1).at(-1) || { x: 0, z: L - 30 };          // the run starts at x = 0
+  const z0 = i * L, nG = rng() < level(z0 + L / 2).twoGates ? 2 : 1, out = [];
+  let prev = gatesFor(i - 1).at(-1) || { x: 0, z: L - 30, side: 1 };          // the run starts at x = 0
   for (let k = 0; k < nG; k++) {
-    const z = z0 + 8 + (k + 0.2 + rng() * 0.6) * (L / nG);
-    const reach = Math.min(18, 0.45 * (z - prev.z));
-    const g = { x: clamp(prev.x * 0.8 + (rng() * 2 - 1) * reach, -17, 17), z, red: (i + k) % 2 === 0, prev: { x: prev.x, z: prev.z } };
+    const z = z0 + 6 + (k + 0.2 + rng() * 0.6) * ((L - 10) / nG), lv = level(z), side = -prev.side;
+    const reach = Math.min(18, 0.45 * (z - prev.z)), lim = T.halfWidth - lv.corridor - 4;
+    const want = courseCentre(z) + side * lv.amp * (0.65 + 0.35 * rng());
+    const g = { x: clamp(clamp(want, prev.x - reach, prev.x + reach), -lim, lim), z, side, half: lv.gateHalf, red: side > 0, prev: { x: prev.x, z: prev.z } };
     out.push(g); prev = g;
   }
   courseCache.set(i, out);
   return out;
 }
+function nextGate(z) {
+  const ci = chunkIndexAt(z);
+  for (let i = Math.max(1, ci); i <= ci + 2; i++) for (const g of gatesFor(i)) if (g.z >= z) return g;
+  return null;
+}
+// x of the course line at z
+function courseX(z) {
+  const g = nextGate(z);
+  if (!g || z <= g.prev.z) return g ? g.prev.x : 0;
+  const u = (z - g.prev.z) / (g.z - g.prev.z);
+  return g.prev.x + (g.x - g.prev.x) * u * u * (3 - 2 * u);
+}
+// how far the line bends away from its own tangent over the next `ahead` metres (a kicker's flight)
+function courseBend(z, ahead) {
+  const x0 = courseX(z), slope = courseX(z + 0.5) - courseX(z - 0.5);
+  let dev = 0;
+  for (let s = 3; s <= ahead; s += 3) dev = Math.max(dev, Math.abs(courseX(z + s) - (x0 + slope * s)));
+  return dev;
+}
+// half-width of the groomed lane at z (the top of the run opens wider still)
+function laneAt(z) {
+  const c = level(z).corridor;
+  return z < L ? lerp(34, c, clamp((z - 6) / (L - 6), 0, 1)) : c;
+}
+// Kickers and logs are planned per chunk like the gates (deterministic, memoised) so a chunk can see
+// its neighbours' and keep every jump's landing clear across chunk borders. Both sit where the line
+// bends little over the flight: nobody can steer in the air, so the dog lands where the line was
+// heading — still well inside the lane, and nothing is allowed in the landing zone.
+const kickerCache = new Map(), logCache = new Map();
+const plannedCount = (v, rng) => Math.floor(v + rng());                          // 0.6 → 0 or 1, 0.6 on average
+function kickersFor(i) {
+  if (i < 0) return [];
+  if (kickerCache.has(i)) return kickerCache.get(i);
+  const rng = mulberry32(0x6B1C4E2D ^ (i * 15485863 + 7)), z0 = i * L, out = [];
+  const prev = kickersFor(i - 1), gates = gatesFor(i);
+  for (let k = plannedCount(level(z0 + L / 2).kickers, rng), tries = 0; k > 0 && tries < 24; tries++) {
+    const z = z0 + 14 + rng() * (L - 28);                                        // the bump stays inside its chunk's ground
+    if (gates.some((g) => Math.abs(g.z - z) < 6) || [...prev, ...out].some((r) => Math.abs(r.z - z) < 36) || courseBend(z, 27) > 3) continue;
+    out.push({ x: courseX(z), z, rx: 2.8, rz: 4.6, h: 1.3 + rng() * 0.5 }); k--;
+  }
+  kickerCache.set(i, out);
+  return out;
+}
+function logsFor(i) {
+  if (i < 0) return [];
+  if (logCache.has(i)) return logCache.get(i);
+  const rng = mulberry32(0x2F6E2B17 ^ (i * 32452843 + 11)), z0 = i * L, out = [];
+  const prev = logsFor(i - 1), gates = gatesFor(i), kicks = [...kickersFor(i - 1), ...kickersFor(i), ...kickersFor(i + 1)];
+  for (let k = plannedCount(level(z0 + L / 2).logs, rng), tries = 0; k > 0 && tries < 24; tries++) {
+    const z = z0 + 5 + rng() * (L - 10);
+    if (gates.some((g) => Math.abs(g.z - z) < 7) || kicks.some((r) => z > r.z - 20 && z < r.z + 32)) continue;
+    if ([...prev, ...out].some((o) => Math.abs(o.z - z) < 30) || courseBend(z - 8, 30) > 3.5) continue;
+    out.push({ x: courseX(z), z, half: Math.min(T.logMaxHalf, laneAt(z) + 1.2) }); k--;
+  }
+  logCache.set(i, out);
+  return out;
+}
+// the stretch a jump or a kicker needs clear of rocks: its run-up and where it comes down
+const inFlightZone = (i, z) => [i - 1, i, i + 1].some((k) => kickersFor(k).some((r) => z > r.z - 12 && z < r.z + 34) || logsFor(k).some((o) => z > o.z - 8 && z < o.z + 28));
+
+// ------------------------------------------------------------------ chunks
+const haloMat = new BABYLON.StandardMaterial('halo', scene);
+haloMat.diffuseTexture = dotTex; haloMat.opacityTexture = dotTex; haloMat.diffuseColor = new BABYLON.Color3(1, 0.86, 0.4);
+haloMat.disableLighting = true; haloMat.alpha = 0.7; haloMat.backFaceCulling = false; haloMat.fogEnabled = false;   // blended, not added: added light vanishes on white snow
 const zeroMat = BABYLON.Matrix.Zero();
 function makeChunk(i) {
   const rng = mulberry32(0x9E3779B1 ^ (i * 7919 + 17));
-  const z0 = i * L;
-  const c = { i, z0, trees: [], rocks: [], gates: [], bones: [], ramps: [], meshes: [], casters: [] };
+  const z0 = i * L, lv = level(z0 + L / 2);
+  const c = { i, z0, trees: [], rocks: [], gates: [], bones: [], ramps: [], logs: [], gold: null, meshes: [], casters: [] };
   const rr = (a, b) => a + rng() * (b - a);
-  if (i >= 2) {
-    const n = rng() < 0.4 ? 2 : 1;
-    for (let k = 0; k < n; k++) c.ramps.push({ x: rr(-20, 20), z: z0 + 14 + (k + rng()) * ((L - 28) / n), rx: 2.8, rz: 4.6, h: rr(1.3, 1.8) });
-  }
-  // the course: gates chained chunk to chunk, and a trail of bones that curves in from the previous
-  // gate and ends at each gate's centre (the trail of the next chunk's first gate spills into this one)
-  for (const g of gatesFor(i)) c.gates.push({ x: g.x, z: g.z, red: g.red, done: false });
-  const smooth = (u) => u * u * (3 - 2 * u);
-  for (const g of [...gatesFor(i), ...gatesFor(i + 1).slice(0, 1)]) {
-    const dz = g.z - g.prev.z, n = Math.min(9, Math.floor((dz - 8) / 3));
-    for (let k = 0; k < n; k++) {
-      const z = g.z - 2.5 - k * 3;
-      if (z < z0 || z >= z0 + L) continue;
-      c.bones.push({ x: lerp(g.prev.x, g.x, smooth((z - g.prev.z) / dz)), z, taken: false, idx: c.bones.length });
+  const count = (v) => plannedCount(v, rng);
+  const far = (x, z, list, d) => list.every((o) => (o.x - x) * (o.x - x) + (o.z - z) * (o.z - z) > d * d);
+  const farZ = (z, list, d) => list.every((o) => Math.abs(o.z - z) > d);
+  for (const g of gatesFor(i)) c.gates.push({ x: g.x, z: g.z, half: g.half, red: g.red, done: false });
+  // kickers on the line; fallen logs across the lane: jump them (a wide lane leaves room to go round)
+  c.ramps = kickersFor(i);
+  for (const lg of logsFor(i)) c.logs.push({ ...lg, done: false });
+  // a golden bone on the line every few hundred metres gives a lost bone back
+  if (i >= 6 && (i - 6) % T.goldEvery === 0) {
+    for (let tries = 0; tries < 14 && !c.gold; tries++) {
+      const z = rr(z0 + 8, z0 + L - 8);
+      if (farZ(z, c.gates, 5) && farZ(z, c.logs, 6) && !c.ramps.some((r) => Math.abs(r.z - z) < 8)) c.gold = { x: courseX(z), z, taken: false };
     }
   }
-  const far = (x, z, list, d) => list.every((o) => (o.x - x) * (o.x - x) + (o.z - z) * (o.z - z) > d * d);
-  // difficulty ramp: an open piste for the first chunks, then the forest closes in over ~600 m
-  const ramp = clamp((i - 1) / 10, 0, 1);                       // 0 at the top, 1 from chunk 11 on
-  const corridor = lerp(26, 3, ramp);                           // half-width kept clear of trees
-  const nTrees = Math.round(lerp(6, 120, ramp) + Math.max(0, i - 11) * 2);
+  // bones: a trail along the line into each gate (the trail of the next chunk's first gate spills
+  // into this one); none on a log or under the golden bone
+  for (const g of [...gatesFor(i), ...gatesFor(i + 1).slice(0, 1)]) {
+    const n = Math.min(9, Math.floor((g.z - g.prev.z - 8) / 3));
+    for (let k = 0; k < n; k++) {
+      const z = g.z - 2.5 - k * 3;
+      if (z < z0 || z >= z0 + L || !farZ(z, c.logs, 2.5) || (c.gold && Math.abs(z - c.gold.z) < 2.5)) continue;
+      c.bones.push({ x: courseX(z), z, taken: false, phase: rng() * 6.28 });
+    }
+  }
+  // rocks inside the lane but never on the line: skiing the line is safe, wandering is not
+  for (let k = count(lv.rocks), tries = 0; k > 0 && tries < 30; tries++) {
+    const z = rr(z0 + 3, z0 + L - 3), s = rr(0.6, 1.15);
+    const minOff = T.rockR * s + T.dogR + 1.3, maxOff = laneAt(z) - 0.6;
+    if (maxOff <= minOff) continue;
+    const x = courseX(z) + (rng() < 0.5 ? -1 : 1) * rr(minOff, maxOff);
+    if (!far(x, z, c.gates, 5) || inFlightZone(i, z) || !far(x, z, c.rocks, 5) || (c.gold && !far(x, z, [c.gold], 4))) continue;
+    c.rocks.push({ x, z, s, rot: rng() * Math.PI * 2 }); k--;
+  }
+  // the forest: half of it crowds the edge of the lane (a tree line you can read from far away), the
+  // rest is spread over the slope; nothing grows inside the lane
+  const nTrees = Math.round(lv.trees);
   let tries = 0;
-  while (c.trees.length < nTrees && tries++ < nTrees * 12 + 40) {
-    const x = rr(-(T.halfWidth + 14), T.halfWidth + 14), z = z0 + rr(0, L);
-    const localCorridor = i === 0 ? lerp(40, corridor, clamp((z - z0 - 6) / (L - 6), 0, 1)) : corridor;
-    if (Math.abs(x) < localCorridor) continue;
-    if (Math.abs(x) < 6 && ramp < 0.8 && rng() < 0.7) continue;
-    if (!far(x, z, c.gates, 4.5) || !far(x, z, c.bones, 3.2) || !far(x, z, c.ramps, 7) || !far(x, z, c.trees, 2.4)) continue;
-    c.trees.push({ x, z, s: rr(0.55, 0.95), rot: rng() * Math.PI * 2 });
+  while (c.trees.length < nTrees && tries++ < nTrees * 14 + 40) {
+    const z = z0 + rr(0, L), cx = courseX(z), lane = laneAt(z);
+    const x = rng() < 0.5 ? cx + (rng() < 0.5 ? -1 : 1) * (lane + rr(0.4, 7)) : rr(-(T.halfWidth + 14), T.halfWidth + 14);
+    const d = Math.abs(x - cx);
+    if (d < lane || !far(x, z, c.ramps, 7) || !far(x, z, c.trees, 2.4)) continue;
+    // pines along the lane are slimmer, so their branches don't hang over it (the hit is the trunk)
+    c.trees.push({ x, z, s: rr(0.55, 0.95), w: lerp(0.62, 1, smooth(lane, lane + 6, d)), rot: rng() * Math.PI * 2 });
   }
   for (let k = 0; k < 34; k++) {
     const side = rng() < 0.5 ? -1 : 1;
-    c.trees.push({ x: side * rr(T.halfWidth + 1, T.halfWidth + 18), z: z0 + rr(0, L), s: rr(0.7, 1.2), rot: rng() * Math.PI * 2 });
+    c.trees.push({ x: side * rr(T.halfWidth + 1, T.halfWidth + 18), z: z0 + rr(0, L), s: rr(0.7, 1.2), w: 1, rot: rng() * Math.PI * 2 });
   }
-  const nRocks = i < 4 ? 0 : Math.min(20, 2 + Math.floor((i - 4) * 1.5));
-  tries = 0;
-  while (c.rocks.length < nRocks && tries++ < 200) {
-    const x = rr(-T.halfWidth, T.halfWidth), z = z0 + rr(0, L);
-    if (Math.abs(x) < corridor * 0.6) continue;
-    if (!far(x, z, c.gates, 4.5) || !far(x, z, c.bones, 3.2) || !far(x, z, c.ramps, 7) || !far(x, z, c.trees, 2.2) || !far(x, z, c.rocks, 4)) continue;
-    c.rocks.push({ x, z, s: rr(0.6, 1.4), rot: rng() * Math.PI * 2 });
+  // a few boulders out in the forest
+  for (let k = lv.zone >= 1 ? 3 : 0, n = 0; k > 0 && n < 40; n++) {
+    const x = rr(-T.halfWidth, T.halfWidth), z = z0 + rr(0, L), s = rr(0.6, 1.4);
+    if (Math.abs(x - courseX(z)) < laneAt(z) + 1 || !far(x, z, c.trees, 2.2) || !far(x, z, c.rocks, 4) || !far(x, z, c.ramps, 7)) continue;
+    c.rocks.push({ x, z, s, rot: rng() * Math.PI * 2 }); k--;
   }
   chunks.set(i, c);
   buildChunkMeshes(c);
   return c;
 }
 
+// height of the rendered ground mesh (its triangles, not the exact terrain) for things laid on the snow
+function meshH(c, x, z) {
+  const nx = T.gridX, nz = T.gridZ, W = T.chunkHalfW;
+  const gx = ((x + W) / (2 * W)) * nx, gz = ((z - c.z0) / L) * nz;
+  const i0 = clamp(Math.floor(gx), 0, nx - 1), j0 = clamp(Math.floor(gz), 0, nz - 1), fx = gx - i0, fz = gz - j0;
+  const X = (i) => -W + (2 * W * i) / nx, Z = (j) => c.z0 + (L * j) / nz;
+  const ha = terrainH(X(i0), Z(j0), c.ramps), hb = terrainH(X(i0 + 1), Z(j0), c.ramps), hd = terrainH(X(i0), Z(j0 + 1), c.ramps);
+  if (fx + fz <= 1) return ha + (hb - ha) * fx + (hd - ha) * fz;
+  const he = terrainH(X(i0 + 1), Z(j0 + 1), c.ramps);
+  return he + (hd - he) * (1 - fx) + (hb - he) * (1 - fz);
+}
 function buildChunkMeshes(c) {
   const nx = T.gridX, nz = T.gridZ, W = T.chunkHalfW;
   const positions = new Float32Array((nx + 1) * (nz + 1) * 3), colors = new Float32Array((nx + 1) * (nz + 1) * 4);
@@ -342,13 +493,19 @@ function buildChunkMeshes(c) {
   const n = new V3();
   let p = 0, q = 0;
   for (let j = 0; j <= nz; j++) {
+    const z = c.z0 + (L * j) / nz, cx = courseX(z), lane = laneAt(z);
     for (let i = 0; i <= nx; i++) {
-      const x = -W + (2 * W * i) / nx, z = c.z0 + (L * j) / nz;
+      const x = -W + (2 * W * i) / nx;
       positions[p++] = x; positions[p++] = terrainH(x, z, c.ramps); positions[p++] = z;
       uvs[(j * (nx + 1) + i) * 2] = x / (2 * W); uvs[(j * (nx + 1) + i) * 2 + 1] = z / (2 * W);
       terrainNormal(x, z, n);
       const flat = Math.pow(clamp(n.y, 0, 1), 6);
-      colors[q++] = lerp(0.78, 0.98, flat); colors[q++] = lerp(0.84, 0.985, flat); colors[q++] = lerp(0.95, 1.0, flat); colors[q++] = 1;
+      // the groomed lane is a touch bluer than the powder around it, with a soft line along its edge
+      const d = Math.abs(x - cx), piste = 1 - smooth(lane - 1.2, lane + 1.2, d), shade = 1 - 0.06 * Math.exp(-((d - lane) * (d - lane)) / 0.8);
+      colors[q++] = lerp(0.78, 0.98, flat) * lerp(1, 0.9, piste) * shade;
+      colors[q++] = lerp(0.84, 0.985, flat) * lerp(1, 0.94, piste) * shade;
+      colors[q++] = lerp(0.95, 1.0, flat) * shade;
+      colors[q++] = 1;
     }
   }
   let k = 0;
@@ -365,30 +522,89 @@ function buildChunkMeshes(c) {
   ground.material = snowMat; ground.receiveShadows = true; ground.isPickable = false;
   c.meshes.push(ground);
 
-  const place = (base, list, name, yOff, scaleFn) => {
+  // thin instances of a base mesh, one per object; returns the mesh and its matrix buffer
+  const place = (base, list, name, yOff, scaleOf) => {
     if (!list.length) return null;
     const m = base.clone(name + c.i); m.setEnabled(true); m.isPickable = false;
     m.makeGeometryUnique();   // thin instances on a clone that shares geometry render nothing
     const buf = new Float32Array(list.length * 16);
-    const mat = new BABYLON.Matrix();
+    const mat = new BABYLON.Matrix(), sc = new V3();
     list.forEach((o, idx) => {
-      const s = scaleFn ? scaleFn(o) : (o.s || 1);
-      BABYLON.Matrix.ComposeToRef(new V3(s, s, s), BABYLON.Quaternion.FromEulerAngles(0, o.rot || 0, 0), new V3(o.x, terrainH(o.x, o.z, c.ramps) + (yOff || 0), o.z), mat);
-      mat.copyToArray(buf, idx * 16);
       o.instance = idx;
+      o.y = terrainH(o.x, o.z, c.ramps) + (yOff || 0);
+      if (scaleOf) scaleOf(o, sc); else sc.setAll(o.s || 1);
+      BABYLON.Matrix.ComposeToRef(sc, BABYLON.Quaternion.FromEulerAngles(0, o.rot || 0, 0), new V3(o.x, o.y, o.z), mat);
+      mat.copyToArray(buf, idx * 16);
     });
     m.thinInstanceSetBuffer('matrix', buf, 16, false);
     c.meshes.push(m);
-    return m;
+    return { mesh: m, buf };
   };
-  const trees = place(baseTree, c.trees, 'trees', -0.15);
+  const trees = place(baseTree, c.trees, 'trees', -0.15, (o, sc) => sc.set(o.s * o.w, o.s, o.s * o.w));
+  if (trees) { c.treeMesh = trees.mesh; c.treeBuf = trees.buf; for (const t of c.trees) { t.duck = 0; t.vis = 1; } }
   const rocks = place(baseRock, c.rocks, 'rocks', -0.25);
-  c.boneMesh = place(baseBone, c.bones, 'bones', 0.55, () => 1);
+  const bones = place(baseBone, c.bones, 'bones', 0.7, (o, sc) => sc.setAll(1.35));
+  if (bones) {
+    c.boneMesh = bones.mesh; c.boneBuf = bones.buf;
+    bones.mesh.renderOutline = true; bones.mesh.outlineWidth = 0.02; bones.mesh.outlineColor = new BABYLON.Color3(0.36, 0.24, 0.12);
+  }
   const poles = [];
-  for (const g of c.gates) poles.push({ x: g.x - T.gateHalf, z: g.z, rot: 0, red: g.red }, { x: g.x + T.gateHalf, z: g.z, rot: Math.PI, red: g.red });
-  place(baseRed, poles.filter((o) => o.red), 'gatesRed', 0, () => 1);
-  place(baseBlue, poles.filter((o) => !o.red), 'gatesBlue', 0, () => 1);
-  c.casters = [trees, rocks].filter(Boolean);
+  for (const g of c.gates) poles.push({ x: g.x - g.half, z: g.z, rot: 0, red: g.red }, { x: g.x + g.half, z: g.z, rot: Math.PI, red: g.red });
+  place(baseRed, poles.filter((o) => o.red), 'gatesRed', 0, (o, sc) => sc.setAll(1));
+  place(baseBlue, poles.filter((o) => !o.red), 'gatesBlue', 0, (o, sc) => sc.setAll(1));
+  // logs: short segments that follow the snow across the lane
+  const segs = [];
+  for (const lg of c.logs) {
+    const n = Math.max(2, Math.ceil((2 * lg.half) / 2.8)), len = (2 * lg.half) / n;
+    for (let s = 0; s < n; s++) {
+      const xa = lg.x - lg.half + s * len, xb = xa + len, ha = terrainH(xa, lg.z, c.ramps), hb = terrainH(xb, lg.z, c.ramps);
+      segs.push({ x: (xa + xb) / 2, z: lg.z, y: (ha + hb) / 2 + T.logR - 0.08, len: len + 0.1, roll: Math.atan2(hb - ha, len) });
+    }
+  }
+  let logs = null;
+  if (segs.length) {
+    const m = baseLog.clone('logs' + c.i); m.setEnabled(true); m.isPickable = false; m.makeGeometryUnique();
+    const buf = new Float32Array(segs.length * 16), mat = new BABYLON.Matrix();
+    segs.forEach((sg, idx) => {
+      BABYLON.Matrix.ComposeToRef(new V3(sg.len, 1, 1), BABYLON.Quaternion.FromEulerAngles(0, 0, sg.roll), new V3(sg.x, sg.y, sg.z), mat);
+      mat.copyToArray(buf, idx * 16);
+    });
+    m.thinInstanceSetBuffer('matrix', buf, 16, false);
+    c.meshes.push(m); logs = m;
+  }
+  // kickers: an orange lip across the crest and a marker pole either side, readable from far away
+  if (c.ramps.length) {
+    const pos = [], idx = [], segN = 16;
+    for (const r of c.ramps) {
+      const base = pos.length / 3;
+      for (let s = 0; s <= segN; s++) {
+        const x = r.x + lerp(-1.7, 1.7, s / segN) * r.rx;
+        for (const dz of [-0.6, 0.3]) pos.push(x, meshH(c, x, r.z + dz) + 0.04, r.z + dz);
+      }
+      for (let s = 0; s < segN; s++) { const a = base + s * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const lip = new BABYLON.Mesh('lip' + c.i, scene), lvd = new BABYLON.VertexData(), nrm = [];
+    BABYLON.VertexData.ComputeNormals(pos, idx, nrm);
+    lvd.positions = pos; lvd.indices = idx; lvd.normals = nrm; lvd.applyToMesh(lip);
+    lip.material = lipMat; lip.isPickable = false;
+    c.meshes.push(lip);
+    const marks = [];
+    for (const r of c.ramps) marks.push({ x: r.x - 1.9 * r.rx, z: r.z, rot: 0 }, { x: r.x + 1.9 * r.rx, z: r.z, rot: Math.PI });
+    place(baseMarker, marks, 'markers', 0, (o, sc) => sc.setAll(1));
+  }
+  // the golden bone floats in a glow on the line
+  if (c.gold) {
+    const g = c.gold;
+    g.y = terrainH(g.x, g.z, c.ramps) + 0.95;
+    g.mesh = baseGold.clone('gold' + c.i); g.mesh.setEnabled(true); g.mesh.isPickable = false;
+    g.mesh.position.set(g.x, g.y, g.z); g.mesh.scaling.setAll(1.9);
+    g.mesh.renderOutline = true; g.mesh.outlineWidth = 0.02; g.mesh.outlineColor = new BABYLON.Color3(0.45, 0.28, 0.02);
+    g.halo = BABYLON.MeshBuilder.CreatePlane('halo' + c.i, { size: 2.8 }, scene);
+    g.halo.material = haloMat; g.halo.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL; g.halo.isPickable = false;
+    g.halo.position.set(g.x, g.y, g.z);
+    c.meshes.push(g.mesh, g.halo);
+  }
+  c.casters = [trees, rocks, bones].filter(Boolean).map((o) => o.mesh).concat(logs ? [logs] : [], c.gold ? [c.gold.mesh] : []);
 }
 function disposeChunk(c) {
   for (const m of c.casters) shadows.removeShadowCaster(m);
@@ -668,6 +884,7 @@ function animateRig(dt) {
 const hud = createHud(null, { gameId: 'ski', music: { seed: 11, bpm: 128, root: 67 } });
 const input = createInput({ touch: 'auto' });
 input.touch?.setLabels({ a: '⬆️', b: '⬇️' });
+const JUMP_KEY = input.touch ? '⬆️' : 'רווח';
 let wind = null;
 function windSetup() {
   const ctx = ensureAudio();
@@ -682,7 +899,10 @@ function windSetup() {
 }
 const sfx = {
   pickup() { beep(880, 0, 0.12, 'sine', 0.16, 1320); },
-  gate() { chord([659, 988], 0.09, 0.2, 'triangle', 0.16); },
+  gate(mult = 1) { const f = Math.pow(2, (Math.min(mult, T.streakMax) - 1) / 6); chord([659 * f, 988 * f], 0.09, 0.2, 'triangle', 0.16); },
+  log() { beep(587, 0, 0.1, 'triangle', 0.14, 880); beep(880, 0.08, 0.14, 'triangle', 0.12, 1175); },
+  gold() { chord([784, 988, 1175, 1568], 0.07, 0.3, 'sine', 0.16); },
+  zone() { chord([523, 659, 784, 1046], 0.11, 0.35, 'triangle', 0.13); },
   jump() { noise(0.25, 1800, 0.12); },
   land() { noise(0.18, 400, 0.25); },
   trick() { beep(523, 0, 0.1, 'square', 0.1, 1046); beep(784, 0.1, 0.18, 'square', 0.1, 1568); },
@@ -691,6 +911,21 @@ const sfx = {
 };
 function drawLives() {
   hud.set('#lives', '🦴'.repeat(Math.max(0, state.lives)) + '◽'.repeat(Math.max(0, T.lives - state.lives)));
+}
+function drawStreak(pop) {
+  const m = Math.min(T.streakMax, state.streak);
+  if (m < 2) { hud.hide('#streak'); return; }
+  hud.set('#streak', `🔥 ‎×${m}`);
+  hud.show('#streak');
+  if (pop) hud.pop('#streak');
+}
+// zone names and first-time hints: a card under the badges with its own timer (the centre flash
+// belongs to gates and bones, which would cut a zone name short)
+const bannerEl = document.getElementById('banner');
+let bannerTime = 0;
+function banner(text, dur) {
+  if (!bannerEl) return;
+  bannerEl.textContent = text; bannerEl.classList.add('show'); bannerTime = dur;
 }
 let hudTick = 0;
 function updateHUD(force) {
@@ -704,10 +939,12 @@ function resetRun() {
   for (const c of [...chunks.values()]) disposeChunk(c);
   Object.assign(state, { running: false, over: false, t: 0, x: 0, z: 4, heading: 0, speed: T.startSpeed, air: false, airTime: 0, spin: 0,
     lives: T.lives, score: 0, dist: 0, bones: 0, gates: 0, tuck: false, inv: 0, shake: 0, landBounce: 0, crouch: 0, overTimer: 0,
-    lean: 0, leanVel: 0, kick: 0, kickSign: 0, prevTurn: 0, aLat: 0, skid: 0 });
+    lean: 0, leanVel: 0, kick: 0, kickSign: 0, prevTurn: 0, aLat: 0, skid: 0,
+    zone: -1, streak: 0, bestStreak: 0, logs: 0, golds: 0, logHint: false, goldHint: false, jumpBuf: 0 });
   ensureChunks(state.z);
   state.y = terrainH(state.x, state.z); state.vy = 0;
-  drawLives(); updateHUD(true);
+  bannerTime = 0; bannerEl?.classList.remove('show');
+  drawLives(); drawStreak(); updateHUD(true);
   syncVisuals(0);
   for (const tr of trails) tr.reset();
 }
@@ -725,6 +962,7 @@ function endRun() {
   const best = hud.best('ski-best', Math.round(state.score));
   hud.set('#finalScore', `${Math.round(state.score)} נקודות!`);
   hud.set('#finalDetail', `גלשתם ${Math.round(state.dist)} מטר 🎿 · ${state.gates} שערים 🚩 · ${state.bones} עצמות 🦴`);
+  hud.set('#finalZone', `הגעתם עד ${ZONES[Math.max(0, state.zone)].name}` + (state.bestStreak >= 2 ? ` · רצף שיא ‎×${Math.min(T.streakMax, state.bestStreak)} 🔥` : ''));
   hud.set('#bestScore', Math.round(state.score) >= best && state.score > 0 ? `שיא חדש! ${best} נקודות ⭐` : `השיא שלכם: ${best} נקודות ⭐`);
   hud.show('#gameover');
   sfx.over();
@@ -733,24 +971,64 @@ function endRun() {
 function hit(what) {
   if (state.inv > 0) return;
   state.lives -= 1; drawLives(); hud.pop('#lives');
+  state.streak = 0; drawStreak();
   state.speed = Math.max(T.minSpeed, state.speed * 0.25); state.heading *= 0.3; state.inv = 2.2; state.shake = 1;
   puff.emitter = new V3(state.x, state.y + 0.2, state.z); puff.manualEmitCount = 60;
   sfx.crash();
   if (state.lives <= 0) { hud.flash('נפלתם בשלג! 🌨️', { bad: true, dur: 1400 }); state.running = false; state.over = true; state.overTimer = 1.2; }
-  else hud.flash(what === 'rock' ? 'אאוץ׳! סלע 🪨' : 'הב! עץ 🌲', { bad: true, dur: 900 });
+  else hud.flash({ rock: 'אאוץ׳! סלע 🪨', log: 'אופס! גזע 🪵' }[what] || 'הב! עץ 🌲', { bad: true, dur: 900 });
+}
+function passGate() {
+  state.gates++; state.streak++; state.bestStreak = Math.max(state.bestStreak, state.streak);
+  const mult = Math.min(T.streakMax, state.streak), pts = 50 * mult;
+  state.score += pts;
+  hud.flash(mult > 1 ? `שער! ‎×${mult} ‎+${pts} 🚩` : 'שער! ‎+50 🚩', { good: true, dur: 900 });
+  sfx.gate(mult); hud.pop('#score'); drawStreak(true);
+}
+function missGate() {
+  hud.flash(state.streak >= 2 ? 'פספסתם שער — הרצף נגמר' : 'פספסתם את השער', { dur: 800 });
+  state.streak = 0; drawStreak();
+}
+function clearLog() {
+  state.logs++; state.score += 25;
+  hud.flash('קפיצה מעל הגזע! ‎+25 🪵', { good: true, dur: 900 }); sfx.log(); hud.pop('#score');
+}
+function takeGold(g) {
+  g.taken = true; state.golds++;
+  g.mesh.setEnabled(false); g.halo.setEnabled(false);
+  if (state.lives < T.lives) { state.lives++; drawLives(); hud.pop('#lives'); hud.flash('עצם זהב! עוד חיים ✨', { good: true, dur: 1300 }); }
+  else { state.score += 100; hud.pop('#score'); hud.flash('עצם זהב! ‎+100 ✨', { good: true, dur: 1100 }); }
+  sfx.gold();
+}
+function enterZone(k) {
+  const first = state.zone < 0;
+  state.zone = k;
+  banner(ZONES[k].name, first ? 2.0 : 2.8);
+  if (!first) sfx.zone();
+}
+// the first log and the first golden bone of a run are announced before they arrive
+function hints() {
+  if (state.logHint && state.goldHint) return;
+  const ci = chunkIndexAt(state.z);
+  for (const c of [chunks.get(ci), chunks.get(ci + 1)]) {
+    if (!c) continue;
+    if (!state.logHint && c.logs.some((lg) => lg.z > state.z && lg.z - state.z < 40)) { state.logHint = true; banner(`🪵 גזע על המסלול! ${JUMP_KEY} = קפיצה`, 2.6); }
+    if (!state.goldHint && c.gold && !c.gold.taken && c.gold.z > state.z && c.gold.z - state.z < 50) { state.goldHint = true; banner('✨ עצם זהב מחזירה חיים!', 2.4); }
+  }
 }
 
 // ------------------------------------------------------------------ physics step
-const tmpN = new V3();
+const tmpN = new V3(), lvNow = {};
 function readInput() {
   const ax = input.p1.axis();
-  ctrl.turn = clamp(ax.x + (ctrl.right ? 1 : 0) - (ctrl.left ? 1 : 0), -1, 1);
+  ctrl.turn = clamp(ax.x + (ctrl.right ? 1 : 0) - (ctrl.left ? 1 : 0) + ctrl.steer, -1, 1);
   if (input.p1.consume('a')) ctrl.jumpQueued = true;
   return { turn: ctrl.turn, tuck: ctrl.tuck || ax.z > 0.5 || input.p1.down('b') };
 }
 function step(dt) {
   dt = Math.min(dt, 0.05);
   state.t += dt;
+  if (bannerTime > 0 && (bannerTime -= dt) <= 0) bannerEl?.classList.remove('show');
   if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 1.6);
   if (state.landBounce > 0) state.landBounce = Math.max(0, state.landBounce - dt * 3);
   if (!state.running) {
@@ -765,6 +1043,7 @@ function step(dt) {
   }
   if (state.inv > 0) state.inv -= dt;
   const { turn, tuck } = readInput();
+  if (ctrl.jumpQueued) { ctrl.jumpQueued = false; state.jumpBuf = 0.25; }             // a press made just before landing still jumps
   state.tuck = tuck && !state.air;
   // Skiing like a bike: the input asks for a LEAN, not a turn. Starting a turn first sways the body
   // the other way (the counter-steer kick), then the body falls into the turn; a balanced carve on
@@ -789,7 +1068,7 @@ function step(dt) {
     const pivot = turn * T.skidSteer / (1 + v / 12);
     omega += pivot;
     state.skid += Math.abs(pivot) * 0.25;
-    const fallLine = T.g * Math.sin(SLOPE) * Math.sin(state.heading) / v;             // gravity bends the line downhill
+    const fallLine = G_SLOPE * Math.sin(state.heading) / v;                           // gravity bends the line downhill
     state.heading = clamp(state.heading + (omega - fallLine) * dt, -T.maxHeading, T.maxHeading);
   } else {
     state.leanVel += (T.leanSpring * 0.4 * (0 - state.lean) - T.leanDamp * state.leanVel) * dt;
@@ -798,8 +1077,11 @@ function step(dt) {
     state.spin += turn * 7.2 * dt;
     state.airTime += dt;
   }
-  const k = state.tuck ? T.dragTuck : T.drag;
-  let a = T.g * Math.sin(SLOPE) * Math.cos(state.heading) - k * state.speed * state.speed;
+  // the zone sets the top speed: slow fresh snow on the open slope, fast packed snow in the forest
+  const lv = level(state.z, lvNow);
+  if (lv.zone !== state.zone) enterZone(lv.zone);
+  const k = (G_SLOPE / (lv.vTerm * lv.vTerm)) * (state.tuck ? T.tuckDrag : 1);
+  let a = G_SLOPE * Math.cos(state.heading) - k * state.speed * state.speed;
   if (!state.air) a -= (T.carveDrag * 0.5 * (Math.abs(state.aLat) / T.g) + 0.8 * state.skid) * state.speed;   // edging and skidding cost speed
   state.speed = Math.max(T.minSpeed, state.speed + a * dt);
   const dx = state.speed * Math.sin(state.heading) * dt, dz = state.speed * Math.cos(state.heading) * dt;
@@ -811,8 +1093,8 @@ function step(dt) {
   let launched = false;
   if (!state.air) {
     const vyGround = (h - state.y) / dt;
-    if (ctrl.jumpQueued) {
-      ctrl.jumpQueued = false;
+    if (state.jumpBuf > 0) {
+      state.jumpBuf = 0;
       state.air = true; state.airTime = 0; state.spin = 0; state.vy = vyGround + T.jumpV + state.speed * 0.04;
       state.crouch = 0; sfx.jump(); launched = true;
       for (const tr of trails) tr.reset();
@@ -823,6 +1105,7 @@ function step(dt) {
       state.vy = vyGround; state.y = h;
     }
   }
+  if (state.jumpBuf > 0) state.jumpBuf -= dt;
   if (state.air && !launched) {
     state.vy -= T.g * dt; state.y += state.vy * dt;
     for (const tr of trails) tr.reset();
@@ -836,38 +1119,45 @@ function step(dt) {
       if (state.airTime > 0.3) { puff.emitter = new V3(state.x, h, state.z); puff.manualEmitCount = 30; sfx.land(); }
     }
   }
-  state.score += dz * 0.5;
+  state.score += dz * 0.1;                                                              // the points are in the gates now
+  const yRel = state.y - h;
   const ci = chunkIndexAt(state.z);
-  for (const idx of [ci, ci + 1]) {
+  for (const idx of [ci - 1, ci, ci + 1]) {
     const c = chunks.get(idx); if (!c) continue;
-    if (!state.air) {
-      for (const t of c.trees) {
-        const ddz = t.z - state.z; if (ddz > 2 || ddz < -2) continue;
-        const ddx = t.x - state.x, r = T.treeR * t.s + T.dogR;
-        if (ddx * ddx + ddz * ddz < r * r) { hit('tree'); break; }
-      }
-      for (const rk of c.rocks) {
-        const ddz = rk.z - state.z; if (ddz > 2.5 || ddz < -2.5) continue;
-        const ddx = rk.x - state.x, r = T.rockR * rk.s + T.dogR;
-        if (ddx * ddx + ddz * ddz < r * r) { hit('rock'); break; }
-      }
+    for (const t of c.trees) {                                                          // trunks are taller than any jump
+      const ddz = t.z - state.z; if (ddz > 2 || ddz < -2) continue;
+      const ddx = t.x - state.x, r = T.treeR * t.s + T.dogR;
+      if (ddx * ddx + ddz * ddz < r * r) { hit('tree'); break; }
+    }
+    for (const rk of c.rocks) {                                                         // rocks are low: a jump clears them
+      const ddz = rk.z - state.z; if (ddz > 2.5 || ddz < -2.5) continue;
+      const ddx = rk.x - state.x, r = T.rockR * rk.s + T.dogR;
+      if (ddx * ddx + ddz * ddz < r * r && yRel < 0.7 * rk.s - 0.15) { hit('rock'); break; }
+    }
+    for (const lg of c.logs) {                                                          // crossed a log this frame: over it or into it
+      if (lg.done || state.z < lg.z || state.z - dz >= lg.z) continue;
+      lg.done = true;
+      if (Math.abs(state.x - lg.x) > lg.half + T.dogR) continue;                        // went round the end
+      if (state.y - terrainH(state.x, lg.z) > T.logTop - 0.1) clearLog(); else hit('log');
     }
     for (const b of c.bones) {
       if (b.taken) continue;
       const ddz = b.z - state.z, ddx = b.x - state.x;
       if (ddx * ddx + ddz * ddz < T.boneR * T.boneR && Math.abs(state.y - terrainH(b.x, b.z)) < 2.2) {
         b.taken = true; state.bones++; state.score += 10; sfx.pickup(); hud.pop('#score');
-        if (c.boneMesh) { c.boneMesh.thinInstanceSetMatrixAt(b.instance, zeroMat, false); c.boneMesh.thinInstanceBufferUpdated('matrix'); }
+        if (c.boneMesh) { c.boneBuf.fill(0, b.instance * 16, b.instance * 16 + 16); c.boneMesh.thinInstanceBufferUpdated('matrix'); }
         if (state.bones % 5 === 0) hud.flash(`${state.bones} עצמות! 🦴`, { good: true, dur: 800 });
       }
     }
+    const gd = c.gold;
+    if (gd && !gd.taken && (gd.x - state.x) ** 2 + (gd.z - state.z) ** 2 < T.goldR * T.goldR && yRel < 2.6) takeGold(gd);
     for (const g of c.gates) {
       if (g.done || state.z - dz >= g.z || state.z < g.z) continue;
       g.done = true;
-      if (Math.abs(state.x - g.x) < T.gateHalf - 0.15) { state.gates++; state.score += 50; hud.flash('שער! ‎+50 🚩', { good: true, dur: 900 }); sfx.gate(); hud.pop('#score'); }
-      else hud.flash('פספסתם את השער', { dur: 700 });
+      if (Math.abs(state.x - g.x) < g.half - 0.15) passGate(); else missGate();
     }
   }
+  hints();
   updateHUD(false);
 }
 
@@ -876,6 +1166,63 @@ const camPos = new V3(0, 3, -7), camTarget = new V3(0, 0, 5);
 const fwd = new V3(), up = new V3(), right = new V3(), q = new BABYLON.Quaternion(), qRoll = new BABYLON.Quaternion();
 const rotMat = new BABYLON.Matrix();
 const ROLL_SIGN = -1;   // positive lean = right turn = body tilts toward +x
+// Trees the dog has already passed that stand between it and the camera (or crowd the camera) sink
+// into the snow, so the dog and the lane stay in view; nothing ahead of the dog ever hides, since a
+// hidden trunk would be an unfair hit.
+const duckM = new BABYLON.Matrix(), duckS = new V3(), duckP = new V3(), duckQ = new BABYLON.Quaternion();
+function writeTree(c, t) {
+  duckS.set(t.s * t.w * t.vis, t.s * t.vis, t.s * t.w * t.vis);
+  BABYLON.Quaternion.RotationYawPitchRollToRef(t.rot, 0, 0, duckQ);
+  duckP.set(t.x, t.y, t.z);
+  BABYLON.Matrix.ComposeToRef(duckS, duckQ, duckP, duckM);
+  duckM.copyToArray(c.treeBuf, t.instance * 16);
+}
+function duckTrees(dt) {
+  const cx = camPos.x, cz = camPos.z, dx = state.x - cx, dz = state.z - cz, len2 = dx * dx + dz * dz || 1;
+  const ci = chunkIndexAt(state.z);
+  for (const c of [chunks.get(ci - 1), chunks.get(ci)]) {
+    if (!c || !c.treeMesh) continue;
+    let dirty = false;
+    for (const t of c.trees) {
+      let want = 0;
+      if (t.z < state.z - 0.9 && t.z > cz - 3) {
+        const u = clamp(((t.x - cx) * dx + (t.z - cz) * dz) / len2, 0, 1);
+        const ex = t.x - cx - dx * u, ez = t.z - cz - dz * u, reach = 2.6 * t.s * t.w * 0.85 + 0.6;
+        if (ex * ex + ez * ez < reach * reach) want = 1;
+      }
+      if (t.duck === want) continue;
+      t.duck = !dt ? want : want > t.duck ? Math.min(1, t.duck + dt * 10) : Math.max(0, t.duck - dt * 2.5);  // quick down, slow back up
+      t.vis = 1 - 0.96 * smooth(0, 1, t.duck);
+      writeTree(c, t); dirty = true;
+    }
+    if (dirty) c.treeMesh.thinInstanceBufferUpdated('matrix');
+  }
+}
+// bones turn and bob so they read against the snow; the golden bone spins in its glow
+const boneM = new BABYLON.Matrix(), boneQ = new BABYLON.Quaternion(), boneP = new V3(), boneS = new V3(1.35, 1.35, 1.35);
+function spinBones(t) {
+  const ci = chunkIndexAt(state.z);
+  for (let idx = ci - 1; idx <= ci + 3; idx++) {
+    const c = chunks.get(idx);
+    if (!c) continue;
+    if (c.boneMesh) {
+      for (const b of c.bones) {
+        if (b.taken) continue;
+        BABYLON.Quaternion.RotationYawPitchRollToRef(t * 2.4 + b.phase, 0, 0.35, boneQ);
+        boneP.set(b.x, b.y + 0.08 * Math.sin(t * 3 + b.phase), b.z);
+        BABYLON.Matrix.ComposeToRef(boneS, boneQ, boneP, boneM);
+        boneM.copyToArray(c.boneBuf, b.instance * 16);
+      }
+      c.boneMesh.thinInstanceBufferUpdated('matrix');
+    }
+    const g = c.gold;
+    if (g && !g.taken) {
+      g.mesh.rotation.set(0.3, t * 3.2, 0.25);
+      g.mesh.position.y = g.halo.position.y = g.y + 0.14 * Math.sin(t * 2.6);
+      g.halo.scaling.setAll(1 + 0.12 * Math.sin(t * 5));
+    }
+  }
+}
 function syncVisuals(dt) {
   terrainNormal(state.x, state.z, tmpN);
   const yawVis = state.heading + state.spin;
@@ -909,10 +1256,11 @@ function syncVisuals(dt) {
   if (outer) { outer.computeWorldMatrix(true); sprayEmitter.position.copyFrom(outer.getAbsolutePosition()); }
   const out = -Math.sign(state.lean || 1);
   spray.direction1.set(out * 2 - 1, 1.2, -2); spray.direction2.set(out * 4 + 1, 3.5, -4);
-  const back = 4.6 + Math.min(1.8, state.speed * 0.05), height = 2.2 + Math.min(0.9, state.speed * 0.025);
+  // the camera rides a little higher than the dog's shoulder and looks well down the lane
+  const back = T.camBack + Math.min(1.8, state.speed * 0.05), height = T.camHeight + Math.min(1.0, state.speed * 0.03);
   const cy = state.heading * 0.35;
   const wantPos = new V3(state.x - Math.sin(cy) * back, terrainH(state.x - Math.sin(cy) * back, state.z - Math.cos(cy) * back) + height, state.z - Math.cos(cy) * back);
-  const wantTarget = new V3(state.x + Math.sin(cy) * 6, state.y + 0.55 - 6 * TAN_SLOPE * 0.55, state.z + Math.cos(cy) * 6);
+  const wantTarget = new V3(state.x + Math.sin(cy) * T.camLook, state.y + 0.55 - T.camLook * TAN_SLOPE * 0.55, state.z + Math.cos(cy) * T.camLook);
   const kPos = dt ? 1 - Math.exp(-dt * 5.5) : 1, kTar = dt ? 1 - Math.exp(-dt * 8) : 1;
   camPos.set(lerp(camPos.x, wantPos.x, kPos), lerp(camPos.y, wantPos.y, kPos), lerp(camPos.z, wantPos.z, kPos));
   camTarget.set(lerp(camTarget.x, wantTarget.x, kTar), lerp(camTarget.y, wantTarget.y, kTar), lerp(camTarget.z, wantTarget.z, kTar));
@@ -920,6 +1268,8 @@ function syncVisuals(dt) {
   camera.position.set(camPos.x + (Math.random() - 0.5) * sh, camPos.y + (Math.random() - 0.5) * sh, camPos.z);
   camera.setTarget(camTarget);
   camera.rotation.z = lerp(camera.rotation.z, ROLL_SIGN * state.lean * 0.16, dt ? 1 - Math.exp(-dt * 4) : 1);   // the camera leans a little with the dog
+  duckTrees(dt);
+  spinBones(state.t);
   snowEmitter.position.set(camPos.x, camPos.y, camPos.z);
   peaks.position.set(camPos.x, camPos.y - 60, camPos.z);
   sun.position.set(state.x - sun.direction.x * 90, state.y - sun.direction.y * 90, state.z - sun.direction.z * 90);
@@ -948,4 +1298,7 @@ if (!SIM) {
     step(dt); syncVisuals(dt); input.endFrame(); scene.render();
   });
 }
-window.__ski = { state, input: ctrl, T, step, syncVisuals, start: startRun, reset: resetRun, terrainH, chunks, scene, engine, sim: SIM, get rig() { return rig; } };
+window.__ski = {
+  state, input: ctrl, T, ZONES, step, syncVisuals, start: startRun, reset: resetRun, terrainH, chunks, scene, engine, camera, sim: SIM,
+  courseX, laneAt, level, gatesFor, get rig() { return rig; },
+};

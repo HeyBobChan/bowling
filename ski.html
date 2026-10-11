@@ -10,6 +10,18 @@
     #lives { letter-spacing: 2px; }
     #lives .lost { opacity: .25; }
     .overlay .keys { direction: rtl; }
+    /* ids win over the kit's .badge.tr, which is injected after this block */
+    #streak { top: 74px; font-size: clamp(15px, 3vw, 24px); color: var(--hot-dark); border-color: var(--hot-dark); --tilt: 2deg; }
+    /* zone names and first-time hints: a card under the badges */
+    #banner {
+      top: 84px; left: 50%; transform: translate(-50%, -14px); opacity: 0;
+      font-size: clamp(20px, 3.8vw, 34px); font-weight: 900; color: var(--accent-dark);
+      background: var(--paper); border: 3px solid var(--accent); border-radius: 18px 14px 20px 15px;
+      padding: 6px 18px; white-space: nowrap; pointer-events: none; z-index: 6;
+      transition: opacity .25s ease-out, transform .25s ease-out;
+    }
+    #banner.show { opacity: 1; transform: translate(-50%, 0); }
+    @media (max-width: 720px) { #banner { top: 134px; } }
   </style>
 </head>
 <body>
@@ -18,15 +30,18 @@
   <div id="score" class="hud badge tr">⭐ 0</div>
   <div id="speed" class="hud badge tl hot">0 קמ״ש</div>
   <div id="lives" class="hud badge tc">🦴🦴🦴</div>
+  <div id="streak" class="hud badge tr hidden">🔥 ×2</div>
+  <div id="banner" class="hud"></div>
   <div id="msg" class="hud msg"></div>
 
   <div id="intro" class="overlay">
     <h1>🎿 רוקרוק בשלג! 🐕</h1>
     <p>הכלב יורד על מגלשיים במורד הר מושלג — שאין לו סוף!</p>
-    <p class="tip">🚩 עוברים <b>בין שני הדגלים</b> = שער! ‎+50 · 🦴 <b>העצמות מראות את הדרך לשער</b> — אוספים ‎+10</p>
-    <p class="tip">🌲 עצים ו-🪨 סלעים מורידים עצם. יש שלוש — נגמרו? נפלתם בשלג.</p>
-    <p class="tip">⛰️ יש מקפצות בשלג! <b>רווח</b> = קפיצה, ובאוויר לוחצים על החצים כדי <b>להסתובב</b> — סיבוב שלם ‎+100</p>
-    <p class="tip">⬇️ חץ למטה או Shift = מתכופפים ומגבירים מהירות</p>
+    <p class="tip">🚩 עוברים <b>בין שני הדגלים</b> = שער! כמה שערים ברצף? כל אחד שווה יותר 🔥 ‎×2 ‎×3… עד ‎×5</p>
+    <p class="tip">🦴 <b>העצמות והשלג המוחלק מראים את הדרך</b> — אוספים ‎+10 · ✨ <b>עצם זהב</b> מחזירה חיים</p>
+    <p class="tip">🌲 עצים, 🪨 סלעים ו-🪵 גזעים מורידים עצם. יש שלוש — נגמרו? נפלתם בשלג.</p>
+    <p class="tip">⬆️ <b>רווח</b> = קפיצה מעל גזעים וסלעים · ⛰️ במקפצות לוחצים באוויר על החצים כדי <b>להסתובב</b> — ‎+100</p>
+    <p class="tip">🏔️ מתחילים במדרון פתוח, ואז היער מתקרב · ⬇️ חץ למטה או Shift = מתכופפים ומגבירים מהירות</p>
     <p class="tip">🏃 גולשים עם <b>החצים</b> או WASD · במגע: ג׳ויסטיק משמאל, A קופץ, B מתכופף</p>
     <button id="startBtn">גולשים!</button>
     <p class="tip other-game"></p>
@@ -36,6 +51,7 @@
     <h1 id="goTitle">🌨️ בום! נפלתם בשלג</h1>
     <p class="big-score" id="finalScore"></p>
     <p id="finalDetail"></p>
+    <p id="finalZone"></p>
     <p id="bestScore"></p>
     <button id="restartBtn">עוד פעם!</button>
     <p class="tip other-game"></p>

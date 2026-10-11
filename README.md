@@ -12,7 +12,7 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 | ⚽ **פנדלים בנגיחה** (Header Penalties) | `/pendel.html` | Read the keeper's lean, head the lob into the corner he isn't. Five kicks a round; two players can take turns as keeper. |
 | 🦖 **דינו במבוך** (Dino Maze) | `/dino.html` | Eat fifteen little dinos in an endless maze, dodge the dragon's flame, find the exit before the dragons get angry. |
 | 🥊 **חתול ביער** (Punch Game) | `/punch.html` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
-| 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski.html` | Our real dog, as a 3D model, skis an endless slope: thread the gates, grab the bones, launch off kickers and spin. Three bones, no lift ticket. |
+| 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski.html` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
 
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
