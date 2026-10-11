@@ -84,20 +84,32 @@ test.describe('Bowling Escape', () => {
       const key = (code, down) => window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, bubbles: true }));
       const held = {}; const set = (c, on) => { if (!!held[c] !== on) { held[c] = on; key(c, on); } };
       const release = () => ['ArrowUp', 'ArrowLeft', 'ArrowRight', 'Space'].forEach((c) => set(c, false));
+      // the lane winds, so the controller thinks in lane coordinates: s along it, d across it.
+      // "up" is read relative to the camera, which follows the lane, so holding it rolls on.
       const controller = () => {
-        const bx = G.ball.position.x, bz = G.ball.position.z;
+        const bs = G.state.s, bd = G.state.d;
         let threat = null, td = 1e9;
-        for (const m of G.state.monsters) { const dz = bz - m.position.z, dx = m.position.x - bx; if (dz > -3 && dz < 16 && Math.abs(dx) < 5) { const d = Math.hypot(dx, dz); if (d < td) { td = d; threat = m; } } }
-        let tx = 0, best = 1e9; for (const rk of G.state.racks) { const dz = bz - rk.center.z; if (dz > 0 && dz < best) { best = dz; tx = rk.center.x; } }
-        let steerX = Math.abs(tx - bx) > 0.8 ? Math.sign(tx - bx) : 0;
-        if (threat) { steerX = threat.position.x - bx > 0 ? -1 : 1; if (Math.abs(bx) > 10) steerX = -Math.sign(bx); }
-        set('ArrowUp', true); set('ArrowLeft', steerX < 0); set('ArrowRight', steerX > 0); set('Space', !!threat);
+        for (const m of G.state.monsters) { const ds = m.userData.s - bs, dd = m.userData.d - bd; if (ds > -3 && ds < 16 && Math.abs(dd) < 5) { const d = Math.hypot(dd, ds); if (d < td) { td = d; threat = m; } } }
+        let tx = 0, best = 1e9; for (const rk of G.state.racks) { const ds = rk.s - bs; if (ds > 0 && ds < best) { best = ds; tx = rk.d; } }
+        let steer = Math.abs(tx - bd) > 0.8 ? Math.sign(tx - bd) : 0;
+        if (threat) { steer = threat.userData.d - bd > 0 ? -1 : 1; if (Math.abs(bd) > 10) steer = -Math.sign(bd); }
+        set('ArrowUp', true); set('ArrowLeft', steer < 0); set('ArrowRight', steer > 0); set('Space', !!threat);
       };
       G.startGame();
-      let steps = 0, finite = true;
-      while (G.state.phase !== 'over' && steps < 60 * 45) { controller(); G.step(dt); steps++; if (!Number.isFinite(G.ball.position.x + G.ball.position.z)) { finite = false; break; } }
+      let steps = 0, finite = true, maxTurn = 0, maxD = 0, offLane = 0;
+      while (G.state.phase !== 'over' && steps < 60 * 45) {
+        controller(); G.step(dt); steps++;
+        if (!Number.isFinite(G.ball.position.x + G.ball.position.z)) { finite = false; break; }
+        maxTurn = Math.max(maxTurn, Math.abs(G.state.heading));
+        maxD = Math.max(maxD, Math.abs(G.state.d));
+        for (const m of G.state.monsters) if (Math.abs(m.userData.d) > G.LANE_HALF + 1.01) offLane++;
+      }
       release();
-      const run = { secs: steps / 60, strikes: G.state.strikes, finite, kinds: new Set(G.state.monsters.map((m) => m.userData.kind)).size };
+      const run = { secs: steps / 60, strikes: G.state.strikes, finite, maxTurn, maxD, offLane, dist: G.state.s, kinds: new Set(G.state.monsters.map((m) => m.userData.kind)).size };
+      // lane coordinates must round-trip through the world, far round the bends ahead too
+      const s0 = G.state.s;
+      const roundTrip = [[50, 0], [120, 8], [205, -11.5], [300, 4]].map(([ds, d]) => { const L = G.lane(G.track.point(s0 + ds, d)); return Math.max(Math.abs(L.s - s0 - ds), Math.abs(L.d - d)); });
+      const bends = G.track.segments.filter((g) => g.k !== 0).length;
       // the crowd cap: starts small, grows with rolling time and with strikes, never ends the game
       G.startGame();
       const capStart = G.crowdCap();
@@ -106,10 +118,17 @@ test.describe('Bowling Escape', () => {
       let guard = 0; while (G.state.strikes < 12 && guard++ < 900) { if (G.state.racks.length) G.doStrike(G.state.racks[0]); G.step(dt); }
       const capAfterStrikes = G.crowdCap();
       for (let i = 0; i < 60 * 3; i++) G.step(dt);
-      return { run, capStart, capAfterRolling, capAfterStrikes, strikes: G.state.strikes, phase: G.state.phase, monsters: G.state.monsters.length };
+      return { run, roundTrip, bends, capStart, capAfterRolling, capAfterStrikes, strikes: G.state.strikes, phase: G.state.phase, monsters: G.state.monsters.length };
     });
     expect(r.run.finite).toBe(true);
     expect(r.run.strikes).toBeGreaterThanOrEqual(2);
+    // the lane twists and turns: the run met real bends, and nothing left the lane
+    expect(r.run.dist).toBeGreaterThan(200);
+    expect(r.run.maxTurn).toBeGreaterThan(0.3);
+    expect(r.run.maxD).toBeLessThanOrEqual(12.001);
+    expect(r.run.offLane).toBe(0);
+    expect(r.bends).toBeGreaterThan(0);
+    for (const err of r.roundTrip) expect(err).toBeLessThan(0.05);
     expect(r.capStart).toBe(3);
     expect(r.capAfterRolling).toBeGreaterThan(r.capStart);
     expect(r.capAfterStrikes).toBeGreaterThan(r.capAfterRolling);

@@ -8,7 +8,7 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 
 | Game | Page | The kid's rule |
 |---|---|---|
-| 🎳 **כדור באולינג בורח** (Bowling Escape) | `/bowling.html` | The world only moves when the ball moves. Every strike is worth ten, and the crowd of monsters keeps growing the longer you roll. |
+| 🎳 **כדור באולינג בורח** (Bowling Escape) | `/bowling.html` | The world only moves when the ball moves. Every strike is worth ten, the crowd of monsters keeps growing the longer you roll, and the lane twists and turns forever. |
 | ⚽ **פנדלים בנגיחה** (Header Penalties) | `/pendel.html` | Read the keeper's lean, head the lob into the corner he isn't. Five kicks a round; two players can take turns as keeper. |
 | 🦖 **דינו במבוך** (Dino Maze) | `/dino.html` | Eat fifteen little dinos in an endless maze, dodge the dragon's flame, find the exit before the dragons get angry. |
 | 🥊 **חתול ביער** (Punch Game) | `/punch.html` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
@@ -57,7 +57,9 @@ links and asset references after a build. The roster content lives in each game'
   - `audio.js` beeps, noise bursts, a master mute and a tiny generative music box
   - `juice.js` hitstop, camera shake, floating score numbers, squash-and-stretch
 - `src/characters/` — the punch game's fighters, each built from its drawing.
-- `src/main.js`, `pendel.js`, `dino.js`, `punch.js` — one file per game.
+- `src/main.js`, `pendel.js`, `dino.js`, `punch.js` — one file per game; `src/track.js` is
+  the bowling game's endless winding lane (straights and bends, lane coordinates, the
+  brown edge-line ribbons).
 - `src/ski.js` — the ski game; Babylon.js (`@babylonjs/core`) instead of three.js because the dog
   model (`src/assets/dog.glb`, see `design/ski.md`) was exported for Babylon, but it uses the kit's
   HUD, input, audio and `?sim` hook like every other page.
