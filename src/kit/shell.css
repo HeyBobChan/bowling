@@ -14,6 +14,15 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 #app { position: fixed; inset: 0; }
 canvas { display: block; }
 
+.game-home {
+  position: fixed; top: max(76px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left));
+  z-index: 12; padding: 10px 14px; border: 2px solid #20213e; border-radius: 12px;
+  background: #fff; color: #20213e; box-shadow: 2px 3px 0 #20213e;
+  font: 700 14px Arial, sans-serif; text-decoration: none; direction: rtl;
+}
+.game-home:hover { background: #e9ecff; }
+.game-home:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+
 .hud {
   position: fixed;
   font-family: var(--font);
@@ -59,10 +68,10 @@ canvas { display: block; }
 /* intro / game-over cards */
 .overlay {
   position: fixed; inset: 0; z-index: 10;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: safe center;
   background: rgba(248, 245, 236, .9);
   font-family: var(--font); direction: rtl; text-align: center;
-  color: var(--accent); gap: 12px; padding: 14px; box-sizing: border-box;
+  color: var(--accent); gap: 12px; padding: 126px 20px 30px; box-sizing: border-box;
   overflow-y: auto;
 }
 .overlay h1 { font-size: clamp(30px, 6vw, 50px); margin: 0; transform: rotate(-1.5deg); }

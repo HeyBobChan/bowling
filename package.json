@@ -8,7 +8,9 @@
     "build": "vite build",
     "build:artifacts": "node scripts/build-artifact.mjs",
     "test": "playwright test",
-    "render:characters": "node scripts/render-characters.mjs"
+    "render:characters": "node scripts/render-characters.mjs",
+    "preview": "vite preview",
+    "test:site": "node scripts/check-site.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.25.0",

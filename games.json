@@ -2,14 +2,22 @@
   "games": [
     {
       "id": "main",
-      "page": "index.html",
-      "path": "/",
+      "page": "bowling.html",
+      "path": "/bowling.html",
       "emoji": "🎳",
       "title": "כדור באולינג בורח",
       "short": "באולינג בורח",
       "accent": "#2b4bd7",
       "accentDark": "#1d35a8",
-      "artifact": "https://claude.ai/code/artifact/5b968668-3c4e-4a6c-a373-767c4a63020f"
+      "artifact": "https://claude.ai/code/artifact/5b968668-3c4e-4a6c-a373-767c4a63020f",
+      "lobby": {
+        "genre": "בריחה ופעולה",
+        "description": "המפלצות בעקבותיכם! מתגלגלים, מפילים פינים — ועוצרים כדי להקפיא את העולם.",
+        "image": "/images/bowling-original.jpg",
+        "imageAlt": "הציור המקורי של גבריאל: מסלול הבאולינג והמפלצות",
+        "tint": "#eeecff",
+        "action": "יאללה, סטרייק"
+      }
     },
     {
       "id": "pendel",
@@ -20,7 +28,15 @@
       "short": "פנדלים בנגיחה",
       "accent": "#2b7a1f",
       "accentDark": "#1c5214",
-      "artifact": "https://claude.ai/code/artifact/e889e6eb-74a8-4a69-b9aa-9b2633b408bf"
+      "artifact": "https://claude.ai/code/artifact/e889e6eb-74a8-4a69-b9aa-9b2633b408bf",
+      "lobby": {
+        "genre": "כדורגל ותזמון",
+        "description": "כדור עולה, השוער מתכונן… מכוונים לפינה ונוגחים ברגע הנכון. מי יבקיע יותר?",
+        "image": "/images/penalties-original.jpg",
+        "imageAlt": "הציור המקורי של עדן: שחקן נוגח מול השער",
+        "tint": "#e3f4e6",
+        "action": "עולים למגרש"
+      }
     },
     {
       "id": "dino",
@@ -31,29 +47,70 @@
       "short": "דינו במבוך",
       "accent": "#2f8a25",
       "accentDark": "#205c18",
-      "artifact": "https://claude.ai/code/artifact/93eedb89-2ed7-4410-9557-e4b163edd2a2"
+      "artifact": "https://claude.ai/code/artifact/93eedb89-2ed7-4410-9557-e4b163edd2a2",
+      "lobby": {
+        "genre": "מבוך והרפתקה",
+        "description": "15 דינוזאורים קטנים, דרקון יורק אש ויציאה אחת שצריך למצוא. מוכנים למרדף?",
+        "tint": "#f0f4cf",
+        "action": "נכנסים למבוך"
+      }
     },
     {
       "id": "punch",
       "page": "punch.html",
       "path": "/punch.html",
       "emoji": "🥊",
-      "title": "משחק אגרופים",
-      "short": "משחק אגרופים",
+      "title": "חתול ביער",
+      "short": "חתול ביער",
       "accent": "#4a3ab8",
       "accentDark": "#2d2478",
-      "artifact": "https://claude.ai/code/artifact/e6eb4ed7-ea28-4cae-a2fd-86f9204f0372"
+      "artifact": "https://claude.ai/code/artifact/e6eb4ed7-ea28-4cae-a2fd-86f9204f0372",
+      "lobby": {
+        "genre": "אגרופים והישרדות",
+        "description": "חתול עם אגרופים נמתחים מול יער של יצורים. מתחמקים, מכים ושורדים — לבד או יחד.",
+        "image": "/images/cat-in-the-forest.png",
+        "imageAlt": "חתול ירוק ודמויות היער בציור בטושים",
+        "tint": "#ffe9df",
+        "action": "נכנסים לזירה"
+      }
     },
     {
       "id": "ski",
       "page": "ski.html",
       "path": "/ski.html",
       "emoji": "🎿",
-      "title": "כלב גולש",
-      "short": "כלב גולש",
+      "title": "רוקרוק בשלג",
+      "short": "רוקרוק בשלג",
       "accent": "#2f6fd6",
       "accentDark": "#1f4b93",
-      "artifact": "https://claude.ai/code/artifact/32b3a58e-b133-45d1-af22-22e306ebbf39"
+      "artifact": "https://claude.ai/code/artifact/32b3a58e-b133-45d1-af22-22e306ebbf39",
+      "lobby": {
+        "genre": "שלג, מהירות ועצמות",
+        "description": "הכלב שלנו על מגלשיים! גולשים בין הדגלים, אוספים עצמות וקופצים במדרון שלא נגמר.",
+        "image": "/drawings/ski-dog-reference.png",
+        "imageAlt": "רוקרוק, הכלב השחור־חום שיוצא לגלוש בשלג",
+        "tint": "#c7e5ff",
+        "action": "יוצאים לגלוש"
+      }
+    },
+    {
+      "id": "jump",
+      "page": "jump.html",
+      "path": "/jump.html",
+      "emoji": "🤸",
+      "title": "קופצים מעל הרעים",
+      "short": "קופצים מעל הרעים",
+      "accent": "#c9302c",
+      "accentDark": "#8f1f1b",
+      "artifact": "https://claude.ai/artifact/9AC786qvWzEUkVmKdNkfj5",
+      "lobby": {
+        "genre": "קפיצות והתהפכויות",
+        "description": "בוחרים דמות וקופצים מעל הרעים שרוצים לאכול אתכם! מתהפכים באוויר, עולים על המגדלים הירוקים ואוספים לבבות.",
+        "image": "/drawings/jump-game-1-characters.webp",
+        "imageAlt": "הציור המקורי: החוקים של המשחק ושלוש הדמויות — חמודה, מפחידה ורגילה",
+        "tint": "#ffe6e1",
+        "action": "יאללה, קופצים"
+      }
     }
   ]
 }

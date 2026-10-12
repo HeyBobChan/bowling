@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
+import { renderRoster } from './scripts/lobby.mjs';
 
 // One page per game, declared once in games.json (the kit reads the same file for
 // the cross-links between games). ONLY=<id> builds a single self-contained page —
@@ -10,6 +11,21 @@ const manifest = JSON.parse(readFileSync(resolve(__dirname, 'games.json'), 'utf8
 const only = process.env.ONLY;
 const games = manifest.games.filter((g) => !only || g.id === only);
 if (only && games.length === 0) throw new Error(`ONLY=${only} is not a game id in games.json`);
+
+const lobbyPlugin = () => ({
+  name: 'game-roster',
+  transformIndexHtml: {
+    order: 'pre',
+    handler(html, ctx) {
+      if (ctx.filename === resolve(__dirname, 'index.html')) {
+        const current = JSON.parse(readFileSync(resolve(__dirname, 'games.json'), 'utf8'));
+        return html.replace('<!-- GAME_ROSTER -->', renderRoster(current.games));
+      }
+      if (process.env.ARTIFACT === '1') return html;
+      return html.replace('<body>', '<body>\n  <a class="game-home" href="/">← כל המשחקים</a>');
+    },
+  },
+});
 
 const BABYLON_VERSION = '9.25.0';
 // Artifact builds must stay small (the host rejects pages around 10 MB), so the ski game's
@@ -31,7 +47,7 @@ const babylonCdnPlugin = () => ({
 });
 
 export default defineConfig({
-  plugins: [babylonCdnPlugin()],
+  plugins: [lobbyPlugin(), babylonCdnPlugin()],
   define: { __ARTIFACT__: JSON.stringify(process.env.ARTIFACT === '1') },
   // Babylon (ski game) must be pre-bundled in one pass: if the optimizer discovers it mid-session
   // the page ends up with two copies and the engine extensions land on the wrong class.
@@ -46,7 +62,10 @@ export default defineConfig({
     assetsInlineLimit: process.env.ARTIFACT === '1' ? 16 * 1024 * 1024 : 4096,
     emptyOutDir: true,
     rollupOptions: {
-      input: Object.fromEntries(games.map((g) => [g.id, resolve(__dirname, g.page)])),
+      input: {
+        ...(!only ? { lobby: resolve(__dirname, 'index.html') } : {}),
+        ...Object.fromEntries(games.map((g) => [g.id, resolve(__dirname, g.page)])),
+      },
     },
   },
 });

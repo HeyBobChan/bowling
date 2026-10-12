@@ -1,0 +1,25 @@
+{
+	admin off
+	persist_config off
+	auto_https off
+}
+
+:{$PORT:8080} {
+	root * /srv
+	encode zstd gzip
+	file_server
+
+	# Vite emits content-hashed filenames into /assets — safe to cache forever.
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	# Revalidate every HTML entry point, including games added to the roster.
+	# Without this directive browsers may heuristically cache an old document
+	# that points at a deleted, content-hashed bundle.
+	@entry path / /*.html
+	header @entry Cache-Control "no-cache"
+
+	# Deliberately no `try_files {path} /index.html`. This app has no client-side
+	# router; a fallback would turn an honest 404 on a missing bundle into a 200
+	# serving HTML, which surfaces as a confusing MIME type error instead.
+}

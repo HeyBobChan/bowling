@@ -385,18 +385,47 @@ function setupPhysics() {
 }
 
 // ---------- Fighters ----------
+// A wave contains at most one of each fighter, and its knockouts leave the scene
+// before the next wave spawns. Keep those six render graphs for the page lifetime:
+// rebuilding them leaked GPU geometry and grew OutlineEffect's per-mesh/material
+// caches on every wave/restart. Physics bodies and match state are still fresh.
+const fighterModels = new Map();
+function getFighterModel(spec) {
+  if (!fighterModels.has(spec.key)) {
+    const built = spec.build();
+    const centerY = Math.max(1.0, built.height * 0.82) / 2;
+    const pivot = new THREE.Group();
+    built.group.position.y = -centerY;
+    pivot.add(built.group);
+    const shadow = blobShadow(built.radius * 0.85, { color: 0x2a2118, opacity: 0.14 });
+    const restPose = [];
+    // Include inner idle-animation groups, stretched arms/fists, and the outer
+    // knockout pivot so an interrupted punch or fall cannot survive a restart.
+    pivot.traverse((object) => restPose.push({
+      object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone(),
+    }));
+    fighterModels.set(spec.key, { built, pivot, shadow, restPose });
+  }
+  const model = fighterModels.get(spec.key);
+  for (const pose of model.restPose) {
+    pose.object.position.copy(pose.position);
+    pose.object.quaternion.copy(pose.quaternion);
+    pose.object.scale.copy(pose.scale);
+  }
+  model.shadow.position.set(0, 0.02, 0);
+  model.shadow.scale.setScalar(model.built.radius * 0.85);
+  model.shadow.material.opacity = 0.14;
+  return model;
+}
+
 function makeFighter(spec, { player = 0, wave = 1 } = {}) {
-  const built = spec.build();
+  const { built, pivot, shadow } = getFighterModel(spec);
   const capTotal = Math.max(1.0, built.height * 0.82);
   const capR = Math.min(built.radius * 0.8, capTotal * 0.32);
   const cylHalf = Math.max(0.05, capTotal / 2 - capR);
   const centerY = capTotal / 2;
 
-  const pivot = new THREE.Group();
-  built.group.position.y = -centerY;
-  pivot.add(built.group);
   scene.add(pivot);
-  const shadow = blobShadow(built.radius * 0.85, { color: 0x2a2118, opacity: 0.14 });
   scene.add(shadow);
 
   const [sx, sz] = SPAWNS[spec.key];

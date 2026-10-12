@@ -2,39 +2,24 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>כדור באולינג בורח!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f5f7ff" />
+  <meta name="description" content="המשחקייה של ב׳3 — כדור באולינג בורח, פנדלים בנגיחה, דינו במבוך, חתול ביער, רוקרוק בשלג וקופצים מעל הרעים." />
+  <title>המשחקייה של ב׳3</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🖍️%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/src/lobby.css" />
 </head>
 <body>
-  <div id="app"></div>
-
-  <div id="score" class="hud badge tr">נקודות: 0</div>
-  <div id="ammo" class="hud badge tl hot">🔴 6</div>
-  <div id="strikes" class="hud badge tc">🎳 0</div>
-  <div id="msg" class="hud msg">סטרייק!</div>
-
-  <div id="intro" class="overlay">
-    <h1>🎳 כדור באולינג בורח!</h1>
-    <p>המפלצות רודפות אחרי הכדור… תברחו!</p>
-    <p>פוגעים בפינים = <b>סטרייק!</b> תמיד. ‎+10 נקודות 🎉</p>
-    <p class="tip">⭐ סוד: המפלצות זזות <b>רק כשהכדור זז</b>. עומדים במקום — הכל קופא!</p>
-    <p class="tip">🔴 לוחצים <b>רווח</b> כדי לירות כדורים במפלצות! כל סטרייק נותן עוד 3 כדורים</p>
-    <p class="tip">🖐️ זהירות: לכל מפלצת יש משהו ארוך שמנסה לתפוס — וכל אחת רודפת אחרת: יש שמסתערות, יש שקופצות, ויש שמחכות בשקט…</p>
-    <p class="tip">👾 ככל שמתגלגלים רחוק יותר ומפילים יותר פינים — מגיעות עוד ועוד מפלצות. כמה זמן תשרדו?</p>
-    <p class="tip">זזים עם החצים או WASD</p>
-    <button id="startBtn">שחקו!</button>
-    <p class="tip other-game"></p>
+  <a class="skip-link" href="#games">דילוג למשחקים</a>
+  <div class="site-wrap">
+    <header class="site-header">
+      <h1><a class="brand" href="/" aria-label="המשחקייה של ב׳3 — דף הבית"><span class="brand-mark" aria-hidden="true">🖍️</span><span>המשחקייה של <span class="brand-color">ב׳3</span></span></a></h1>
+    </header>
+    <main>
+      <section id="games" class="games" aria-label="בחירת משחק" tabindex="-1">
+        <!-- GAME_ROSTER -->
+      </section>
+    </main>
   </div>
-
-  <div id="gameover" class="overlay hidden">
-    <h1>😱 המפלצת תפסה את הכדור!</h1>
-    <p class="big-score" id="finalScore"></p>
-    <p id="finalDetail"></p>
-    <p id="bestScore"></p>
-    <button id="restartBtn">עוד פעם!</button>
-    <p class="tip other-game"></p>
-  </div>
-
-  <script type="module" src="/src/main.js"></script>
 </body>
 </html>

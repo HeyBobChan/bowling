@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createApp } from './kit/app.js';
-import { toonMat, flatMat, spriteMat, noOutline, blobShadow, canvasTex, paperTexture, clamp, smooth } from './kit/toon.js';
+import { toonMat, flatMat, spriteMat, noOutline, blobShadow, canvasTex, paperTexture, clamp, smooth, angleDiff } from './kit/toon.js';
+import { createTrack } from './track.js';
 import { createInput } from './kit/input.js';
 import { createHud } from './kit/hud.js';
 import { beep, noise, chord } from './kit/audio.js';
@@ -121,22 +122,17 @@ const spiralTex = canvasTex(256, (g) => {
 const scribbleMat = toonMat(0xffffff, { map: scribbleTex, outline: SCRIBBLE_RED_DARK });
 const spiralMat = toonMat(0xffffff, { map: spiralTex, outline: MARKER_ORANGE_DARK });
 
-// ---------- The paper "lane" ----------
-paperTex.repeat.set(10, 40);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 340), noOutline(new THREE.MeshBasicMaterial({ map: paperTex })));
+// ---------- The paper and the winding lane ----------
+// The paper is one big sheet that rides along under the ball (the texture offset keeps
+// its speckles still in the world). The lane itself — the drawing's two pairs of brown
+// edge lines — is an endless path of straights and bends built by track.js; everything
+// that lives on it keeps lane coordinates (s along the lane, d across it).
+const PAPER_TILE = 9;
+paperTex.repeat.set(360 / PAPER_TILE, 360 / PAPER_TILE);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(360, 360), noOutline(new THREE.MeshBasicMaterial({ map: paperTex })));
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
-const laneLines = [];
-const lineGeo = new THREE.BoxGeometry(0.24, 0.02, 340);
-[-1, 1].forEach((side) => {
-  [0.4, 1.4].forEach((off, i) => {
-    const line = new THREE.Mesh(lineGeo, flat(LINE_BROWN));
-    line.position.set(side * (LANE_HALF + off), 0.01, 0);
-    line.rotation.y = side * (i ? -0.004 : 0.006);
-    scene.add(line);
-    laneLines.push(line);
-  });
-});
+const track = createTrack({ scene, laneHalf: LANE_HALF, lineColor: LINE_BROWN });
 
 // ---------- Ball ----------
 const ball = new THREE.Group();
@@ -898,7 +894,11 @@ const state = {
   shotCooldown: 0,
   lastAim: new THREE.Vector3(0, 0, -1),
   spawnTimer: 3,
-  nextRackZ: -40,
+  nextRackS: 40,
+  s: 0,          // the ball in lane coordinates: metres along the centre line...
+  d: 0,          // ...and sideways offset (positive = right)
+  heading: 0,    // lane heading under the ball
+  camYaw: 0,     // where the camera looks — it turns with the lane, and the stick follows it
 };
 // how many monsters the lane wants right now: a small crowd that keeps growing
 const crowdCap = () => Math.min(
@@ -920,24 +920,30 @@ function setStrikes() {
 }
 
 // ---------- Racks ----------
-function spawnRack(z) {
+function spawnRack(s) {
+  track.extendTo(s + 8);
   const group = new THREE.Group();
-  const center = new THREE.Vector3((Math.random() * 2 - 1) * (LANE_HALF - 4), 0, z);
-  const layout = [[0, 0], [-0.9, -1.6], [0.9, -1.6], [-1.8, -3.2], [0, -3.2], [1.8, -3.2]];
-  const pins = layout.map(([x, dz]) => {
+  const d = (Math.random() * 2 - 1) * (LANE_HALF - 4);
+  const th = track.heading(s);
+  const center = track.point(s, d);
+  track.tangent(th, _T);
+  track.right(th, _R);
+  // the triangle points down the lane: the head pin nearest the ball, two rows behind it
+  const layout = [[0, 0], [-0.9, 1.6], [0.9, 1.6], [-1.8, 3.2], [0, 3.2], [1.8, 3.2]];
+  const pins = layout.map(([across, ahead]) => {
     const p = makePin();
-    p.position.set(center.x + x, 0, center.z + dz);
-    p.rotation.y = (Math.random() - 0.5) * 0.3;
+    p.position.copy(center).addScaledVector(_R, across).addScaledVector(_T, ahead);
+    p.rotation.y = th + (Math.random() - 0.5) * 0.3;
     group.add(p);
     return p;
   });
   scene.add(group);
-  state.racks.push({ center, pins, group });
+  state.racks.push({ center, pins, group, s, d });
 }
 function ensureRacks() {
   while (state.racks.length < RACKS_AHEAD) {
-    spawnRack(state.nextRackZ);
-    state.nextRackZ -= 45 + Math.random() * 45;
+    spawnRack(state.nextRackS);
+    state.nextRackS += 45 + Math.random() * 45;
   }
 }
 
@@ -975,12 +981,25 @@ function spawnMonster() {
   if (state.monsters.length >= MAX_MONSTERS) return;
   const make = MONSTER_MAKERS[Math.floor(Math.random() * MONSTER_MAKERS.length)];
   const m = make();
-  const x = (Math.random() * 2 - 1) * LANE_HALF;
-  // most of the crowd waits ahead in the fog, right in your path; a few come from behind
-  if (Math.random() < 0.8) m.position.set(x, 0, ball.position.z - 95 - Math.random() * 30);
-  else m.position.set(x, 0, ball.position.z + 45 + Math.random() * 15);
-  m.add(blobShadow(1.15));
   const ud = m.userData;
+  const d = (Math.random() * 2 - 1) * LANE_HALF;
+  let s;
+  if (Math.random() < 0.8) {
+    // most of the crowd waits ahead in the fog, right in your path — "ahead" is measured
+    // along the lane, and pushed further round the bend until the spot is really out of
+    // the camera's sight
+    s = state.s + 95 + Math.random() * 30;
+    for (let i = 0; i < 20; i++) {
+      track.extendTo(s + 8);
+      if (track.point(s, d, _spawn).distanceTo(camera.position) >= 105) break;
+      s += 8;
+    }
+  } else {
+    s = state.s - 45 - Math.random() * 15; // ...and a few come from behind
+  }
+  track.point(s, d, m.position);
+  ud.s = s; ud.d = d; ud.th = track.heading(s);
+  m.add(blobShadow(1.15));
   // the crowd is the difficulty; speed only creeps up so the lane stays readable
   ud.speed = Math.min(10.5, 6.5 + state.strikes * 0.12 + Math.random() * 1.2);
   ud.vel = new THREE.Vector3();
@@ -1023,21 +1042,23 @@ function resetGame() {
   state.lastAim.set(0, 0, -1);
   state.shotCooldown = 0;
   state.spawnTimer = 2.5;
-  state.nextRackZ = -35;
+  state.nextRackS = 35;
   state.strikes = 0;
   state.time = 0;
   state.worldTime = 0;
   state.knocked = 0;
   catching = null;
+  track.reset();
+  state.s = 0; state.d = 0; state.heading = 0; state.camYaw = 0;
   ball.position.set(0, BALL_R, 0);
   ballMesh.rotation.set(0, 0, 0);
+  camera.position.set(0, 8, 12); // before the spawns: the crowd hides from THIS camera
+  camera.lookAt(0, 0, -5);
   setScore(0);
   setAmmo(AMMO_START);
   setStrikes();
   ensureRacks();
   for (let i = 0; i < MONSTERS_START; i++) spawnMonster();
-  camera.position.set(0, 8, 12);
-  camera.lookAt(0, 0, -5);
 }
 
 function startGame() {
@@ -1062,17 +1083,25 @@ function showGameOver() {
 hud.bind({ start: startGame, restart: startGame });
 
 // ---------- Main loop ----------
-const camTarget = new THREE.Vector3();
+const camTarget = new THREE.Vector3(), camAnchor = new THREE.Vector3(), camLook = new THREE.Vector3();
 const _axis = { x: 0, z: 0 };
-const _input = new THREE.Vector3();
+const _input = new THREE.Vector3(), _camFwd = new THREE.Vector3(), _spawn = new THREE.Vector3();
+const _T = new THREE.Vector3(), _R = new THREE.Vector3(), _mT = new THREE.Vector3(), _mR = new THREE.Vector3();
+const _lane = { s: 0, d: 0, th: 0, x: 0, z: 0 };
 
 function update(dt) {
   if (state.phase === 'play') {
     state.time += dt;
 
     // --- ball input ---
+    // the stick is read relative to the camera, which turns with the lane: "up" is
+    // always "away from us", down the lane
     const ax = input.p1.axis(_axis);
-    _input.set(ax.x, 0, ax.z);
+    camera.getWorldDirection(_camFwd);
+    const camYaw = Math.atan2(-_camFwd.x, -_camFwd.z);
+    track.tangent(camYaw, _T);
+    track.right(camYaw, _R);
+    _input.set(0, 0, 0).addScaledVector(_R, ax.x).addScaledVector(_T, -ax.z);
     const hasInput = _input.lengthSq() > 0;
     state.vel.addScaledVector(_input, BALL_ACCEL * dt);
     state.vel.addScaledVector(state.vel, -(hasInput ? BALL_DRAG : BALL_DRAG_STOP) * dt);
@@ -1080,7 +1109,23 @@ function update(dt) {
     if (!hasInput && state.vel.length() < 0.7) state.vel.set(0, 0, 0);
 
     ball.position.addScaledVector(state.vel, dt);
-    ball.position.x = clamp(ball.position.x, -LANE_HALF + BALL_R, LANE_HALF - BALL_R);
+    // keep the ball between the edge lines: clamp its sideways offset and drop the part of
+    // its speed that pushes into the line — the world only moves when the ball really moves
+    const lp = track.project(ball.position.x, ball.position.z, state.s, _lane);
+    const dMax = LANE_HALF - BALL_R;
+    if (Math.abs(lp.d) > dMax) {
+      const d = clamp(lp.d, -dMax, dMax);
+      track.right(lp.th, _R);
+      const vr = state.vel.dot(_R);
+      if (vr * lp.d > 0) state.vel.addScaledVector(_R, -vr);
+      ball.position.set(lp.x + _R.x * d, BALL_R, lp.z + _R.z * d);
+      lp.d = d;
+    }
+    state.s = lp.s;
+    state.d = lp.d;
+    state.heading = lp.th;
+    track.extendTo(state.s + 330);
+    track.trim(state.s - 150);
 
     const speed = state.vel.length();
     if (speed > 0.01) {
@@ -1102,6 +1147,14 @@ function update(dt) {
       dir.y = 0;
       const dist = dir.length();
       dir.normalize();
+      // far down the lane the crowd follows the bends toward you instead of ramming the
+      // edge lines; up close every monster runs straight at the ball, its own way
+      const ds = ud.s - state.s;
+      const follow = clamp((Math.abs(ds) - 20) / 25, 0, 1);
+      if (follow > 0) {
+        track.tangent(ud.th, _mT).multiplyScalar(ds > 0 ? -1 : 1);
+        dir.lerp(_mT, follow).normalize();
+      }
       ud.tick += sdt;
 
       let want = ud.speed * br.speed;
@@ -1119,11 +1172,11 @@ function update(dt) {
         case 'jitter': {
           // a scribble never travels straight: quick sidesteps and speed hiccups
           const j = Math.sin(ud.bob * 2.9) + Math.sin(ud.bob * 4.3) * 0.5;
-          m.position.x += j * 2.2 * sdt;
+          m.position.addScaledVector(track.right(ud.th, _mR), j * 2.2 * sdt);
           want *= 0.9 + 0.45 * Math.sin(ud.bob * 1.7);
           break;
         }
-        case 'mirror': ud.vel.x += clamp(ball.position.x - m.position.x, -1, 1) * 14 * sdt; break;
+        case 'mirror': ud.vel.addScaledVector(track.right(ud.th, _mR), clamp(state.d - ud.d, -1, 1) * 14 * sdt); break;
         default: break;
       }
       // close in, but slow down while the grabber is reaching — the arm does the work
@@ -1137,8 +1190,16 @@ function update(dt) {
         m.position.x += dir.z * Math.sin(ud.bob * 1.7) * 2.0 * sdt;
         m.position.z += -dir.x * Math.sin(ud.bob * 1.7) * 2.0 * sdt;
       }
-      if (br.pattern === 'mirror') m.position.x += Math.sin(ud.bob * 2.3) * 1.5 * sdt;
-      m.position.x = clamp(m.position.x, -LANE_HALF - 1, LANE_HALF + 1);
+      if (br.pattern === 'mirror') m.position.addScaledVector(track.right(ud.th, _mR), Math.sin(ud.bob * 2.3) * 1.5 * sdt);
+      // monsters may lean on the edge lines but never leave the lane
+      const lm = track.project(m.position.x, m.position.z, ud.s, _lane);
+      ud.s = lm.s; ud.th = lm.th; ud.d = lm.d;
+      if (Math.abs(lm.d) > LANE_HALF + 1) {
+        ud.d = clamp(lm.d, -LANE_HALF - 1, LANE_HALF + 1);
+        track.right(lm.th, _mR);
+        m.position.x = lm.x + _mR.x * ud.d;
+        m.position.z = lm.z + _mR.z * ud.d;
+      }
 
       const facing = ud.vel.lengthSq() > 0.5 ? ud.vel : dir;
       const targetYaw = Math.atan2(facing.x, facing.z);
@@ -1263,7 +1324,7 @@ function update(dt) {
     if (state.flyingMonsters.length) state.monsters = state.monsters.filter((m) => !m.userData.knocked);
 
     state.monsters = state.monsters.filter((m) => {
-      if (m.position.z - ball.position.z > 70) { disposeObject(m); return false; }
+      if (state.s - m.userData.s > 70) { disposeObject(m); return false; }
       return true;
     });
 
@@ -1286,7 +1347,7 @@ function update(dt) {
       if (hit && speed > 1) doStrike(rack);
     }
     state.racks = state.racks.filter((r) => {
-      if (r.center.z - ball.position.z > 30) { disposeObject(r.group); return false; }
+      if (state.s - r.s > 30) { disposeObject(r.group); return false; }
       return true;
     });
     ensureRacks();
@@ -1312,10 +1373,9 @@ function update(dt) {
       return true;
     });
 
-    // scroll the paper with the ball
-    ground.position.z = ball.position.z;
-    paperTex.offset.y = -ball.position.z / (340 / 40);
-    for (const line of laneLines) line.position.z = ball.position.z;
+    // the paper rides along under the ball; the texture offset keeps its speckles still
+    ground.position.set(ball.position.x, 0, ball.position.z);
+    paperTex.offset.set(ball.position.x / PAPER_TILE, -ball.position.z / PAPER_TILE);
   }
 
   // --- the "gotcha" cinematic: grabbers wrap the ball and hold it up ---
@@ -1334,10 +1394,17 @@ function update(dt) {
     }
   }
 
-  // --- camera follows ---
-  camTarget.set(ball.position.x * 0.6, 8, ball.position.z + 12);
+  // --- camera follows, and turns with the lane: it looks where the lane heads a few
+  // metres further on, so it starts swinging into a bend just before the ball gets there
+  state.camYaw += angleDiff(track.heading(state.s + 8), state.camYaw) * smooth(3.5, dt);
+  track.tangent(state.camYaw, _T);
+  track.point(state.s, state.d * 0.6, camAnchor);
+  camTarget.copy(camAnchor).addScaledVector(_T, -12);
+  camTarget.y = 8;
   camera.position.lerp(camTarget, smooth(4, dt));
-  camera.lookAt(ball.position.x * 0.6, 1, ball.position.z - 6);
+  camLook.copy(camAnchor).addScaledVector(_T, 6);
+  camLook.y = 1;
+  camera.lookAt(camLook);
 }
 
 resetGame();
@@ -1347,17 +1414,21 @@ app.start(update);
 // debugging / test hook. showcase('alien') parks one monster of that kind in front of
 // the ball with the world frozen — handy for comparing a monster with its drawing.
 window.__game = {
-  app, state, ball, camera, crowdCap,
+  app, state, ball, camera, crowdCap, track, LANE_HALF,
   startGame, spawnMonster, doStrike,
+  // lane coordinates of a world point (s along the lane, d across it)
+  lane: (pos) => track.project(pos.x, pos.z, state.s, {}, 16),
   showcase(kind, dist = 7) {
     for (const m of state.monsters) disposeObject(m);
     state.monsters = [];
     for (const make of MONSTER_MAKERS) {
       const m = make();
       if (m.userData.kind !== kind) { disposeObject(m); continue; }
-      m.position.set(0, 0, ball.position.z - dist);
+      const s = state.s + dist;
+      track.point(s, 0, m.position);
+      m.rotation.y = track.heading(s); // facing back down the lane, at the ball
       m.add(blobShadow(1.15));
-      Object.assign(m.userData, { speed: 0, vel: new THREE.Vector3(), agility: 0, bob: 0, tick: 0, grow: 1 });
+      Object.assign(m.userData, { speed: 0, vel: new THREE.Vector3(), agility: 0, bob: 0, tick: 0, grow: 1, s, d: 0, th: m.rotation.y });
       m.updateMatrixWorld();
       for (const gr of m.userData.grabbers) { gr.cur.copy(gr.rest(gr.phase)); layoutGrabber(gr); }
       scene.add(m);

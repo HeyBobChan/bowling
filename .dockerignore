@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.claude
+README.md
+Dockerfile
+.dockerignore
+test-results
+playwright-report
+artifacts

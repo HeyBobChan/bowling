@@ -61,12 +61,12 @@ const GROUPS = [
   },
   {
     drawing: 'punch-fighters-1.webp', game: 'punch', date: '13.8.2026',
-    title: 'משחק אגרופים · החתול', note: 'The player.',
+    title: 'חתול ביער · החתול', note: 'The player.',
     shots: [{ id: 'cat', label: 'החתול הירוק · the cat', kind: 'cat' }],
   },
   {
     drawing: 'punch-fighters-2.webp', game: 'punch', date: '13.8.2026',
-    title: 'משחק אגרופים · הלוחמים', note: 'The Emperor, the King, the Queen and the creature with the green mohawk.',
+    title: 'חתול ביער · הלוחמים', note: 'The Emperor, the King, the Queen and the creature with the green mohawk.',
     shots: [
       { id: 'emperor', label: 'הקיסר · the Emperor', kind: 'emperor' },
       { id: 'king', label: 'המלך · the King', kind: 'king' },
