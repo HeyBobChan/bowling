@@ -78,6 +78,41 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 
 ## Publish flow
 
+### Railway website
+
+The live website is https://bowling-escape-production.up.railway.app, also served
+through https://matanbob.com/kids/. The release branch is `main` in
+[`HeyBobChan/bowling`](https://github.com/HeyBobChan/bowling). Upstream game development
+continues in [`BobYeger/bowling`](https://github.com/BobYeger/bowling).
+
+In the current local checkout, `origin` points to BobYeger's repository and `fork`
+points to HeyBobChan's. To bring in upstream changes, start with a clean checkout,
+fetch both remotes, create a new task branch from `fork/main`, and merge
+`origin/main`. Keep local changes on their own branch or back them up first.
+
+```bash
+git fetch --all
+git switch -c codex/sync-games-upstream fork/main
+git merge origin/main
+npm test -- --workers=1
+npm run build
+npm run test:site
+git push -u fork HEAD
+```
+
+Use a fresh task branch name for each sync. Open a pull request targeting
+`HeyBobChan/bowling:main` and merge it with a merge commit to preserve upstream
+history. This keeps later syncs from presenting already-integrated commits again.
+
+Railway currently receives CLI source uploads; a GitHub push alone does not
+publish. Deploy a clean source archive of the tested, merged `fork/main` commit
+to project `39d512ee-cd58-40ae-a335-494cb54b2caf`, service
+`76d27ee0-de6b-4d82-88ac-0980721a2a24`, production environment
+`0b5a2b7c-93e8-491c-9e57-4daefa1e5958`. Verify the deployment reaches `SUCCESS`
+and check the roster, games and return links through `/kids/` afterward.
+
+### Standalone artifacts
+
 `npm run build:artifacts -- <id>` writes `artifacts/<id>.html`; publish it with the
 Artifact tool using the `artifact` URL from `games.json` to keep the same link.
 
