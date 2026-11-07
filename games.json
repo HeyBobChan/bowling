@@ -111,6 +111,25 @@
         "tint": "#ffe6e1",
         "action": "יאללה, קופצים"
       }
+    },
+    {
+      "id": "jaffa",
+      "page": "jaffa.html",
+      "path": "/jaffa.html",
+      "emoji": "🐾",
+      "title": "שחור לבן ביפו · Jaffa Hop",
+      "short": "שחור לבן ביפו",
+      "accent": "#222222",
+      "accentDark": "#111111",
+      "artifact": null,
+      "lobby": {
+        "genre": "כלב קטן, עיר גדולה",
+        "description": "קופצים בשדרות ירושלים, מתחמקים משליחים וקורקינטים ואוספים עצמות ושקיות אורז בין עצי הפיקוס. יאללה, יפו!",
+        "image": "/images/jaffa-original.jpg",
+        "imageAlt": "הציור המקורי: כלב שחור לבן, שליח, רוכב קורקינט, עצם ושקית אורז",
+        "tint": "#ffffff",
+        "action": "יאללה, קופצים"
+      }
     }
   ]
 }

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="A little dog. A big boulevard. Hop through Jaffa, dodge delivery scooters, and collect bones in this original street-crossing game." />
+  <title>Jaffa Hop · שחור לבן · يافا</title>
+</head>
+<body>
+  <div id="world" aria-label="Jaffa street-crossing game"></div>
+  <header class="topbar">
+    <div class="wordmark"><span class="brand-paw" aria-hidden="true">✣</span><span>JAFFA HOP<small>שחור לבן <span>·</span> يافا</small></span></div>
+    <div class="scoreboard" aria-label="Your score">
+      <div class="score-main"><span class="score-caption">SCORE</span><strong id="score">000</strong></div>
+      <span class="score-divider"></span>
+      <div class="pickup-counter"><span class="bone-icon" aria-hidden="true">🦴</span><strong id="bones">0</strong></div>
+      <div class="pickup-counter"><span class="rice-icon" aria-hidden="true">▥</span><strong id="rice">0</strong></div>
+    </div>
+    <div class="toolbar"><button id="sound" class="icon-button" aria-label="Mute sound" title="Sound · M">♫</button><button id="pause" class="icon-button" aria-label="Pause game" title="Pause · P" disabled>Ⅱ</button></div>
+  </header>
+  <div id="lives" class="lives" aria-label="3 chances remaining"><span>♥</span><span>♥</span><span>♥</span></div>
+  <main id="intro" class="intro">
+    <div class="eyebrow"><span></span> A LITTLE JAFFA ADVENTURE</div>
+    <h1>Small dog.<br>Big <em>city.</em></h1>
+    <p class="intro-copy">The boulevard is busy. <br>The bones are calling.</p>
+    <p class="intro-detail">Hop past delivery riders and electric scooters.<br>Find the rice bags. Keep your tail wagging.</p>
+    <button id="start" class="primary-button">YALLA, LET’S HOP <span aria-hidden="true">↗</span></button>
+    <div class="start-hint">or press <kbd>SPACE</kbd></div>
+    <div class="legend"><span><i class="bone-icon" aria-hidden="true"></i> <b>+10</b> bones</span><span><i class="rice-icon">▥</i> <b>+50</b> rice + shield</span></div>
+    <div class="intro-bottom">INSPIRED BY A KID’S DRAWING <span>✎</span></div>
+  </main>
+  <div id="shade" class="intro-shade"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="shield" class="shield-status" hidden>✦ RICE POWER <span id="shield-time">5s</span></div>
+  <div id="modal" class="modal" hidden>
+    <section class="result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div id="result-tag" class="eyebrow">GOOD RUN, LITTLE DOG</div>
+      <h2 id="result-title">One more hop?</h2>
+      <p id="result-copy">There are more bones around the corner.</p>
+      <div id="result-stats"><div><strong id="final-score">0</strong><span>YOUR SCORE</span></div><div><strong id="best-score">0</strong><span>PERSONAL BEST</span></div></div>
+      <button id="again" class="primary-button">LET’S GO AGAIN <span aria-hidden="true">↗</span></button>
+      <p class="modal-hint">Press <kbd>SPACE</kbd> to continue</p>
+    </section>
+  </div>
+  <footer class="bottom-bar"><div class="control-hint"><span class="key-cluster"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>HOP AROUND <span class="or">/</span> WASD <span class="or">·</span> SPACE FORWARD</span></div><div class="place"><span class="place-dot"></span><span>JERUSALEM BOULEVARD<small>JAFFA <span>·</span> يافا <span>·</span> יפו</small></span></div></footer>
+  <nav id="touch-controls" class="touch-controls" aria-label="Movement controls"><button data-dir="up" aria-label="Hop forward">↑</button><div><button data-dir="left" aria-label="Hop left">←</button><button data-dir="down" aria-label="Hop backward">↓</button><button data-dir="right" aria-label="Hop right">→</button></div></nav>
+  <div id="load-error" class="load-error" hidden><h2>The street couldn’t load.</h2><p>This game needs a browser with WebGL enabled.</p><a href="/">Back to all games</a></div>
+  <script type="module" src="/src/jaffa.js"></script>
+</body>
+</html>
