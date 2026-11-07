@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createApp } from './kit/app.js';
 import { toonMat, flatMat, spriteMat, noOutline, blobShadow, canvasTex, paperTexture, clamp, smooth, angleDiff } from './kit/toon.js';
 import { createTrack } from './track.js';
-import { createInput } from './kit/input.js';
+import { createBowlingInput } from './bowling-input.js';
 import { createHud } from './kit/hud.js';
 import { beep, noise, chord } from './kit/audio.js';
 
@@ -47,6 +47,8 @@ const BALL_MAX_SPEED = 19;
 const BALL_ACCEL = 55;
 const BALL_DRAG = 2.4;
 const BALL_DRAG_STOP = 7.0;    // stronger brake with no input — stopping is the panic button
+const ROLL_DRAG = 0.65;        // a mobile flick carries forward between swipes
+const ROLL_SIDE_DRAG = 2.4;    // sideways pushes settle sooner, so dodges stay controllable
 const BREAK_SPEED = 14;        // faster than this, the ball rips free from a grabber's grip
 const GRAB_RADIUS = 0.95;      // grabber tip touching distance (each tip adds its own size on top)
 const STRIKE_DIST = 2.6;
@@ -65,10 +67,9 @@ const Z_AXIS = new THREE.Vector3(0, 0, 1);
 // ---------- App ----------
 const app = createApp({ fov: 55, fog: { near: 40, far: 105 } });
 const { scene, camera, juice } = app;
-const input = createInput();
+const input = createBowlingInput({ canRoll: () => state.phase === 'play' });
 app.input = input;
 const hud = createHud(app, { gameId: 'main', music: { seed: 1, bpm: 112 } });
-if (input.touch) input.touch.setLabels({ a: '🔴', b: '' });
 
 const toon = (color, dark) => toonMat(color, dark ? { outline: dark } : {});
 const flat = flatMat;
@@ -898,7 +899,7 @@ const state = {
   s: 0,          // the ball in lane coordinates: metres along the centre line...
   d: 0,          // ...and sideways offset (positive = right)
   heading: 0,    // lane heading under the ball
-  camYaw: 0,     // where the camera looks — it turns with the lane, and the stick follows it
+  camYaw: 0,     // where the camera looks — it turns with the lane, and input follows it
 };
 // how many monsters the lane wants right now: a small crowd that keeps growing
 const crowdCap = () => Math.min(
@@ -1020,6 +1021,7 @@ function disposeObject(obj) {
 function caught(m) {
   if (catching) return;
   state.phase = 'caught';
+  input.resetRolling();
   grabSound();
   juice.shake(0.5);
   juice.hitstop(0.1, 0.15);
@@ -1028,6 +1030,7 @@ function caught(m) {
 
 // ---------- Reset / start ----------
 function resetGame() {
+  input.resetRolling();
   for (const m of state.monsters) disposeObject(m);
   for (const r of state.racks) disposeObject(r.group);
   for (const fp of state.flyingPins) disposeObject(fp.mesh);
@@ -1089,13 +1092,38 @@ const _input = new THREE.Vector3(), _camFwd = new THREE.Vector3(), _spawn = new 
 const _T = new THREE.Vector3(), _R = new THREE.Vector3(), _mT = new THREE.Vector3(), _mR = new THREE.Vector3();
 const _lane = { s: 0, d: 0, th: 0, x: 0, z: 0 };
 
+// A metre along an offset arc spans a different lane distance than a metre on
+// the centre line. Split travel at each boundary so entering a straight or an
+// opposite bend cannot turn a capped roll into a sudden jump. Works in reverse.
+function advanceRoll(s, d, distance) {
+  const direction = Math.sign(distance);
+  if (!direction) return s;
+  const segments = track.segments;
+  let index = segments.findIndex((segment) => s < segment.s0 + segment.len);
+  if (index < 0) index = segments.length - 1;
+  if (direction < 0 && s === segments[index].s0 && index > 0) index--;
+  let remaining = Math.abs(distance);
+  for (;;) {
+    const segment = segments[index];
+    const scale = Math.max(0.3, 1 + segment.k * d);
+    const boundary = direction > 0 ? segment.s0 + segment.len : segment.s0;
+    const available = Math.max(0, (boundary - s) * direction) * scale;
+    const nextIndex = index + direction;
+    if (remaining <= available || nextIndex < 0 || nextIndex >= segments.length) {
+      return s + direction * remaining / scale;
+    }
+    remaining -= available;
+    s = boundary;
+    index = nextIndex;
+  }
+}
+
 function update(dt) {
   if (state.phase === 'play') {
     state.time += dt;
 
     // --- ball input ---
-    // the stick is read relative to the camera, which turns with the lane: "up" is
-    // always "away from us", down the lane
+    // Keyboard direction and swipe pushes are relative to the current camera.
     const ax = input.p1.axis(_axis);
     camera.getWorldDirection(_camFwd);
     const camYaw = Math.atan2(-_camFwd.x, -_camFwd.z);
@@ -1103,12 +1131,44 @@ function update(dt) {
     track.right(camYaw, _R);
     _input.set(0, 0, 0).addScaledVector(_R, ax.x).addScaledVector(_T, -ax.z);
     const hasInput = _input.lengthSq() > 0;
-    state.vel.addScaledVector(_input, BALL_ACCEL * dt);
-    state.vel.addScaledVector(state.vel, -(hasInput ? BALL_DRAG : BALL_DRAG_STOP) * dt);
-    if (state.vel.length() > BALL_MAX_SPEED) state.vel.setLength(BALL_MAX_SPEED);
-    if (!hasInput && state.vel.length() < 0.7) state.vel.set(0, 0, 0);
+    const rolls = input.consumeRolls();
+    if (hasInput) input.rolling = false;
+    if (input.rolling) {
+      for (const roll of rolls) {
+        _input.set(0, 0, 0).addScaledVector(_R, roll.x).addScaledVector(_T, -roll.z);
+        const power = _input.length();
+        const opposingSpeed = -state.vel.dot(_input) / power;
+        // A gentle opposing flick can stop a slow roll without unexpectedly
+        // launching it backward. Deliberate strong flicks can still reverse it.
+        if (!roll.canReverse && opposingSpeed > state.vel.length() * 0.5 && opposingSpeed < power) {
+          _input.multiplyScalar(opposingSpeed / power);
+        }
+        state.vel.add(_input);
+        if (state.vel.length() > BALL_MAX_SPEED) state.vel.setLength(BALL_MAX_SPEED);
+      }
+      // Carry momentum in the lane's local directions: bends turn the roll, but
+      // never pull the ball toward the centre or steer it around obstacles.
+      track.tangent(state.heading, _T);
+      track.right(state.heading, _R);
+      let forward = state.vel.dot(_T) * Math.exp(-ROLL_DRAG * dt);
+      let side = state.vel.dot(_R) * Math.exp(-ROLL_SIDE_DRAG * dt);
+      if (Math.hypot(forward, side) < 0.7) forward = side = 0;
+      const nextS = advanceRoll(state.s, state.d + side * dt / 2, forward * dt);
+      const nextD = state.d + side * dt;
+      track.point(nextS, nextD, ball.position);
+      ball.position.y = BALL_R;
+      const heading = track.heading(nextS);
+      state.vel.copy(track.tangent(heading, _T)).multiplyScalar(forward)
+        .addScaledVector(track.right(heading, _R), side);
+    } else {
+      // Preserve the original PC movement, including its quick release-to-stop.
+      state.vel.addScaledVector(_input, BALL_ACCEL * dt);
+      state.vel.addScaledVector(state.vel, -(hasInput ? BALL_DRAG : BALL_DRAG_STOP) * dt);
+      if (state.vel.length() > BALL_MAX_SPEED) state.vel.setLength(BALL_MAX_SPEED);
+      if (!hasInput && state.vel.length() < 0.7) state.vel.set(0, 0, 0);
+      ball.position.addScaledVector(state.vel, dt);
+    }
 
-    ball.position.addScaledVector(state.vel, dt);
     // keep the ball between the edge lines: clamp its sideways offset and drop the part of
     // its speed that pushes into the line — the world only moves when the ball really moves
     const lp = track.project(ball.position.x, ball.position.z, state.s, _lane);
@@ -1251,7 +1311,7 @@ function update(dt) {
 
     // --- shooting: space fires a mini scribble-ball at the monsters ---
     state.shotCooldown -= dt;
-    if (input.p1.down('a') && state.shotCooldown <= 0) {
+    if ((input.p1.down('a') || input.p1.consume('a')) && state.shotCooldown <= 0) {
       state.shotCooldown = SHOT_COOLDOWN;
       if (state.ammo <= 0) {
         emptySound();

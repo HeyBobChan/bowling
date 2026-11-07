@@ -6,7 +6,7 @@
 **Fantasy:** "A bowling ball runs away from monsters that chase it, and when it hits the
 pins you get 10 points — it's always a strike."
 
-**Player verbs:** roll (arrows / stick) · shoot mini balls (Space, ammo from strikes) ·
+**Player verbs:** roll (arrows / WASD on PC, swipe pushes on touchscreens) · shoot mini balls (Space / red button, ammo from strikes) ·
 **freeze** (stop rolling and the whole world stops) · aim strikes at racks.
 
 **Enemy verbs:** each monster has its own move — the purple loop and yellow wheel charge
@@ -27,10 +27,22 @@ fire a volley, then roll and they all launch.
 60 m, then bends alternate with straights — radius 30–75 m, heading never more than ≈57°
 off the opening direction so the lane cannot cross itself, and the first two bends of a
 run are gentle. The camera turns with the lane (it looks where the lane heads 8 m on) and
-the stick is read relative to the camera, so "up" always means "down the lane". Ball and
+input is read relative to the camera, so "up" always means "down the lane". Ball and
 monsters live in lane coordinates (distance along, offset across); far-away monsters
 follow the bends toward you, close ones charge straight. Pushing into an edge line stops
 that part of the ball's speed — the world only moves when the ball really moves.
+
+**Mobile rolling:** swipe and release anywhere outside the red shooting button to push
+the ball in that screen direction. Longer, quicker strokes push harder, with the same
+top speed as keyboard movement. Momentum carries between swipes and follows lane bends
+without centering the ball; sideways momentum fades sooner to keep dodges controlled.
+Gentle opposing swipes brake to a stop; stronger ones can reverse the roll. Leaving it alone eventually stops it and
+freezes the world. Hold the red button with another finger to shoot while swiping.
+Taps and accessible activation fire once; holding keeps firing. Rotating the screen
+cancels unfinished gestures but preserves the ball's existing momentum.
+Keyboard movement retains its original acceleration and quick stopping, including on
+touch devices with a hardware keyboard. Restart, focus loss, and canceled gestures clear
+touch input. `src/bowling-input.js` owns these controls; other games keep their sticks.
 
 **Difficulty:** the CROWD. The lane starts with three monsters and wants one more for
 every 12 seconds the world was actually moving and one more for every two strikes, up
@@ -39,7 +51,7 @@ to sixteen. Monster speed only creeps up, so the lane stays readable.
 **Round length:** open-ended; a good run is a minute or two.
 
 **Knobs (src/main.js):** `MONSTERS_START`, `CROWD_EVERY_S`, `CROWD_EVERY_STRIKES`,
-`MAX_MONSTERS`, `BALL_MAX_SPEED`, `BREAK_SPEED`, the `BRAINS` table (speed / agility /
+`MAX_MONSTERS`, `BALL_MAX_SPEED`, `ROLL_DRAG` / `ROLL_SIDE_DRAG`, `BREAK_SPEED`, the `BRAINS` table (speed / agility /
 pattern per monster). **Lane knobs (src/track.js):** `OPENING_STRAIGHT`, `HEADING_MAX`,
 `RADIUS_MIN` / `RADIUS_MAX`, `TURN_MIN`, `GENTLE_BENDS`.
 
@@ -47,7 +59,8 @@ pattern per monster). **Lane knobs (src/track.js):** `OPENING_STRAIGHT`, `HEADIN
 coordinates) must survive and strike; the run must meet real bends with the ball and every
 monster still between the edge lines; lane coordinates must round-trip through the world;
 the crowd cap must grow with rolling time and with strikes; strikes must never end the
-game.
+game. `tests/bowling-controls.spec.js` checks mobile momentum, steering, braking, bends,
+gesture cancellation, shooting, and unchanged keyboard movement.
 
 **Not in the game yet:** the yellow crown and the small striped fish on the second sheet.
 
