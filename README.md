@@ -2,7 +2,7 @@
 
 The game roster is at `/` (index.html), with original artwork and links to every game.
 
-Six games designed by kids, drawn with markers, and brought to life. Every
+Seven games designed by kids, drawn with markers or pencil, and brought to life. Every
 game is a page of the same little kit: cel-shaded "marker on paper" rendering, one
 keyboard or a touch pad, one or two players, and a headless test that drives it.
 
@@ -14,6 +14,7 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 | 🥊 **חתול ביער** (Punch Game) | `/punch.html` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
 | 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski.html` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
 | 🤸 **קופצים מעל הרעים** (Jump Over the Bad Guys) | `/jump.html` | Pick one of three box characters, walk both ways and jump over the bad guys who want to eat you — flipping feet, head, feet, head. Climb the green towers; the cute one double-jumps, the scary one slams down with a roar, the regular one glides on its wing. Once in a while the monster king stomps in and blocks the way: dodge his hands, then climb his sleeping hand and arm and bounce off his head to get over him. A 2D canvas game, not three.js. |
+| 🐾 **שחור לבן ביפו** (Jaffa Hop) | `/jaffa.html` | A black-and-white dog hops along Jerusalem Boulevard in Jaffa, dodging Wolt delivery riders and youths on electric scooters. Collect bones (+10) and rice bags (+50 and five seconds of protection), shelter in ficus plazas, and beat your best score. Original Arabic-inspired music and a completely black-and-white pencil streetscape using the actual characters from the drawing. |
 
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
@@ -41,6 +42,7 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 
 ## Controls
 
+- **Jaffa Hop:** arrows/WASD move one tile; Space hops forward; swipe, tap, or use the direction buttons on touch screens. P/Escape pauses; M toggles sound. Three collisions end a run, with brief protection after each hit.
 - **One player:** arrows or WASD to move · **Space** = the action (shoot / head / punch) ·
   **Shift** = dash (punch game) · Enter or Space starts and restarts.
 - **Two players** (penalties, punch): player 1 = arrows + Enter + right Shift, player 2 =
@@ -73,6 +75,7 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 - `src/ski.js` — the ski game; Babylon.js (`@babylonjs/core`) instead of three.js because the dog
   model (`src/assets/dog.glb`, see `design/ski.md`) was exported for Babylon, but it uses the kit's
   HUD, input, audio and `?sim` hook like every other page.
+- `src/jaffa.js`, `jaffa-world.js`, `jaffa-sketch.js`, `jaffa-motion.js`, and `jaffa-music.js` — the Jaffa game: grid hopping, bounded procedural street scenery, original-drawing dog/rider cutouts, animated pencil legs and wheels, and monochrome rendering, and an original synthesized Hijaz-inspired melody and drum rhythm. Its responsive HTML/CSS interface shares the kit's sound effects and mute preference. `?sim` exposes `window.__jaffa` for gameplay and resource checks.
 - `tests/` — Playwright specs that load each page with `?sim`, drive
   `window.__<game>.step(dt)` and assert the balance rules from the design sheets.
 

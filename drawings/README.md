@@ -8,6 +8,7 @@ a dino with its back spikes turned into legs).
 
 | File | Game | What's on it |
 |---|---|---|
+| `jaffa-dog-and-scooters.jpg` | Jaffa Hop / שחור לבן | The user's pencil drawing: a slender black-and-white dog with a dark back patch and ears, a standing electric-scooter rider, a seated delivery rider with a rear box, a bone, and a rice bag. The written rules call for a road and sidewalk, Jaffa's Jerusalem Boulevard, ficus trees, Crossy Road style, and Arabic music. |
 | `bowling-lane-and-monsters.jpg` | Bowling Escape | The lane with its two brown edge lines, the six pins (blue outline, red band), the red scribble ball with three holes, the yellow wheel with red spokes, the purple loop on wheels, the green stalk-eyed zigzag monster. The text is the rules: the ball runs from chasing monsters, hitting pins is always a strike, 10 points. |
 | `bowling-monsters-2.jpg` | Bowling Escape | The long green snake with purple zigzags, a blue scribble head with a purple horn and two little wheels at its tail; the orange spiral snail with a spiky crown; the green dino with orange triangles down its BACK. A yellow crown and a small yellow striped fish are also on the page and are not in the game yet. |
 | `bowling-monsters-3-whiteboard.png` | Bowling Escape | The lollipop (grey ball with a red asterisk on a teal double pole), the grey peanut-head worm with red dangling legs and a red dot on its tail, and the green stick alien with big black eyes and twig hands and feet. |
