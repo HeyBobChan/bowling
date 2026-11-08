@@ -24,6 +24,7 @@
   position: absolute; bottom: max(64px, env(safe-area-inset-bottom)); left: 12px; right: 12px;
   color: var(--accent-dark); font: 700 clamp(12px, 3vw, 16px) var(--font); text-align: center;
   text-shadow: 0 1px 3px var(--paper), 0 -1px 3px var(--paper); pointer-events: none;
+  padding: 0 8px; box-sizing: border-box; text-wrap: balance;
 }
 #bowling-touch .roll-fire {
   position: absolute; bottom: max(106px, calc(env(safe-area-inset-bottom) + 90px));

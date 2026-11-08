@@ -49,6 +49,8 @@ const BALL_DRAG = 2.4;
 const BALL_DRAG_STOP = 7.0;    // stronger brake with no input — stopping is the panic button
 const ROLL_DRAG = 0.65;        // a mobile flick carries forward between swipes
 const ROLL_SIDE_DRAG = 2.4;    // sideways pushes settle sooner, so dodges stay controllable
+const ROLL_HOLD_DRAG = 11;     // a resting finger grips the ball; lifting lets it coast
+const ROLL_REST_DELAY = 0.08;  // tolerate gaps between touch samples before gripping
 const BREAK_SPEED = 14;        // faster than this, the ball rips free from a grabber's grip
 const GRAB_RADIUS = 0.95;      // grabber tip touching distance (each tip adds its own size on top)
 const STRIKE_DIST = 2.6;
@@ -1031,6 +1033,9 @@ function caught(m) {
 // ---------- Reset / start ----------
 function resetGame() {
   input.resetRolling();
+  rollIdleTime = 0;
+  rollContactId = null;
+  brakedStroke = null;
   for (const m of state.monsters) disposeObject(m);
   for (const r of state.racks) disposeObject(r.group);
   for (const fp of state.flyingPins) disposeObject(fp.mesh);
@@ -1091,6 +1096,8 @@ const _axis = { x: 0, z: 0 };
 const _input = new THREE.Vector3(), _camFwd = new THREE.Vector3(), _spawn = new THREE.Vector3();
 const _T = new THREE.Vector3(), _R = new THREE.Vector3(), _mT = new THREE.Vector3(), _mR = new THREE.Vector3();
 const _lane = { s: 0, d: 0, th: 0, x: 0, z: 0 };
+const _brakeDirection = new THREE.Vector3();
+let rollIdleTime = 0, rollContactId = null, brakedStroke = null;
 
 // A metre along an offset arc spans a different lane distance than a metre on
 // the centre line. Split travel at each boundary so entering a straight or an
@@ -1134,15 +1141,28 @@ function update(dt) {
     const rolls = input.consumeRolls();
     if (hasInput) input.rolling = false;
     if (input.rolling) {
+      rollIdleTime = rolls.length || input.contactId !== rollContactId ? 0 : rollIdleTime + dt;
+      rollContactId = input.contactId;
       for (const roll of rolls) {
         _input.set(0, 0, 0).addScaledVector(_R, roll.x).addScaledVector(_T, -roll.z);
-        const power = _input.length();
-        const opposingSpeed = -state.vel.dot(_input) / power;
-        // A gentle opposing flick can stop a slow roll without unexpectedly
-        // launching it backward. Deliberate strong flicks can still reverse it.
-        if (!roll.canReverse && opposingSpeed > state.vel.length() * 0.5 && opposingSpeed < power) {
-          _input.multiplyScalar(opposingSpeed / power);
+        let power = _input.length();
+        // Once a gentle stroke brakes to zero, continuing that same slow
+        // stroke should not unexpectedly start a reverse roll.
+        if (brakedStroke === roll.stroke) {
+          if (!roll.canReverse && _input.dot(_brakeDirection) > power * 0.5) continue;
+          brakedStroke = null;
         }
+        const opposingSpeed = -state.vel.dot(_input) / power;
+        if (!roll.canReverse && opposingSpeed > state.vel.length() * 0.5) {
+          _input.multiplyScalar(1.5); // forgiving braking while in contact
+          power *= 1.5;
+          if (opposingSpeed <= power + 0.7) {
+            _brakeDirection.copy(_input).normalize();
+            _input.multiplyScalar(opposingSpeed / power);
+            brakedStroke = roll.stroke;
+          }
+        }
+        if (roll.canReverse) brakedStroke = null;
         state.vel.add(_input);
         if (state.vel.length() > BALL_MAX_SPEED) state.vel.setLength(BALL_MAX_SPEED);
       }
@@ -1150,9 +1170,10 @@ function update(dt) {
       // never pull the ball toward the centre or steer it around obstacles.
       track.tangent(state.heading, _T);
       track.right(state.heading, _R);
-      let forward = state.vel.dot(_T) * Math.exp(-ROLL_DRAG * dt);
-      let side = state.vel.dot(_R) * Math.exp(-ROLL_SIDE_DRAG * dt);
-      if (Math.hypot(forward, side) < 0.7) forward = side = 0;
+      const holdingStill = input.contactId !== null && rollIdleTime >= ROLL_REST_DELAY;
+      let forward = state.vel.dot(_T) * Math.exp(-(holdingStill ? ROLL_HOLD_DRAG : ROLL_DRAG) * dt);
+      let side = state.vel.dot(_R) * Math.exp(-(holdingStill ? ROLL_HOLD_DRAG : ROLL_SIDE_DRAG) * dt);
+      if (rollIdleTime >= ROLL_REST_DELAY && Math.hypot(forward, side) < 0.7) forward = side = 0;
       const nextS = advanceRoll(state.s, state.d + side * dt / 2, forward * dt);
       const nextD = state.d + side * dt;
       track.point(nextS, nextD, ball.position);

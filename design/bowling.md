@@ -32,12 +32,17 @@ monsters live in lane coordinates (distance along, offset across); far-away mons
 follow the bends toward you, close ones charge straight. Pushing into an edge line stops
 that part of the ball's speed — the world only moves when the ball really moves.
 
-**Mobile rolling:** swipe and release anywhere outside the red shooting button to push
-the ball in that screen direction. Longer, quicker strokes push harder, with the same
-top speed as keyboard movement. Momentum carries between swipes and follows lane bends
-without centering the ball; sideways momentum fades sooner to keep dodges controlled.
-Gentle opposing swipes brake to a stop; stronger ones can reverse the roll. Leaving it alone eventually stops it and
-freezes the world. Hold the red button with another finger to shoot while swiping.
+**Mobile rolling:** move a finger anywhere outside the red shooting button to push the
+ball immediately. Every new part of the stroke contributes in its current screen
+direction, so a forward stroke can curve sideways without lifting. Faster/longer
+movement gives a stronger push, with the same top speed as keyboard movement. An 8 px
+starting threshold rejects accidental taps; power has no per-event minimum bonus.
+Resting the finger on the screen grips the ball and slows it to a stop. Lifting simply
+releases that grip and lets existing momentum coast; it never adds another launch.
+Momentum follows lane bends without centering the ball; sideways momentum fades sooner
+to keep dodges controlled. Gentle opposing strokes brake to a stop; sustained fast ones
+can reverse the roll. A stopped ball freezes the world. Hold the red button with another
+finger to shoot while rolling.
 Taps and accessible activation fire once; holding keeps firing. Rotating the screen
 cancels unfinished gestures but preserves the ball's existing momentum.
 Keyboard movement retains its original acceleration and quick stopping, including on
@@ -51,7 +56,7 @@ to sixteen. Monster speed only creeps up, so the lane stays readable.
 **Round length:** open-ended; a good run is a minute or two.
 
 **Knobs (src/main.js):** `MONSTERS_START`, `CROWD_EVERY_S`, `CROWD_EVERY_STRIKES`,
-`MAX_MONSTERS`, `BALL_MAX_SPEED`, `ROLL_DRAG` / `ROLL_SIDE_DRAG`, `BREAK_SPEED`, the `BRAINS` table (speed / agility /
+`MAX_MONSTERS`, `BALL_MAX_SPEED`, `ROLL_DRAG` / `ROLL_SIDE_DRAG` / `ROLL_HOLD_DRAG`, `ROLL_REST_DELAY`, `BREAK_SPEED`, the `BRAINS` table (speed / agility /
 pattern per monster). **Lane knobs (src/track.js):** `OPENING_STRAIGHT`, `HEADING_MAX`,
 `RADIUS_MIN` / `RADIUS_MAX`, `TURN_MIN`, `GENTLE_BENDS`.
 
