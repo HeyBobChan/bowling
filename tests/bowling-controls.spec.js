@@ -30,7 +30,7 @@ async function prepare(page) {
       },
       swipe(dx, dy, duration = 120) {
         this.pointer('pointerdown', 170, 450);
-        this.pointer('pointermove', 170 + dx, 450 + dy, 1, duration / 2);
+        this.pointer('pointermove', 170 + dx, 450 + dy, 1, duration);
         this.pointer('pointerup', 170 + dx, 450 + dy, 1, duration);
         this.step();
       },
@@ -44,14 +44,14 @@ test.describe('Bowling swipe rolling', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   test.beforeEach(async ({ page }) => { await prepare(page); });
 
-  test('release gives a directional push; longer and faster flicks are stronger and speed is capped', async ({ page }) => {
+  test('finger movement pushes immediately, release adds no launch, and power follows travel and speed', async ({ page }) => {
     await expect(page.locator('#touch')).toHaveCount(0);
     const result = await page.evaluate(() => {
       const C = window.controls, G = window.__game;
       C.pointer('pointerdown', 180, 450);
-      C.pointer('pointermove', 180, 300);
-      C.step(30);
-      const held = G.state.vel.length();
+      C.pointer('pointermove', 180, 300, 1, 120);
+      C.step();
+      const moving = G.state.vel.length();
       C.pointer('pointerup', 180, 300, 1, 120);
       C.step();
       const forward = { speed: G.state.vel.length(), s: G.state.s, d: G.state.d };
@@ -60,9 +60,10 @@ test.describe('Bowling swipe rolling', () => {
       C.reset(); C.swipe(100, -100);
       const diagonal = { s: G.state.s, d: G.state.d };
       for (let i = 0; i < 10; i++) C.swipe(0, -150);
-      return { held, forward, short, slow, diagonal, max: G.state.vel.length() };
+      return { moving, forward, short, slow, diagonal, max: G.state.vel.length() };
     });
-    expect(result.held).toBe(0);
+    expect(result.moving).toBeGreaterThan(15);
+    expect(result.forward.speed).toBeLessThan(result.moving);
     expect(result.forward.s).toBeGreaterThan(0);
     expect(Math.abs(result.forward.d)).toBeLessThan(0.01);
     expect(result.forward.speed).toBeGreaterThan(result.short + 5);
@@ -70,6 +71,98 @@ test.describe('Bowling swipe rolling', () => {
     expect(result.diagonal.s).toBeGreaterThan(0);
     expect(result.diagonal.d).toBeGreaterThan(0);
     expect(result.max).toBeLessThanOrEqual(19);
+  });
+
+  test('one unbroken stroke can roll forward, turn right, then steer left before lifting', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const C = window.controls, G = window.__game;
+      let x = 150, y = 600, time = 0;
+      C.pointer('pointerdown', x, y);
+      const move = (dx, dy) => {
+        for (let i = 0; i < 12; i++) {
+          x += dx; y += dy; time += 1000 / 60;
+          C.pointer('pointermove', x, y, 1, time); C.step();
+        }
+        return { s: G.state.s, d: G.state.d, x: G.state.vel.x, z: G.state.vel.z, contact: G.app.input.contactId };
+      };
+      const forward = move(0, -8);
+      const right = move(8, 0);
+      const left = move(-8, 0);
+      const beforeRelease = G.state.vel.length();
+      C.pointer('pointerup', x, y, 1, time); C.step();
+      return { forward, right, left, beforeRelease, afterRelease: G.state.vel.length() };
+    });
+    expect(result.forward.s).toBeGreaterThan(0.5);
+    expect(result.forward.z).toBeLessThan(-5);
+    expect(result.right.s).toBeGreaterThan(result.forward.s);
+    expect(result.right.d).toBeGreaterThan(result.forward.d + 0.5);
+    expect(result.right.x).toBeGreaterThan(5);
+    expect(result.left.x).toBeLessThan(-2);
+    expect(result.forward.contact).not.toBeNull();
+    expect(result.right.contact).toBe(result.forward.contact);
+    expect(result.left.contact).toBe(result.forward.contact);
+    expect(result.afterRelease).toBeLessThan(result.beforeRelease);
+  });
+
+  test('resting a finger brakes to a stop, lifting coasts, and a fresh touch can grip a rolling ball', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const C = window.controls, G = window.__game;
+      C.pointer('pointerdown', 170, 450);
+      C.pointer('pointermove', 170, 300, 1, 120); C.step();
+      const moving = G.state.vel.length();
+      // A resting thumb may still generate tiny coordinate changes.
+      for (let i = 0; i < 30; i++) {
+        C.pointer('pointermove', 170 + Math.sin(i) * 0.7, 300 + Math.cos(i) * 0.7, 1, 120 + (i + 1) * 1000 / 60);
+        C.step();
+      }
+      const held = { speed: G.state.vel.length(), s: G.state.s, time: G.state.worldTime };
+      C.pointer('pointerup', 170, 300, 1, 620); C.step(60);
+      const liftedAfterStop = { speed: G.state.vel.length(), s: G.state.s, time: G.state.worldTime };
+      C.reset(); C.swipe(0, -150); C.step(30);
+      const released = G.state.vel.length();
+      C.pointer('pointerdown', 170, 450); C.step(30);
+      return { moving, held, liftedAfterStop, released, gripped: G.state.vel.length() };
+    });
+    expect(result.moving).toBeGreaterThan(15);
+    expect(result.held.speed).toBe(0);
+    expect(result.liftedAfterStop).toEqual(result.held);
+    expect(result.released).toBeGreaterThan(12);
+    expect(result.gripped).toBe(0);
+  });
+
+  test('a held finger can start and gently brake again after changing direction', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const C = window.controls, G = window.__game;
+      C.pointer('pointerdown', 170, 450);
+      const move = (y, time) => { C.pointer('pointermove', 170, y, 1, time); C.step(); return G.state.vel.z; };
+      const first = move(410, 120);
+      const brake = move(440, 300);
+      const resume = move(400, 420);
+      const brakeAgain = move(430, 600);
+      return { first, brake, resume, brakeAgain };
+    });
+    expect(result.first).toBeLessThan(-3);
+    expect(Math.abs(result.brake)).toBeLessThan(0.001);
+    expect(result.resume).toBeLessThan(-3);
+    expect(Math.abs(result.brakeAgain)).toBeLessThan(0.001);
+  });
+
+  test('the same finger path behaves consistently at different touch sampling rates', async ({ page }) => {
+    const samples = await page.evaluate(() => {
+      const C = window.controls, G = window.__game;
+      return [30, 60, 120].map(rate => {
+        C.reset(); C.pointer('pointerdown', 170, 500);
+        const steps = rate * 0.3;
+        for (let i = 1; i <= steps; i++) {
+          C.pointer('pointermove', 170, 500 - 120 * i / steps, 1, 1000 * i / rate);
+          G.step(1 / rate);
+        }
+        return { rate, speed: G.state.vel.length(), s: G.state.s };
+      });
+    });
+    expect(Math.min(...samples.map(s => s.speed))).toBeGreaterThan(10);
+    expect(Math.max(...samples.map(s => s.speed)) - Math.min(...samples.map(s => s.speed))).toBeLessThan(0.35);
+    expect(Math.max(...samples.map(s => s.s)) - Math.min(...samples.map(s => s.s))).toBeLessThan(0.35);
   });
 
   test('momentum coasts, sideways swipes steer, opposing swipes brake, and stopping freezes the world', async ({ page }) => {
@@ -93,7 +186,7 @@ test.describe('Bowling swipe rolling', () => {
     expect(result.steer.d).toBeGreaterThan(1);
     expect(result.steer.s).toBeGreaterThan(result.coast.s);
     expect(result.afterBrake).toBeGreaterThan(0);
-    expect(result.afterBrake).toBeLessThan(result.beforeBrake * 0.5);
+    expect(result.afterBrake).toBeLessThan(result.beforeBrake);
     expect(result.reverse).toBeGreaterThan(0);
     expect(result.stopped.speed).toBe(0);
     expect(result.later).toEqual({ time: result.stopped.time, s: result.stopped.s });
@@ -246,11 +339,16 @@ test.describe('Bowling swipe rolling', () => {
     const shoot = { id: 1, x: fire.x + fire.width / 2, y: fire.y + fire.height / 2 };
     const start = { id: 2, x: 140, y: 490 };
     const end = { id: 2, x: 140, y: 330 };
+    const side = { id: 2, x: 220, y: 330 };
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [shoot] });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [shoot, start] });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [shoot, end] });
     await expect(page.locator('.roll-guide')).toHaveClass(/visible/);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [end] });
+    expect(await page.evaluate(() => { window.controls.step(); return window.__game.state.vel.z; })).toBeLessThan(-10);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [shoot, side] });
+    await expect(page.locator('.roll-guide')).toHaveCSS('left', '220px');
+    expect(await page.evaluate(() => { window.controls.step(); return window.__game.state.vel.x; })).toBeGreaterThan(3);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [side] });
     await page.evaluate(() => window.controls.step(30));
     const rolling = await page.evaluate(() => ({ speed: window.__game.state.vel.length(), ammo: window.__game.state.ammo, fire: window.__game.app.input.p1.down('a') }));
     expect(rolling.speed).toBeGreaterThan(10);
