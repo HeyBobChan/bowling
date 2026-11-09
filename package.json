@@ -12,12 +12,14 @@
     "test": "playwright test",
     "render:characters": "node scripts/render-characters.mjs",
     "preview": "vite preview",
-    "test:site": "node scripts/check-site.mjs"
+    "test:site": "node scripts/check-site.mjs",
+    "test:chana-drag": "node --test tests/unit/chana-drag.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.25.0",
     "@babylonjs/loaders": "^9.25.0",
     "@dimforge/rapier3d-compat": "^0.20.0",
+    "sortablejs": "1.15.7",
     "three": "^0.170.0"
   },
   "devDependencies": {
