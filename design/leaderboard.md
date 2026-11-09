@@ -28,8 +28,8 @@ use the existing localStorage keys, independently of shared score availability.
   authoritative proof of gameplay or a competition-grade anti-cheat system.
 - Each server instance limits reads to 180 requests/minute and writes to 30/minute
   per client IP. In production it trusts one proxy hop (Railway's edge); when the
-  /kids/ proxy masks client IPs, its players may share a limit. Limits reset on a
-  server restart. Revisit the rate-limit store and trusted proxy chain if scaling.
+  browser uses the direct API origin, its requests bypass the /kids/ proxy. Limits
+  reset on a server restart. Revisit the rate-limit store if scaling.
 - Database credentials exist only in the server's `DATABASE_URL`, never Vite
   variables or browser code. API responses are not cached.
 
@@ -58,7 +58,12 @@ seven-game site after building it. `/healthz` checks the database connection.
 Add a PostgreSQL service in the same production project. On the web service set
 `DATABASE_URL=${{Postgres.DATABASE_URL}}` using the actual database service name.
 Use the private connection URL. Enable volume backups in Railway for recovery.
+Set the web service's `VITE_LEADERBOARD_API_ORIGIN` to
+`https://bowling-escape-production.up.railway.app` and `LEADERBOARD_ALLOWED_ORIGINS`
+to `https://matanbob.com`. The former is a public build argument; the latter is
+the explicit browser origin allowlist. No cookies or credentials are sent.
 Follow the README's clean-source release workflow and verify both the Railway
 domain and `https://matanbob.com/kids/`, including saving on one browser and reading
-the result in another. The frontend resolves API URLs relative to its page, so
-the /kids/ path prefix is preserved. No cross-origin database access is exposed.
+the result in another. The /kids/ proxy forwards reads but rejects POSTs, so the
+production browser uses the direct Railway API with CORS preflight support. Local
+development defaults to a relative API URL. The database itself stays private.

@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG VITE_LEADERBOARD_API_ORIGIN
 RUN npm run build
 RUN npm run test:site
 

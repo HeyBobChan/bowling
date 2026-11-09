@@ -8,7 +8,7 @@ const games = { main: { maxScore: 1000000, scoreStep: 5 } };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const initials = /^(?:[A-Z]{3}|[א-ת]{3})$/u;
 
-export function createServer({ store, staticDir = resolve(import.meta.dirname, '../dist'), trustProxy = false, writeLimit = 30 }) {
+export function createServer({ store, staticDir = resolve(import.meta.dirname, '../dist'), trustProxy = false, writeLimit = 30, allowedOrigins = [] }) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxy);
@@ -18,7 +18,18 @@ export function createServer({ store, staticDir = resolve(import.meta.dirname, '
     try { await store.check(); res.json({ ok: true }); }
     catch { res.status(503).json({ ok: false }); }
   });
-  app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+  app.use('/api', (req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    res.vary('Origin');
+    const allowed = allowedOrigins.includes(req.get('Origin'));
+    if (allowed) {
+      res.set('Access-Control-Allow-Origin', req.get('Origin'));
+      res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+    }
+    if (req.method === 'OPTIONS') return res.sendStatus(allowed ? 204 : 403);
+    next();
+  });
   const limiter = (limit) => rateLimit({ windowMs: 60000, limit, standardHeaders: 'draft-8',
     legacyHeaders: false, message: { error: 'too_many_requests' } });
   app.use('/api', limiter(180));
