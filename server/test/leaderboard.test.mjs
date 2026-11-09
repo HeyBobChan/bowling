@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pg from 'pg';
 import { createStore } from '../store.mjs';
+import { migrateDatabase } from '../migrate.mjs';
 import { createServer } from '../app.mjs';
 
 // Deliberately require a separate disposable database: never fall back to DATABASE_URL.
@@ -28,6 +29,7 @@ before(async () => {
   await mkdir(join(staticDir, 'assets'));
   await writeFile(join(staticDir, 'index.html'), '<h1>Games</h1>');
   await writeFile(join(staticDir, 'assets/test.js'), 'console.log("game");');
+  await migrateDatabase(connectionString);
   store = await createStore(connectionString);
   admin = new pg.Pool({ connectionString });
   server = await listen(createServer({ store, staticDir, writeLimit: 1000 }));

@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import {api} from '../chana-api.mjs';
 import {score,artworks,collections,normalizeName,validateProgress} from '../chana-game.mjs';
 import {createStore} from '../store.mjs';
+import {migrateDatabase} from '../migrate.mjs';
 import {createServer} from '../app.mjs';
 const connectionString=process.env.TEST_DATABASE_URL;
 if(!connectionString)throw Error('Set TEST_DATABASE_URL to a disposable PostgreSQL database.');
-let store;before(async()=>{store=await createStore(connectionString);});after(async()=>{await store.close();});
+let store;before(async()=>{await migrateDatabase(connectionString);store=await createStore(connectionString);});after(async()=>{await store.close();});
 const ordered=artworks.map(a=>a.id);
 const guesses=Object.fromEntries(collections.map(c=>[artworks.find(a=>a.collectionId===c.id).id,c.titleHe]));
 function game(t){return async(path,{method='GET',token,body,origin}={})=>{const r=await store.chanaTransaction(path.match(/rooms\/(\d{6})/)?.[1]||'create',db=>api(new Request('http://localhost/api'+path,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),...(origin?{Origin:origin}:{})},...(body?{body:JSON.stringify(body)}:{})}),{DB:db}));return {status:r.status,...await r.json()};};}

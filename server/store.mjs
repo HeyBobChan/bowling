@@ -1,5 +1,4 @@
 import pg from 'pg';
-import { readFile } from 'node:fs/promises';
 import { chanaDatabase } from './chana-db.mjs';
 
 const fields = 'submission_id AS id, game_id AS game, name, score, created_at AS "createdAt"';
@@ -10,21 +9,16 @@ export async function createStore(connectionString) {
     idleTimeoutMillis: 30000, statement_timeout: 5000 });
   // Never log connection options: the URL contains the database password.
   pool.on('error', () => console.error('Leaderboard database connection interrupted.'));
-  const client = await pool.connect();
   try {
-    await client.query('BEGIN');
-    // Serialize startup migrations during overlapping deployments.
-    await client.query('SELECT pg_advisory_xact_lock(728301901)');
-    await client.query(await readFile(new URL('./schema.sql', import.meta.url), 'utf8'));
-    await client.query('COMMIT');
+    if (process.env.NODE_ENV === 'production') {
+      const { rows } = await pool.query('SELECT rolsuper, rolcreatedb, rolcreaterole, rolbypassrls FROM pg_roles WHERE rolname = current_user');
+      if (Object.values(rows[0]).some(Boolean)) throw new Error('Web database role must be restricted.');
+    }
+    await pool.query('SELECT submission_id FROM leaderboard_scores LIMIT 0');
   } catch (error) {
-    await client.query('ROLLBACK');
-    // Release before ending the pool; pool.end waits for checked-out clients.
-    client.release();
     await pool.end();
     throw error;
   }
-  client.release();
 
   return {
     async chanaTransaction(key, callback) {
