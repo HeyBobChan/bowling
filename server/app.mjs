@@ -23,15 +23,17 @@ export function createServer({ store, staticDir = resolve(import.meta.dirname, '
     res.set('Cache-Control', 'no-store');
     res.vary('Origin');
     const allowed = allowedOrigins.includes(req.get('Origin'));
+    const birthday = req.path.startsWith('/chana/') || req.path.startsWith('/leaderboards/chana/');
     if (allowed) {
       res.set('Access-Control-Allow-Origin', req.get('Origin'));
-      res.set('Access-Control-Allow-Methods', req.path.startsWith('/chana') ? 'GET, POST, PUT, OPTIONS' : 'GET, POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', req.path.startsWith('/chana') ? 'Content-Type, Authorization' : 'Content-Type');
+      res.set('Access-Control-Allow-Methods', birthday ? 'GET, POST, PUT, OPTIONS' : 'GET, POST, OPTIONS');
+      res.set('Access-Control-Allow-Headers', birthday ? 'Content-Type, Authorization' : 'Content-Type');
     }
     if (req.method === 'OPTIONS') return res.sendStatus(allowed ? 204 : 403);
     next();
   });
-  app.use('/api/chana', chanaRouter({ store, allowedOrigins }));
+  // The /kids/ proxy CSP permits the leaderboard prefix for cross-origin requests.
+  app.use(['/api/leaderboards/chana', '/api/chana'], chanaRouter({ store, allowedOrigins }));
   const limiter = (limit) => rateLimit({ windowMs: 60000, limit, standardHeaders: 'draft-8',
     legacyHeaders: false, message: { error: 'too_many_requests' } });
   app.use('/api', limiter(180));
