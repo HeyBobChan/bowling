@@ -84,7 +84,7 @@ test('host can award/revoke a reviewed spelling bonus; player cannot and total/r
 });
 test('Railway HTTP route accepts custom-domain preflights and >2KB drafts without sharing the arcade limiter',async t=>{
  const app=createServer({store,allowedOrigins:['https://matanbob.com']});const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));
- const base=`http://127.0.0.1:${server.address().port}/api/chana`,h=crypto.randomUUID(),p=crypto.randomUUID();
+ const base=`http://127.0.0.1:${server.address().port}/api/leaderboards/chana`,h=crypto.randomUUID(),p=crypto.randomUUID();
  const send=async(path,token,body,method='POST')=>fetch(base+path,{method,headers:{Origin:'https://matanbob.com','Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})});
  const options=await fetch(base+'/rooms',{method:'OPTIONS',headers:{Origin:'https://matanbob.com','Access-Control-Request-Method':'PUT','Access-Control-Request-Headers':'authorization,content-type'}});
  assert.equal(options.status,204);assert.match(options.headers.get('access-control-allow-headers'),/Authorization/);assert.match(options.headers.get('access-control-allow-methods'),/PUT/);

@@ -5,7 +5,7 @@ A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
 
 ## Running the birthday
 
-1. Connect a laptop to the TV/projector, open the game and choose **מנחים מהמסך הגדול?**.
+1. Connect a laptop to the TV/projector, open the game and choose **ניהול המשחק במסך הגדול**.
 2. Create a room and save the **private host recovery link**. Share the player QR code or player link only.
 3. Everyone enters a name on their phone. Confirm the participant list, then start. Joining closes at that point.
 4. Each person gets all 52 dated works in an independent shuffle. Use **הזזה** to choose a destination, or drag on desktop; undo is available. Tap an image for a larger view and an optional exhibition-name guess.
@@ -47,7 +47,7 @@ chronologically ordered catalogue until shared review starts.
 
 The existing `VITE_LEADERBOARD_API_ORIGIN` build setting points writes directly at
 Railway because the matanbob.com `/kids/` proxy forwards reads but rejects POSTs.
-The API's explicit origin allowlist is retained. The Chana route supports CORS
+Requests use `/api/leaderboards/chana`, the prefix permitted by the existing `/kids/` Content Security Policy. The API's explicit origin allowlist is retained. The Chana route supports CORS
 preflights with Authorization and PUT, and uses participant-based limits so guests
 sharing Wi-Fi do not exhaust the arcade leaderboard's shared-IP limit.
 
