@@ -13,7 +13,12 @@ import { createServer } from '../app.mjs';
 const connectionString = process.env.TEST_DATABASE_URL;
 if (!connectionString) throw new Error('Set TEST_DATABASE_URL to a disposable PostgreSQL database.');
 let store, admin, server, base, staticDir;
-const payload = (score = 100, name = 'ABC') => ({ submissionId: randomUUID(), name, score });
+const payload = async (score = 100, name = 'ABC') => {
+  const run = await store.beginRun('main');
+  await admin.query("UPDATE leaderboard_runs SET started_at=now()-interval '120 seconds' WHERE id=$1", [run.id]);
+  return { submissionId: randomUUID(), name, score, runId: run.id, runToken: run.token,
+    durationMs: 60000, strikes: Math.floor(Number(score) / 10), knocked: Number(score) % 10 / 5 };
+};
 const post = (body, path = 'main') => fetch(`${base}/api/leaderboards/${path}`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
 });
@@ -32,10 +37,10 @@ before(async () => {
   await migrateDatabase(connectionString);
   store = await createStore(connectionString);
   admin = new pg.Pool({ connectionString });
-  server = await listen(createServer({ store, staticDir, writeLimit: 1000 }));
+  server = await listen(createServer({ store, staticDir, writeLimit: 1000, runLimit: 1000, cacheMs: 0 }));
   base = `http://127.0.0.1:${server.address().port}`;
 });
-beforeEach(async () => { await admin.query('TRUNCATE leaderboard_scores'); });
+beforeEach(async () => { await admin.query('TRUNCATE leaderboard_runs,leaderboard_scores'); await admin.query('UPDATE leaderboard_budget SET runs=0,scores=0'); });
 after(async () => {
   await closeServer(server); await store.close(); await admin.end();
   await rm(staticDir, { recursive: true });
@@ -43,7 +48,7 @@ after(async () => {
 
 test('persists normalized English and Hebrew names and returns a shared top ten', async () => {
   for (let i = 0; i < 12; i++) {
-    const response = await post(payload(i * 10, i === 0 ? 'אבג' : 'abc'));
+    const response = await post(await payload(i * 10, i === 0 ? 'אבג' : 'abc'));
     assert.equal(response.status, 201);
   }
   const { entries } = await top();
@@ -58,32 +63,32 @@ test('persists normalized English and Hebrew names and returns a shared top ten'
 });
 
 test('retries and concurrent requests create exactly one score and reject changed payloads', async () => {
-  const body = payload();
+  const body = await payload();
   const responses = await Promise.all(Array.from({ length: 5 }, () => post(body)));
   assert.equal(responses.filter((response) => response.status === 201).length, 1);
   assert.equal(responses.filter((response) => response.status === 200).length, 4);
   assert.equal((await top()).entries.length, 1);
-  assert.equal((await post({ ...body, score: 200 })).status, 409);
+  assert.equal((await post({ ...body, score: 200, strikes: 20 })).status, 409);
   assert.equal((await post({ ...body, name: 'DEF' })).status, 409);
   assert.equal((await top()).entries[0].score, 100);
 });
 
 test('equal scores rank deterministically by time, including outside the top ten', async () => {
   let last;
-  for (let i = 0; i < 12; i++) last = await (await post(payload())).json();
+  for (let i = 0; i < 12; i++) last = await (await post(await payload())).json();
   assert.equal(last.entry.rank, 12);
   assert.equal((await top()).entries.length, 10);
-  const response = await (await post(payload(200))).json();
+  const response = await (await post(await payload(200))).json();
   assert.equal(response.entry.rank, 1);
 });
 
 test('rejects invalid names, scores, IDs, games and malformed or oversized requests', async () => {
-  for (const name of ['', 'AB', 'ABCD', '<b>', 'AבC', '123', '💩💩💩']) assert.equal((await post(payload(100, name))).status, 400);
-  for (const score of [-5, 1.5, 7, 1000005, '100', null]) assert.equal((await post(payload(score))).status, 400);
-  assert.equal((await post({ ...payload(), submissionId: 'bad' })).status, 400);
-  assert.equal((await post(payload(), 'missing')).status, 404);
-  assert.equal((await post(payload(), 'toString')).status, 404);
-  assert.equal((await post(payload(100, 'A'.repeat(3000)))).status, 413);
+  for (const name of ['', 'AB', 'ABCD', '<b>', 'AבC', '123', '💩💩💩']) assert.equal((await post(await payload(100, name))).status, 400);
+  for (const score of [-5, 1.5, 7, 1000005, '100', null]) assert.equal((await post(await payload(score))).status, 400);
+  assert.equal((await post({ ...await payload(), submissionId: 'bad' })).status, 400);
+  assert.equal((await post(await payload(), 'missing')).status, 404);
+  assert.equal((await post(await payload(), 'toString')).status, 404);
+  assert.equal((await post(await payload(100, 'A'.repeat(3000)))).status, 413);
   const malformed = await fetch(`${base}/api/leaderboards/main`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' });
   assert.equal(malformed.status, 400);
   const plain = await fetch(`${base}/api/leaderboards/main`, { method: 'POST', body: 'hello' });
@@ -107,13 +112,13 @@ test('limits repeated submissions and recovers from a database outage without le
   const limited = await listen(createServer({ store, staticDir, writeLimit: 1 }));
   const url = `http://127.0.0.1:${limited.address().port}/api/leaderboards/main`;
   for (const expected of [201, 429]) {
-    const result = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload()) });
+    const result = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await payload()) });
     assert.equal(result.status, expected);
     if (expected === 429) assert.ok(result.headers.get('retry-after'));
   }
   await closeServer(limited);
   let offline = true;
-  const broken = await listen(createServer({ staticDir, store: {
+  const broken = await listen(createServer({ staticDir, cacheMs: 0, healthCacheMs: 0, store: {
     check: async () => { if (offline) throw new Error('private database details'); },
     top: async () => { if (offline) throw new Error('private database details'); return []; },
   } }));
@@ -137,11 +142,86 @@ test('allows configured website origins to preflight and save without exposing c
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get('access-control-allow-origin'), headers.Origin);
   assert.equal(preflight.headers.get('access-control-allow-credentials'), null);
-  const saved = await fetch(url, { method: 'POST', headers: { Origin: headers.Origin, 'Content-Type': 'application/json' }, body: JSON.stringify(payload()) });
+  const saved = await fetch(url, { method: 'POST', headers: { Origin: headers.Origin, 'Content-Type': 'application/json' }, body: JSON.stringify(await payload()) });
   assert.equal(saved.status, 201);
   assert.equal(saved.headers.get('access-control-allow-origin'), headers.Origin);
   const rejected = await fetch(url, { method: 'OPTIONS', headers: { ...headers, Origin: 'https://unlisted.example' } });
   assert.equal(rejected.status, 403);
   assert.equal(rejected.headers.get('access-control-allow-origin'), null);
   await closeServer(app);
+});
+
+test('requires an authentic, unexpired, single-use run and plausible results', async () => {
+  const start = await post({}, 'main/runs');
+  assert.equal(start.status, 201);
+  assert.equal((await start.json()).run.token.length, 64);
+  const body = await payload(100);
+  assert.equal((await post({ ...body, runToken: undefined })).status, 403);
+  assert.equal((await post({ ...body, runToken: '0'.repeat(64) })).status, 403);
+  assert.equal((await post({ ...body, score: 1000000, strikes: 100000 })).status, 400);
+  assert.equal((await post({ ...body, durationMs: 300000 })).status, 400);
+  assert.equal((await post({ ...body, knocked: 1 })).status, 400);
+  assert.equal((await post(body)).status, 201);
+  assert.equal((await post({ ...body, submissionId: randomUUID() })).status, 409);
+  const expired = await payload();
+  await admin.query("UPDATE leaderboard_runs SET expires_at=now()-interval '1 second' WHERE id=$1", [expired.runId]);
+  assert.equal((await post(expired)).status, 410);
+  assert.equal((await top()).entries.length, 1);
+});
+
+test('daily quotas persist across connections and retries do not spend the score quota', async () => {
+  const a = await createStore(connectionString, { dailyRuns: 3, dailyScores: 1 });
+  const b = await createStore(connectionString, { dailyRuns: 3, dailyScores: 1 });
+  try {
+    const body = await payload(0);
+    const other = await payload(0);
+    await a.save({ ...body, game: 'main' });
+    assert.equal((await b.save({ ...body, game: 'main' })).created, false);
+    await assert.rejects(b.save({ ...other, game: 'main' }), (e) => e.status === 429);
+    const results = await Promise.allSettled([a.beginRun('main'), b.beginRun('main')]);
+    assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+    assert.equal(results.find((r) => r.status === 'rejected').reason.status, 429);
+    assert.equal((await admin.query('SELECT scores,runs FROM leaderboard_budget')).rows[0].scores, 1);
+  } finally { await a.close(); await b.close(); }
+});
+
+test('bounds pending database work instead of building an unlimited queue', async () => {
+  const bounded = await createStore(connectionString, { maxPending: 1 });
+  const blocker = await admin.connect();
+  await blocker.query('BEGIN');
+  await blocker.query('SELECT * FROM leaderboard_budget FOR UPDATE');
+  const first = bounded.beginRun('main');
+  try {
+    await assert.rejects(bounded.beginRun('main'), (e) => e.status === 503);
+  } finally {
+    await blocker.query('ROLLBACK'); blocker.release();
+    await first; await bounded.close();
+  }
+});
+
+test('hard storage ceiling preserves existing scores and rejects further inserts', async () => {
+  const client = await admin.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('ALTER TABLE leaderboard_scores DISABLE TRIGGER leaderboard_score_capacity');
+    await client.query("INSERT INTO leaderboard_scores(submission_id,game_id,name,score) SELECT gen_random_uuid(),'main','TST',0 FROM generate_series(1,50000)");
+    await client.query('ALTER TABLE leaderboard_scores ENABLE TRIGGER leaderboard_score_capacity');
+    await assert.rejects(client.query("INSERT INTO leaderboard_scores(submission_id,game_id,name,score) VALUES(gen_random_uuid(),'main','TST',0)"), (e) => e.code === 'P0001');
+  } finally { await client.query('ROLLBACK'); client.release(); }
+  assert.equal((await top()).entries.length, 0);
+});
+
+test('coalesces reads and enforces a global ceiling even when client addresses change', async () => {
+  let reads = 0, health = 0;
+  const cached = await listen(createServer({ staticDir, trustProxy: 1, globalLimit: 3, store: {
+    top: async () => { reads++; return []; }, check: async () => { health++; },
+  } }));
+  const origin = `http://127.0.0.1:${cached.address().port}`;
+  try {
+    const responses = await Promise.all(Array.from({ length: 4 }, (_, i) => fetch(`${origin}/api/leaderboards/main`, { headers: { 'X-Forwarded-For': `192.0.2.${i+1}` } })));
+    assert.equal(responses.filter((r) => r.status === 429).length, 1);
+    assert.equal(reads, 1);
+    await Promise.all(Array.from({ length: 10 }, () => fetch(`${origin}/healthz`)));
+    assert.equal(health, 1);
+  } finally { await closeServer(cached); }
 });
