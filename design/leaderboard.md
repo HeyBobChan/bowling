@@ -21,7 +21,9 @@ use the existing localStorage keys, independently of shared score availability.
   payload return the original result; changed payloads return 409. The client
   freezes the submitted name until the next run, including after a lost response.
 - PostgreSQL stores all accepted results in `leaderboard_scores`. The startup
-  schema is additive and serialized with a transaction advisory lock.
+  schema is additive and serialized with a transaction advisory lock. Run
+  `MIGRATION_DATABASE_URL=... node server/migrate.mjs` separately before a release.
+  The web process never runs schema changes, and refuses administrative roles in production.
 - Queries use bound parameters. The server validates IDs, names and each game's
   score range/step, limits request bodies and request rates, and returns generic
   errors. This is a casual arcade leaderboard: client-reported scores are not
@@ -55,8 +57,10 @@ the built games and `/api`. HTML revalidates, hashed assets remain immutable,
 compression is enabled, and missing assets still return 404. Docker verifies the
 seven-game site after building it. `/healthz` checks the database connection.
 
-Add a PostgreSQL service in the same production project. On the web service set
-`DATABASE_URL=${{Postgres.DATABASE_URL}}` using the actual database service name.
+Add a PostgreSQL service in the same production project. Apply `schema.sql` and
+`permissions.sql` with its administrator, set a generated password on
+`marker_games_web`, and give the web service that role's private `DATABASE_URL`.
+Keep the administrator connection on the database service, outside the web service.
 Use the private connection URL. Enable volume backups in Railway for recovery.
 Set the web service's `VITE_LEADERBOARD_API_ORIGIN` to
 `https://bowling-escape-production.up.railway.app` and `LEADERBOARD_ALLOWED_ORIGINS`
