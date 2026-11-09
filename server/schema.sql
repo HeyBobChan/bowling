@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS chana_players (
  guesses_json text NOT NULL DEFAULT '{}',
  revision integer NOT NULL DEFAULT 0,
  submitted integer NOT NULL DEFAULT 0,
+ order_submitted integer NOT NULL DEFAULT 0,
  removed integer NOT NULL DEFAULT 0,
  joined_at bigint NOT NULL,
  updated_at bigint NOT NULL,
@@ -34,3 +35,6 @@ CREATE TABLE IF NOT EXISTS chana_players (
  UNIQUE(room_code,token_hash)
 );
 CREATE INDEX IF NOT EXISTS chana_players_by_room ON chana_players(room_code,removed);
+
+-- Existing games retain their completed submissions; new games can lock order first.
+ALTER TABLE chana_players ADD COLUMN IF NOT EXISTS order_submitted integer NOT NULL DEFAULT 0;
