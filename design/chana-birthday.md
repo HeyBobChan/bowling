@@ -67,3 +67,28 @@ shared review, bonus adjustment, results and export. The 40-participant test is 
 server simulation, not a physical-device or venue-network load test.
 
 All artwork is © Chana Goldberg, sourced from https://www.chanagoldberg.com/.
+
+## Navigation and order review
+
+Phone sorting and naming use larger two-column cards. Submitted sequences open as
+a full, normally scrolling page, with a sticky selector for each participant and
+the correct chronology. The host can open a sequence from a player's name during
+review or from the results. Participants can inspect their own sequence. Years and
+exhibitions are shown without marking shifted slot numbers as incorrect.
+
+Chronology still compares all definitely ordered pairs (0–100), with ties and
+overlapping periods ignored. Moving all three works of the earliest exhibition
+to the end scores 88/100: only pairs involving those works are lost. Naming
+bonuses remain separate.
+
+During the room, Back normally asks **לצאת מהמשחק?**; **להישאר** is focused. Back
+closes an enlarged painting or the order review first. Same-tab exit links also
+ask. One history guard is reused after cancel/reload, and removed at results.
+Refresh/close uses the browser's own warning where available. Horizontal
+overscroll is contained while vertical scrolling and pinch zoom stay available.
+Browsers may bypass these safeguards (especially OS edge gestures, long-press
+history jumps, or forced closure), so local drafts and visibility-change saves
+remain the recovery mechanism. Test physical iPhone/Android gestures at the venue.
+
+Run `npm run test:chana-navigation` for cancellation, real exit, direct-entry
+fallback, modal dismissal, reload, results cleanup, and link handling.

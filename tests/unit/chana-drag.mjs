@@ -30,3 +30,10 @@ test('four-column desktop grids and LTR layouts resolve the release slot', () =>
   assert.equal(dropSlot(desktop, { clientX: 350, clientY: 505 }), 3);
   assert.equal(dropSlot({ ...desktop, rtl: false }, { clientX: 350, clientY: 505 }), 0);
 });
+test('larger two-column phone cards can move across rows', () => {
+  const largePhone = { rect: { left: 16, right: 374, top: 340, bottom: 6050 },
+    columns: [174, 174], rows: Array(26).fill(210), columnGap: 10, rowGap: 10, rtl: true, count: 52 };
+  assert.equal(dropSlot(largePhone, { clientX: 287, clientY: 450 }), 0);
+  assert.equal(dropSlot(largePhone, { clientX: 104, clientY: 670 }), 3);
+  assert.equal(dropSlot(largePhone, { clientX: 104, clientY: 5950 }), 51);
+});

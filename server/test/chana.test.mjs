@@ -22,6 +22,14 @@ test('same-year and overlapping ranges are never decisive',()=>{
  const a=artworks.find(a=>a.collectionId==='the-golden-tray').id,b=artworks.find(a=>a.collectionId==='my-line').id;
  const swap=[...ordered],x=swap.indexOf(a),y=swap.indexOf(b);swap.splice(x,1);swap.splice(swap.indexOf(b)+1,0,a);assert.equal(score(swap).chronology,100);
 });
+test('one displaced exhibition only loses its inverted pairs, not every shifted position',()=>{
+ const moved=artworks.filter(a=>a.collectionId===collections[0].id).map(a=>a.id);
+ const shifted=[...ordered.filter(id=>!moved.includes(id)),...moved];
+ const perfect=score(ordered),result=score(shifted);
+ assert.equal(result.totalPairs-result.correctPairs,moved.length*(ordered.length-moved.length));
+ assert.equal(result.chronology,88);
+ assert.ok(result.correctPairs>perfect.correctPairs*.85);
+});
 test('bonus matching normalizes niqqud, spacing and punctuation but not unrelated guesses',()=>{
  assert.equal(normalizeName(' אמהוּת! '),normalizeName('אמהות'));assert.equal(normalizeName('הסתר פנים TAKE 2'),normalizeName('הסתר פנים take 2'));
  const id=artworks.find(a=>a.collectionId==='my-line').id;assert.equal(score(ordered,{[id]:'  קווים לדמותי! '}).bonus,2);assert.equal(score(ordered,{[id]:'קווים'}).bonus,0);
