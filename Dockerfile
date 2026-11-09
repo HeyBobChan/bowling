@@ -5,10 +5,16 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN npm run test:site
 
 # ---- runtime stage ----
-FROM caddy:2-alpine
-COPY Caddyfile /etc/caddy/Caddyfile
-COPY --from=build /app/dist /srv
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production PORT=8080
+COPY server/package.json server/package-lock.json ./server/
+RUN npm ci --omit=dev --prefix server
+COPY server/*.mjs server/schema.sql ./server/
+COPY --from=build /app/dist ./dist
+USER node
 EXPOSE 8080
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+CMD ["node", "server/index.mjs"]

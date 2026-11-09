@@ -28,6 +28,14 @@
     <p class="tip bowling-touch-tip">✋ עוצרים את האצבע על המסך כדי לבלום. מרימים אותה — והכדור ממשיך להתגלגל ומאט בהדרגה.</p>
     <p class="tip bowling-touch-tip">🌀 הכדור עוקב אחרי הפניות במסלול — מחליקים לצדדים כדי להתחמק ולכוון לפינים!</p>
     <button id="startBtn">שחקו!</button>
+    <details id="intro-leaderboard" class="leaderboard" data-shared-scores>
+      <summary>🏆 טבלת השיאים · כל השחקנים</summary>
+      <div data-leaderboard>
+        <p role="status" aria-live="polite"></p>
+        <button type="button" class="alt" data-retry hidden>לנסות שוב</button>
+        <table hidden aria-label="עשרת השיאים המובילים"><thead><tr><th>מקום</th><th>שם</th><th>נקודות</th></tr></thead><tbody></tbody></table>
+      </div>
+    </details>
     <p class="tip other-game"></p>
   </div>
 
@@ -37,6 +45,26 @@
     <p id="finalDetail"></p>
     <p id="bestScore"></p>
     <button id="restartBtn">עוד פעם!</button>
+    <section class="leaderboard" data-shared-scores aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">🏆 השיאים של כולם</h2>
+      <form id="score-form">
+        <label for="score-name">השם שלכם · 3 אותיות</label>
+        <input id="score-name" name="initials" dir="auto" maxlength="3" required
+          pattern="(?:[A-Za-z]{3}|[א-ת]{3})" autocomplete="off" autocapitalize="characters" spellcheck="false"
+          enterkeyhint="done" aria-describedby="score-name-hint" />
+        <p id="score-name-hint">עברית או אנגלית · בלי הרשמה · השם יופיע לכולם</p>
+        <div class="leaderboard-actions">
+          <button type="submit">שמירת התוצאה</button>
+          <button type="button" class="alt" data-skip>לדלג</button>
+        </div>
+        <p role="status" aria-live="polite"></p>
+      </form>
+      <div data-leaderboard>
+        <p role="status" aria-live="polite"></p>
+        <button type="button" class="alt" data-retry hidden>לנסות שוב</button>
+        <table hidden aria-label="עשרת השיאים המובילים"><thead><tr><th>מקום</th><th>שם</th><th>נקודות</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
     <p class="tip other-game"></p>
   </div>
 
