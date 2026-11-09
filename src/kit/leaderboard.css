@@ -1,0 +1,26 @@
+[data-shared-scores][hidden], .leaderboard [hidden] { display: none !important; }
+.leaderboard {
+  box-sizing: border-box; flex-shrink: 0; width: min(100%, 420px);
+  padding: 16px; border: 2px solid var(--accent-dark); border-radius: 18px;
+  background: var(--paper); color: var(--accent-dark);
+}
+.leaderboard summary { cursor: pointer; font-weight: 900; font-size: 20px; min-height: 32px; }
+.leaderboard h2 { margin: 0 0 10px; font-size: 23px; }
+.leaderboard form { display: grid; justify-items: center; gap: 10px; margin-bottom: 14px; }
+.leaderboard label { font-size: 19px; font-weight: 900; }
+.leaderboard input {
+  width: 130px; padding: 8px 12px; border: 2px solid var(--accent-dark); border-radius: 10px;
+  font: 900 30px var(--font); text-align: center; color: var(--accent-dark); background: white;
+  user-select: text; -webkit-user-select: text;
+}
+.leaderboard .leaderboard-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.overlay .leaderboard button { font-size: 17px; padding: 9px 16px; border-width: 2px; min-height: 44px; }
+.leaderboard button:disabled { opacity: .6; cursor: default; }
+.leaderboard :focus-visible { outline: 3px solid var(--hot); outline-offset: 4px; }
+.overlay .leaderboard p { font-size: 15px; line-height: 1.5; }
+.leaderboard [role="status"]:empty { display: none; }
+.leaderboard table { width: 100%; border-collapse: collapse; font-size: 18px; margin-top: 12px; }
+.leaderboard th { font-size: 14px; font-weight: 700; padding: 6px; }
+.leaderboard td { padding: 7px; border-top: 1px solid #ddd9d0; font-variant-numeric: tabular-nums; }
+.leaderboard-mine { background: #e5edff; font-weight: 900; }
+.leaderboard td:nth-child(2) { font-weight: 900; }

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node server/index.mjs",
+    "test:server": "npm test --prefix server",
     "build": "vite build",
     "build:artifacts": "node scripts/build-artifact.mjs",
     "test": "playwright test",

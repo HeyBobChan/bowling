@@ -4,6 +4,7 @@ import { toonMat, flatMat, spriteMat, noOutline, blobShadow, canvasTex, paperTex
 import { createTrack } from './track.js';
 import { createBowlingInput } from './bowling-input.js';
 import { createHud } from './kit/hud.js';
+import { createLeaderboard } from './kit/leaderboard.js';
 import { beep, noise, chord } from './kit/audio.js';
 
 // The drawings: drawings/bowling-lane-and-monsters.jpg (the lane, the pins, the ball,
@@ -72,6 +73,8 @@ const { scene, camera, juice } = app;
 const input = createBowlingInput({ canRoll: () => state.phase === 'play' });
 app.input = input;
 const hud = createHud(app, { gameId: 'main', music: { seed: 1, bpm: 112 } });
+const leaderboard = createLeaderboard({ gameId: 'main', form: document.querySelector('#score-form'),
+  boards: document.querySelectorAll('[data-leaderboard]'), intro: document.querySelector('#intro-leaderboard') });
 
 const toon = (color, dark) => toonMat(color, dark ? { outline: dark } : {});
 const flat = flatMat;
@@ -1070,6 +1073,7 @@ function resetGame() {
 }
 
 function startGame() {
+  leaderboard.begin();
   resetGame();
   hud.hide('#intro');
   hud.hide('#gameover');
@@ -1086,6 +1090,7 @@ function showGameOver() {
   hud.set('#finalDetail', `${state.strikes} סטרייקים · ${state.knocked} מפלצות הועפו · ${state.time.toFixed(0)} שניות`);
   hud.set('#bestScore', `השיא שלכם: ${best} נקודות ⭐`);
   hud.show('#gameover');
+  leaderboard.finish(state.score);
 }
 
 hud.bind({ start: startGame, restart: startGame });
@@ -1496,7 +1501,7 @@ app.start(update);
 // the ball with the world frozen — handy for comparing a monster with its drawing.
 window.__game = {
   app, state, ball, camera, crowdCap, track, LANE_HALF,
-  startGame, spawnMonster, doStrike,
+  startGame, showGameOver, spawnMonster, doStrike,
   // lane coordinates of a world point (s along the lane, d across it)
   lane: (pos) => track.project(pos.x, pos.z, state.s, {}, 16),
   showcase(kind, dist = 7) {

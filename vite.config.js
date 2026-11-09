@@ -55,6 +55,7 @@ export default defineConfig({
   server: {
     port: process.env.PORT ? Number(process.env.PORT) : 5173,
     strictPort: false,
+    proxy: { '/api': 'http://127.0.0.1:5200' },
   },
   build: {
     outDir: process.env.OUT_DIR || 'dist',

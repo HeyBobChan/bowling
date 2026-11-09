@@ -44,8 +44,9 @@ export function createInput({ twoPlayer = false, touch = 'auto' } = {}) {
   const players = [makePlayer(twoPlayer ? MAPS.p1 : MAPS.solo, true), makePlayer(MAPS.p2, twoPlayer)];
 
   window.addEventListener('keydown', (e) => {
-    // Let navigation links keep their native keyboard behavior.
-    if (e.target instanceof Element && e.target.closest('a')) return;
+    // Text entry and focused controls keep their native keyboard behavior.
+    if (e.target instanceof Element && (e.target.closest('a, input, textarea, select, summary, [contenteditable]')
+      || (e.target.closest('button') && overlayOpen()))) return;
     if (GAME_KEYS.has(e.code)) e.preventDefault();
     if (e.repeat) return;
     keys.add(e.code);

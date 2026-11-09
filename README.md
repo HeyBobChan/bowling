@@ -83,6 +83,11 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 
 ### Railway website
 
+Bowling has a shared top-ten leaderboard with optional three-letter names in
+Hebrew or English. The web service serves the games and a small score API, backed
+by Railway PostgreSQL. See [leaderboard setup and behavior](design/leaderboard.md)
+for local development, API checks, database configuration, and limitations.
+
 The live website is https://bowling-escape-production.up.railway.app, also served
 through https://matanbob.com/kids/. The release branch is `main` in
 [`HeyBobChan/bowling`](https://github.com/HeyBobChan/bowling). Upstream game development
