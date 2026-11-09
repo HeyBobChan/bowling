@@ -14,7 +14,7 @@ WORKDIR /app
 ENV NODE_ENV=production PORT=8080
 COPY server/package.json server/package-lock.json ./server/
 RUN npm ci --omit=dev --prefix server
-COPY server/*.mjs server/schema.sql ./server/
+COPY server/*.mjs server/*.json server/schema.sql ./server/
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 8080

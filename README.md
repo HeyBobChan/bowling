@@ -19,6 +19,10 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
 
+## Chana’s birthday game
+
+**חיים בצבע** is at `/chana.html` (https://matanbob.com/kids/chana.html). A host creates a room on the main screen; guests sort 52 works on their phones, submit, then review the correct exhibition dates and names together. See [event setup and scoring](design/chana-birthday.md). It shares the existing Railway PostgreSQL service.
+
 ## Run it
 
 ```bash
