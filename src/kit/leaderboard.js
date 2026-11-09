@@ -19,7 +19,7 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
   const submit = form.querySelector('[type="submit"]');
   const skip = form.querySelector('[data-skip]');
   const status = form.querySelector('[role="status"]');
-  let round = null, generation = 0, loadVersion = 0, loading = null;
+  let round = null, activeRun = null, generation = 0, loadVersion = 0, loading = null;
   const requests = new Set();
 
   try { input.value = localStorage.getItem(nameKey) || ''; } catch { /* private mode */ }
@@ -31,12 +31,12 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
   input.addEventListener('input', (event) => { if (!event.isComposing) validate(); });
   input.addEventListener('compositionend', validate);
 
-  async function request(options = {}) {
+  async function request(options = {}, url = endpoint) {
     const controller = new AbortController();
     requests.add(controller);
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const response = await fetch(endpoint, { ...options, signal: controller.signal, cache: 'no-store', credentials: 'omit' });
+      const response = await fetch(url, { ...options, signal: controller.signal, cache: 'no-store', credentials: 'omit' });
       if (!response.ok) { const error = new Error('Request failed'); error.status = response.status; throw error; }
       return await response.json();
     } finally {
@@ -100,14 +100,18 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
     const current = round;
     // Freeze the submitted payload so a retry after a lost response cannot create
     // another entry or change the name of a score that was already committed.
-    current.payload ||= { submissionId: crypto.randomUUID(), name: input.value, score: current.score };
     current.pending = true;
     input.readOnly = true;
     submit.disabled = true;
     skip.disabled = true;
     status.textContent = 'שומרים את התוצאה…';
-    try { localStorage.setItem(nameKey, current.payload.name); } catch { /* private mode */ }
     try {
+      const run = await current.runPromise;
+      if (round !== current) return;
+      if (!run) { const error = new Error('No online run'); error.status = 403; throw error; }
+      current.payload ||= { submissionId: crypto.randomUUID(), name: input.value, score: current.score,
+        ...current.result, runId: run.id, runToken: run.token };
+      try { localStorage.setItem(nameKey, current.payload.name); } catch { /* private mode */ }
       const data = await request({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(current.payload) });
       if (round !== current) return;
       current.savedId = data.entry.id;
@@ -117,7 +121,12 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
       await refresh();
     } catch (error) {
       if (round !== current) return;
-      status.textContent = error.status === 429 ? 'הרבה תוצאות בבת אחת! חכו דקה ונסו שוב.'
+      if ([400, 403, 409, 410].includes(error.status)) {
+        status.textContent = 'אי אפשר לאמת את התוצאה בסיבוב הזה. השיא האישי נשמר במכשיר. התחילו משחק חדש כדי לשמור שיא משותף.';
+        skip.disabled = false;
+        return;
+      }
+      status.textContent = error.status === 429 ? 'השמירה עמוסה כרגע. נסו שוב מאוחר יותר.'
         : 'לא הצלחנו לאשר שהשמירה הצליחה. נסו שוב — אותה תוצאה לא תישמר פעמיים. השיא האישי נשאר במכשיר.';
       submit.textContent = 'לנסות שוב';
       submit.disabled = false;
@@ -140,16 +149,25 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
       generation++;
       round = null;
       for (const controller of requests) controller.abort();
+      activeRun = request({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, new URL(`${endpoint.pathname}/runs`, endpoint))
+        .then((data) => data.run).catch(() => null);
       if (intro) intro.open = false;
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     },
-    finish(score) {
-      round = { score, pending: false, savedId: null };
+    finish(score, result) {
+      round = { score, result, runPromise: activeRun || Promise.resolve(null), pending: false, savedId: null };
       input.disabled = input.readOnly = submit.disabled = skip.disabled = false;
       submit.textContent = 'שמירת התוצאה';
       skip.hidden = false;
       status.textContent = '';
       refresh();
+      const current = round;
+      current.runPromise.then((run) => {
+        if (round === current && !run && !current.skipped && !current.pending) {
+          submit.disabled = true;
+          status.textContent = 'אין שמירה משותפת בסיבוב הזה. השיא האישי נשמר במכשיר. נסו משחק חדש כשהחיבור חוזר.';
+        }
+      });
     },
   };
 }

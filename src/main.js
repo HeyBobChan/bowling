@@ -1090,7 +1090,7 @@ function showGameOver() {
   hud.set('#finalDetail', `${state.strikes} סטרייקים · ${state.knocked} מפלצות הועפו · ${state.time.toFixed(0)} שניות`);
   hud.set('#bestScore', `השיא שלכם: ${best} נקודות ⭐`);
   hud.show('#gameover');
-  leaderboard.finish(state.score);
+  leaderboard.finish(state.score, { durationMs: Math.round(state.time * 1000), strikes: state.strikes, knocked: state.knocked });
 }
 
 hud.bind({ start: startGame, restart: startGame });

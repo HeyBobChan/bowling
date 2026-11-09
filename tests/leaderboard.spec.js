@@ -2,13 +2,14 @@ import { test, expect } from '@playwright/test';
 
 async function finish(page, score = 125) {
   await page.evaluate((value) => {
-    window.__game.startGame(); window.__game.state.score = value; window.__game.showGameOver();
+    window.__game.startGame(); window.__game.state.score = value; window.__game.state.strikes = Math.floor(value / 10); window.__game.state.knocked = (value % 10) / 5; window.__game.state.time = 60; window.__game.showGameOver();
   }, score);
 }
 async function prepare(page, options = {}) {
   const calls = [], entries = [];
   let failed = false;
-  await page.route('**/api/leaderboards/main', async (route) => {
+  await page.route('**/api/leaderboards/main**', async (route) => {
+    if (route.request().url().endsWith('/runs')) return route.fulfill({ json: { run: { id: '00000000-0000-4000-8000-000000000001', token: 'a'.repeat(64) } } });
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: { entries } });
     }
@@ -32,6 +33,7 @@ test('keyboard initials and Enter save without restarting, then remember the nam
   await expect(page.locator('#score-form [role=status]')).toContainText('נשמר!');
   expect(calls).toHaveLength(1);
   expect(calls[0].score).toBe(125);
+  expect(calls[0]).toMatchObject({ durationMs: 60000, strikes: 12, knocked: 1, runToken: 'a'.repeat(64) });
   expect(await page.evaluate(() => window.__game.state.phase)).toBe('over');
   await expect(page.locator('#gameover .leaderboard-mine')).toContainText('WAS');
   await page.reload(); await page.waitForFunction(() => !!window.__game);
@@ -50,11 +52,26 @@ test('invalid names cannot submit, skip sends nothing, and local best survives o
   await page.locator('#score-form [data-skip]').click();
   await expect(page.locator('#score-form [role=status]')).toContainText('לא נשלחה');
   expect(calls).toHaveLength(0);
-  await page.unroute('**/api/leaderboards/main');
-  await page.route('**/api/leaderboards/main', (route) => route.abort());
+  await page.unroute('**/api/leaderboards/main**');
+  await page.route('**/api/leaderboards/main**', (route) => route.abort());
   await finish(page, 150);
   await expect(page.locator('#gameover [data-leaderboard] [role=status]')).toContainText('לא זמינה');
+  await expect(page.locator('#score-form [type=submit]')).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('bowling-best'))).toBe('150');
+  await page.locator('#restartBtn').click();
+  expect(await page.evaluate(() => window.__game.state.phase)).toBe('play');
+});
+
+test('a rejected run offers a new game without endlessly retrying the score', async ({ page }) => {
+  await prepare(page);
+  await page.route('**/api/leaderboards/main', (route) => route.request().method() === 'POST'
+    ? route.fulfill({ status: 403, json: { error: 'invalid_request' } })
+    : route.fulfill({ json: { entries: [] } }));
+  await finish(page);
+  await page.locator('#score-name').fill('ABC');
+  await page.locator('#score-form [type=submit]').click();
+  await expect(page.locator('#score-form [role=status]')).toContainText('אי אפשר לאמת');
+  await expect(page.locator('#score-form [type=submit]')).toBeDisabled();
   await page.locator('#restartBtn').click();
   expect(await page.evaluate(() => window.__game.state.phase)).toBe('play');
 });
@@ -75,10 +92,11 @@ test('a lost save response retries the same submission, even with repeated click
 
 test('late saves cannot mark a new round as saved', async ({ page }) => {
   await prepare(page);
-  await page.unroute('**/api/leaderboards/main');
+  await page.unroute('**/api/leaderboards/main**');
   let release, started;
   const waiting = new Promise((resolve) => { started = resolve; });
-  await page.route('**/api/leaderboards/main', async (route) => {
+  await page.route('**/api/leaderboards/main**', async (route) => {
+    if (route.request().url().endsWith('/runs')) return route.fulfill({ json: { run: { id: '00000000-0000-4000-8000-000000000001', token: 'a'.repeat(64) } } });
     if (route.request().method() === 'GET') return route.fulfill({ json: { entries: [] } });
     const body = route.request().postDataJSON(); started();
     await new Promise((resolve) => { release = resolve; });

@@ -14,6 +14,8 @@ GRANT USAGE ON SCHEMA public TO marker_games_web;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM marker_games_web;
 GRANT SELECT, INSERT ON leaderboard_scores TO marker_games_web;
 GRANT SELECT, INSERT, UPDATE ON chana_rooms, chana_players TO marker_games_web;
+GRANT SELECT, INSERT, UPDATE, DELETE ON leaderboard_runs TO marker_games_web;
+GRANT SELECT, UPDATE ON leaderboard_budget TO marker_games_web;
 DO $$ BEGIN
   EXECUTE format('REVOKE CREATE, TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
   EXECUTE format('GRANT CONNECT ON DATABASE %I TO marker_games_web', current_database());
