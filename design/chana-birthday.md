@@ -8,9 +8,9 @@ A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
 1. Connect a laptop to the TV/projector, open the game and choose **ניהול המשחק במסך הגדול**.
 2. Create a room and save the **private host recovery link**. Share the player QR code or player link only.
 3. Everyone enters a name on their phone. Confirm the participant list, then start. Joining closes at that point.
-4. Each person gets all 52 dated works in an independent shuffle. Hold a painting briefly and drag it into place on a phone, or drag directly with a mouse. The page scrolls near its edges and numbers update during the move. Undo is available. Tap an image for a larger view, an optional exhibition-name guess, or **שינוי מיקום** as a keyboard-accessible alternative.
-5. Everyone submits once. Submitted answers are locked. The host cannot reveal until every active participant has submitted. If someone leaves, explicitly remove that unsubmitted participant.
-6. Review 18 exhibitions together. The host advances by buttons or left/right arrows. Phones follow the host. The review panel shows each person's guesses and placements; the host may approve a close spelling for bonus credit.
+4. Each person gets all 52 dated works in an independent shuffle. Hold a painting briefly and drag it into place on a phone, or drag directly with a mouse. The page scrolls near its edges and numbers update during the move. Undo is available. Tap an image for a larger view or **שינוי מיקום** as a keyboard-accessible alternative.
+5. Submit the order to lock it, then enter exhibition-name guesses on the next screen. Every painting has copy/paste buttons; guesses remain optional. Submit the names to finish. The host cannot reveal until every active participant has finished both steps. If someone leaves, explicitly remove that unfinished participant.
+6. Review 18 exhibitions together. The host advances by buttons or left/right arrows. Phones follow the host. The main screen shows every person's guesses, placements and total score next to the correct exhibition. Click a player's name to inspect all 52 submitted positions and guesses. The host may approve a close spelling for bonus credit.
 7. Reveal the scoreboard, then download the JSON results if desired. Rooms remain accessible for seven days. Rehearse with a few phones on the venue's Wi-Fi before the birthday.
 
 No time limit is imposed. Internet is needed to join, sync, submit and follow review.
@@ -55,7 +55,7 @@ sharing Wi-Fi do not exhaust the arcade leaderboard's shared-IP limit.
 
 Run `TEST_DATABASE_URL=... npm run test:server` against a disposable **UTF-8**
 PostgreSQL database. It covers scoring/ties/aliases, independent shuffles, authorization,
-hidden answers, idempotent create/join/submit, stale-save protection, custom-domain
+hidden answers, idempotent create/join/submit, chronology locking before name entry, stale-save protection, custom-domain
 CORS and large drafts, removals, review gating, bonus corrections and 40 simulated
 concurrent participants, as well as existing arcade leaderboard regression tests.
 Run `npm run build` and `npm run test:site` for all eight pages.

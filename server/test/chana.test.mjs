@@ -71,6 +71,26 @@ test('host can remove an absent unsubmitted player; removed token loses access',
  await call('/rooms/'+code+'/remove',{method:'POST',token:h,body:{playerId:joined.me.id}});assert.equal((await call('/rooms/'+code,{token:absent})).status,403);
  assert.equal((await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}})).room.phase,'review');
 });
+test('order submission locks chronology while names remain editable until final submission',async t=>{
+ const call=game(t),{h,p,code}=await setup(call),draft={order:ordered,guesses:{},revision:1};
+ await call('/rooms/'+code+'/start',{method:'POST',token:h,body:{}});
+ assert.equal((await call('/rooms/'+code+'/order',{method:'POST',token:h,body:draft})).status,403);
+ const locked=await call('/rooms/'+code+'/order',{method:'POST',token:p,body:draft});
+ assert.equal(locked.me.orderSubmitted,true);assert.equal(locked.me.submitted,false);assert.equal(locked.answers,undefined);
+ assert.equal((await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}})).status,409);
+ const retry=await call('/rooms/'+code+'/order',{method:'POST',token:p,body:{...draft,order:[...ordered].reverse(),revision:2}});
+ assert.deepEqual(retry.me.order,ordered);assert.equal(retry.me.revision,1);
+ for(const action of ['progress','submit']){
+  assert.equal((await call('/rooms/'+code+'/'+action,{method:action==='progress'?'PUT':'POST',token:p,body:{...draft,order:[...ordered].reverse(),revision:2}})).status,409);
+ }
+ const names={order:ordered,guesses,revision:2};
+ const saved=await call('/rooms/'+code+'/progress',{method:'PUT',token:p,body:names});assert.deepEqual(saved.me.guesses,guesses);assert.equal(saved.me.submitted,false);
+ assert.deepEqual((await call('/rooms/'+code,{token:p})).me.guesses,guesses);
+ assert.equal((await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}})).status,409);
+ const final=await call('/rooms/'+code+'/submit',{method:'POST',token:p,body:names});assert.equal(final.me.submitted,true);
+ const late=await call('/rooms/'+code+'/progress',{method:'PUT',token:p,body:{...names,guesses:{},revision:3}});assert.deepEqual(late.me.guesses,guesses);
+ const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.results[0].total,136);assert.deepEqual(review.submissions[0].guesses,guesses);
+});
 test('host can award/revoke a reviewed spelling bonus; player cannot and total/rank persist',async t=>{
  const call=game(t),{h,p,code,player}=await setup(call),payload={playerId:player.me.id,collectionId:collections[0].id,correct:true};
  await call('/rooms/'+code+'/start',{method:'POST',token:h,body:{}});

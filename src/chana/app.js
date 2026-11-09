@@ -11,6 +11,7 @@ const button=(label,action,kind='primary',extra='')=>`<button class="${kind}" da
 let state=null,session=null,local=null,busy=false,saving=false,saveTimer,noticeTimer,pollTimer,lastSignature='',saveMessage='נשמר',view='join',selectedId=null;
 let artworks=new Map(),undo=[],pollError=false,reviewDetailOpen=false;
 let stopDragging=null,dragging=false;
+let copiedName=typeof get('chana-copied-name')==='string'?get('chana-copied-name'):'';
 const url=new URL(location.href),roomParam=url.searchParams.get('room')||'';
 const brand=()=>`<a class="brand" href="${GAME_URL.pathname}" aria-label="חנה גולדברג — דף הבית"><span class="brand-mark">ח</span><span>חנה גולדברג</span></a>`;
 function toast(message){const n=$('#notice');n.textContent=message;n.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.hidden=true,5500);}
@@ -29,16 +30,17 @@ function home(){
 function remember(s){session=s;put('chana-session-'+s.role+'-'+s.code,s);put('chana-last',s);const u=new URL(location);u.search='?room='+s.code;u.hash=s.role==='host'?'host='+s.token:'';history.replaceState({},'',u);}
 async function enter(data,s){remember(s);artworks=new Map(data.artworks.map(a=>[a.id,a]));state=data;undo=[];
  if(data.me){const saved=get('chana-progress-'+s.code);local=saved&&saved.playerId===data.me.id&&saved.revision>data.me.revision&&!data.me.submitted?saved:{playerId:data.me.id,order:data.me.order,guesses:data.me.guesses,revision:data.me.revision};if(local.revision>data.me.revision)saveMessage='שינויים שמורים בטלפון';}
+ if(data.me?.orderSubmitted)local.order=[...data.me.order];
  render();poll();clearInterval(pollTimer);pollTimer=setInterval(poll,2500);if(local&&local.revision>data.me?.revision&&data.room.phase==='playing')scheduleSave();
 }
-function stateSignature(s){return JSON.stringify({phase:s.room.phase,index:s.room.reviewIndex,players:s.players,submitted:s.me?.submitted,results:s.results});}
+function stateSignature(s){return JSON.stringify({phase:s.room.phase,index:s.room.reviewIndex,players:s.players,submitted:s.me?.submitted,orderSubmitted:s.me?.orderSubmitted,results:s.results});}
 function applyState(data){
- const phases=['lobby','playing','review','results'];if(state&&phases.indexOf(data.room.phase)<phases.indexOf(state.room.phase))return;if(state?.me?.submitted&&data.me&&!data.me.submitted)return;
- const previous=state?.room.phase,wasSubmitted=state?.me?.submitted;state=data;artworks=new Map(data.artworks.map(a=>[a.id,a]));
- if(data.me&&((data.me.submitted&&!wasSubmitted)||!local)){local={playerId:data.me.id,order:data.me.order,guesses:data.me.guesses,revision:data.me.revision};}
+ const phases=['lobby','playing','review','results'];if(state&&phases.indexOf(data.room.phase)<phases.indexOf(state.room.phase))return;if(state?.me?.submitted&&data.me&&!data.me.submitted)return;if(state?.me?.orderSubmitted&&data.me&&!data.me.orderSubmitted)return;
+ const previous=state?.room.phase,wasSubmitted=state?.me?.submitted,wasOrdered=state?.me?.orderSubmitted;state=data;artworks=new Map(data.artworks.map(a=>[a.id,a]));
+ if(data.me&&((data.me.submitted&&!wasSubmitted)||(data.me.orderSubmitted&&!wasOrdered)||!local)){local={playerId:data.me.id,order:data.me.order,guesses:data.me.guesses,revision:data.me.revision};}
  const next=stateSignature(data);if(next!==lastSignature){
   lastSignature=next;
-  if(previous!==data.room.phase||wasSubmitted!==data.me?.submitted||session.role==='host'||data.room.phase!=='playing'){if(modal.open)modal.close();render();}
+  if(previous!==data.room.phase||wasSubmitted!==data.me?.submitted||wasOrdered!==data.me?.orderSubmitted||session.role==='host'||data.room.phase!=='playing'){if(modal.open)modal.close();render();if(previous!==data.room.phase||wasSubmitted!==data.me?.submitted||wasOrdered!==data.me?.orderSubmitted)window.scrollTo(0,0);}
   else updateHeader();
  }
 }
@@ -46,7 +48,7 @@ async function poll(){if(!session||busy||document.hidden)return;try{const data=a
 function topbar(){return `<header class="topbar">${brand()}<div class="session-meta"><span class="room-tag" dir="ltr">${state.room.code}</span><span>${session.role==='host'?'מסך המנחה':esc(state.me.name)}</span>${button('?', 'help','help-button','aria-label="איך משחקים"')}</div></header>`;}
 function updateHeader(){const s=$('#save-status');if(s){s.textContent=pollError?'החיבור מתחדש…':saveMessage;s.classList.toggle('pending',pollError||saveMessage!=='נשמר במשחק');}const c=$('#submitted-count');if(c)c.textContent=`${state.players.filter(p=>p.submitted).length} מתוך ${state.players.length} שלחו`;}
 function qrHtml(){const q=qrcode(0,'M');q.addData(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code);q.make();return q.createSvgTag({cellSize:5,margin:12,scalable:true});}
-function playerList(){return `<ul class="players">${state.players.map(p=>`<li><span class="avatar">${esc([...p.name][0])}</span><span class="player-name">${esc(p.name)}</span><span class="player-state ${p.submitted?'done':''}">${p.submitted?'✓ נשלח':state.room.phase==='lobby'?'הצטרפו':'מסדרים…'}</span>${session.role==='host'&&!p.submitted?`<button class="remove" data-remove="${p.id}" aria-label="הסרת ${esc(p.name)}">×</button>`:''}</li>`).join('')||'<li class="empty">ממתינים למשתתפים</li>'}</ul>`;}
+function playerList(){return `<ul class="players">${state.players.map(p=>`<li><span class="avatar">${esc([...p.name][0])}</span><span class="player-name">${esc(p.name)}</span><span class="player-state ${p.submitted?'done':''}">${p.submitted?'✓ נשלח':state.room.phase==='lobby'?'הצטרפו':p.orderSubmitted?'מוסיפים שמות…':'מסדרים…'}</span>${session.role==='host'&&!p.submitted?`<button class="remove" data-remove="${p.id}" aria-label="הסרת ${esc(p.name)}">×</button>`:''}</li>`).join('')||'<li class="empty">ממתינים למשתתפים</li>'}</ul>`;}
 function render(){
  stopDragging?.();stopDragging=null;
  if(!state)return home();lastSignature=stateSignature(state);
@@ -60,24 +62,65 @@ function render(){
    const done=state.players.filter(p=>p.submitted).length,all=done===state.players.length&&done>0;
    screen.innerHTML=`<div class="host-heading"><h1>${all?'כולם שלחו':'ממתינים לשליחה'}</h1></div><div class="playing-layout"><section class="progress-panel"><div class="progress-number">${done}<span>/${state.players.length}</span></div><h2>שלחו</h2><progress value="${done}" max="${state.players.length||1}"></progress>${button('הצגת התשובות','review','primary wide',all?'':'disabled')}<p class="small">התשובות נפתחות אחרי שכולם שולחים.</p>${button('מסך מלא','fullscreen','text-button')}</section><section class="attendance">${playerList()}<p class="small">× להסרת משתתף שלא שלח.</p></section></div>`;
   }else if(state.me.submitted){screen.innerHTML=`<section class="waiting"><span class="round-icon">✓</span><h1>נשלח</h1><p>ממתינים לתשובות במסך הגדול.</p><span class="pill" id="submitted-count">${state.players.filter(p=>p.submitted).length} מתוך ${state.players.length} שלחו</span><div class="waiting-art"><img src="./art/chana/cover.webp" alt="ציור של חנה גולדברג"></div></section>`;}
+  else if(state.me.orderSubmitted)renderNames(screen);
   else renderTimeline(screen);
  }else if(state.room.phase==='review')renderReview(screen);
  else renderResults(screen);
  updateHeader();if(reviewDetailOpen&&state.room.phase==='review'&&session.role==='host')reviewGuesses();
 }
+function updateNamesProgress(){
+ const count=$('#named-count');if(count)count.textContent=Object.values(local.guesses).filter(v=>v.trim()).length+' / 52';
+}
+function renderNames(screen){
+ screen.innerHTML=`<section class="timeline-heading"><h1>שמות התערוכות</h1><span class="pill" id="named-count" dir="ltr"></span></section><p class="instructions">נחשו את שמות התערוכות לבונוס. אפשר לדלג.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span></div><div class="names-grid">${local.order.map((id,i)=>{
+  const a=artworks.get(id),guess=local.guesses[id]||'';
+  return `<article class="name-card"><span class="position">${i+1}</span><button class="name-image" data-zoom="${id}" aria-label="הגדלת יצירה ${i+1}"><img src="${a.thumbPath}" alt="יצירה ${i+1}" loading="lazy"></button><input data-name-art="${id}" aria-label="שם התערוכה ליצירה ${i+1}" value="${esc(guess)}" maxlength="100" placeholder="שם התערוכה" autocomplete="off" dir="auto"><div class="name-buttons"><button class="secondary" data-copy-name="${id}" aria-label="העתקת שם מיצירה ${i+1}" ${guess.trim()?'':'disabled'}>העתקה</button><button class="secondary" data-paste-name="${id}" aria-label="הדבקת שם ליצירה ${i+1}" ${copiedName?'':'disabled'}>הדבקה</button></div></article>`;
+ }).join('')}</div><div class="submit-bar">${button('שליחת השמות','confirm-names','primary wide')}</div>`;
+ updateNamesProgress();
+}
+function copyName(id){
+ const value=local.guesses[id]?.trim();if(!value)return;
+ copiedName=value;put('chana-copied-name',value);
+ document.querySelectorAll('[data-paste-name]').forEach(b=>b.disabled=false);
+ // The in-game buffer works on every phone without clipboard-read permission.
+ navigator.clipboard?.writeText(value).catch(()=>{});
+ toast('השם הועתק');
+}
+function pasteName(id){
+ if(!copiedName||!state.me.orderSubmitted||state.me.submitted)return;
+ local.guesses[id]=copiedName;const input=$(`[data-name-art="${id}"]`);if(input)input.value=copiedName;
+ const copyButton=$(`[data-copy-name="${id}"]`);if(copyButton)copyButton.disabled=false;
+ changed();
+}
+function reviewAnswers(collection){
+ const scores=new Map(state.results.map(p=>[p.id,p]));
+ return `<section class="review-answers" tabindex="0" aria-label="תשובות המשתתפים"><table><thead><tr><th>שם</th>${collection.artworkIds.map((_,i)=>`<th>ציור ${i+1}</th>`).join('')}<th>ניקוד</th></tr></thead><tbody>${state.submissions.map(p=>{
+  const score=scores.get(p.id);
+  return `<tr><th scope="row"><button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button></th>${collection.artworkIds.map(id=>`<td>${esc(p.guesses[id]?.trim()||'—')}<small>מיקום ${p.order.indexOf(id)+1}</small></td>`).join('')}<td class="answer-score"><strong>${score.total}</strong><small>סדר ${score.chronology} · בונוס ${score.bonus}</small></td></tr>`;
+ }).join('')}</tbody></table></section>`;
+}
+function playerAnswers(id){
+ if(session.role!=='host'||!state.submissions)return;
+ const player=state.submissions.find(p=>p.id===id),score=state.results.find(p=>p.id===id);if(!player)return;
+ const collectionByArt=new Map(state.answers.flatMap(g=>g.artworkIds.map(id=>[id,g])));
+ openModal(`<div class="answers"><h2>${esc(player.name)} · ${score.total} נק׳</h2><div class="player-answer-grid">${player.order.map((id,i)=>{
+  const a=artworks.get(id),g=collectionByArt.get(id);
+  return `<article class="player-answer-card"><span class="position">${i+1}</span><img src="${a.thumbPath}" alt="יצירה במקום ${i+1}" loading="lazy"><p>${esc(player.guesses[id]?.trim()||'ללא ניחוש')}</p><small>${esc(g.titleHe)} · <bdi>${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</bdi></small></article>`;
+ }).join('')}</div></div>`,'answers-modal');
+}
 function renderTimeline(screen){
- screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">החזיקו וגררו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה ולניחוש שם התערוכה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid" aria-label="סדר היצירות">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div><span id="move-announcement" class="sr-only" role="status" aria-live="polite"></span>`;
+ screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">החזיקו וגררו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid" aria-label="סדר היצירות">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div><span id="move-announcement" class="sr-only" role="status" aria-live="polite"></span>`;
  stopDragging=enableArtDragging($('#art-grid'),{onDrop:draggedOrder,onDragging(active){dragging=active;}});
 }
 function draggedOrder(order,id){
- if(state.room.phase!=='playing'||state.me?.submitted)return;
+ if(state.room.phase!=='playing'||state.me?.submitted||state.me?.orderSubmitted)return;
  undo.push([...local.order]);if(undo.length>20)undo.shift();local.order=order;changed();
  $('[data-action="undo"]').disabled=false;
  $('#move-announcement').textContent='היצירה הועברה למקום '+(order.indexOf(id)+1);
 }
 function card(id,i){const a=artworks.get(id);return `<article class="art-card" data-art="${id}"><div class="card-top"><span class="position">${i+1}</span>${local.guesses[id]?.trim()?'<span class="guess-mark" aria-label="נוסף ניחוש">✦</span>':''}</div><button class="art-image" data-detail="${id}" aria-label="הגדלה וניחוש ליצירה ${i+1}"><img src="${a.thumbPath}" width="${a.width}" height="${a.height}" alt="יצירה ${i+1} על הציר" loading="lazy" decoding="async"></button></article>`;}
 function persist(){if(!put('chana-progress-'+session.code,local))toast('השמירה בטלפון אינה זמינה. השאירו את הדף פתוח עד השליחה.');}
-function changed(){local.revision++;persist();saveMessage='נשמר בטלפון…';updateHeader();scheduleSave();}
+function changed(){local.revision++;persist();saveMessage='נשמר בטלפון…';updateHeader();updateNamesProgress();scheduleSave();}
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,700);}
 async function save(){
  if(saving||!local||!state||state.room.phase!=='playing'||state.me?.submitted)return;
@@ -86,16 +129,16 @@ async function save(){
 }
 function moveTo(id,index){const old=local.order.indexOf(id);if(old<0||old===index)return;undo.push([...local.order]);if(undo.length>20)undo.shift();local.order.splice(old,1);local.order.splice(Math.max(0,Math.min(51,index)),0,id);changed();render();const el=$(`[data-art="${id}"]`);el?.scrollIntoView({behavior:'smooth',block:'center'});el?.classList.add('just-moved');toast('היצירה הועברה למקום '+(local.order.indexOf(id)+1));}
 function openModal(html,kind=''){modal.className=kind;modal.innerHTML=`<button class="modal-close" data-action="close-modal" aria-label="סגירה">×</button>${html}`;if(!modal.open)modal.showModal();}
-function detail(id){const a=artworks.get(id),i=local.order.indexOf(id);selectedId=id;openModal(`<div class="detail-image"><img src="${a.imagePath}" alt="יצירה ${i+1} בהגדלה"></div><div class="detail-content"><span class="eyebrow">יצירה ${i+1} על הציר שלך</span><label>שם התערוכה <span class="muted">(בונוס, לא חובה)</span><input id="guess-input" maxlength="100" value="${esc(local.guesses[id]||'')}" placeholder="הניחוש שלך" autocomplete="off"></label><p class="small">2 נקודות לתערוכה. מספיק ניחוש נכון אחד.</p><div class="button-row">${button('שמירה וסגירה','close-detail')}${button('שינוי מיקום','detail-move','secondary')}</div></div>`,'detail-modal');}
+function detail(id){const a=artworks.get(id),i=local.order.indexOf(id);selectedId=id;openModal(`<div class="detail-image"><img src="${a.imagePath}" alt="יצירה ${i+1} בהגדלה"></div><div class="detail-content"><span class="eyebrow">יצירה ${i+1} על הציר שלך</span><div class="button-row">${button('סגירה','close-detail')}${button('שינוי מיקום','detail-move','secondary')}</div></div>`,'detail-modal');}
 function moveDialog(id){selectedId=id;const a=artworks.get(id);openModal(`<div class="move-dialog"><div class="moving-art"><img src="${a.thumbPath}" alt="היצירה להעברה"><div><span class="eyebrow">מקום נוכחי ${local.order.indexOf(id)+1}</span><h2>לאן להעביר?</h2></div></div><form id="move-form"><label>מספר המקום החדש<input type="number" inputmode="numeric" name="position" min="1" max="52" value="${local.order.indexOf(id)+1}" required></label><button class="primary" type="submit">העברה</button></form><p class="small">או בחרו את היצירה שלפניה תרצו למקם:</p><div class="move-targets">${local.order.map((other,i)=>`<button data-target="${other}" ${other===id?'disabled':''} aria-label="לפני יצירה ${i+1}"><img src="${artworks.get(other).thumbPath}" alt="" loading="lazy"><span>${i+1}</span></button>`).join('')}</div>${button('העברה לסוף הציר','move-last','secondary wide')}</div>`,'move-modal');}
 function renderReview(screen){
  const g=state.answers[state.room.reviewIndex],idx=state.room.reviewIndex,host=session.role==='host',mine=state.results.find(p=>p.id===state.me?.id);
  const named=state.results.filter(p=>p.bonuses.find(b=>b.collectionId===g.id)?.correct).length;
- screen.innerHTML=`<div class="review-heading"><span class="eyebrow">תערוכה ${idx+1} מתוך 18</span><div class="review-title"><h1>${esc(g.titleHe)}</h1><span class="review-year" dir="ltr">${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</span></div></div><div class="review-pictures">${g.artworkIds.map(id=>`<button class="review-picture" data-zoom="${id}"><img src="${artworks.get(id).imagePath}" alt="יצירה מתוך ${esc(g.titleHe)}"></button>`).join('')}</div><div class="review-bottom"><span class="pill">✦ ${named} משתתפים זיהו את התערוכה${mine?.bonuses.find(b=>b.collectionId===g.id)?.correct?' · גם אתם! +2 נק׳':''}</span><span class="small">השנה היא שנת התערוכה</span></div>${host?`${button('ניחושים ובונוסים','review-guesses','secondary review-guesses-button')}<nav class="review-controls">${button('→ הקודמת','previous','secondary',idx===0?'disabled':'')}<span>${idx+1} / 18</span>${idx===17?button('תוצאות','results'):button('הבאה ←','next')}</nav><details class="review-jump"><summary>מעבר לתערוכה</summary><div class="review-dots">${state.answers.map((c,i)=>`<button data-review-index="${i}" class="${i===idx?'active':''}" aria-label="${esc(c.titleHe)}" title="${esc(c.titleHe)}">${i+1}</button>`).join('')}</div></details>`:`<div class="following"><span class="pulse"></span>מסונכרן עם המסך הגדול</div>`}`;
+ screen.innerHTML=`<div class="review-heading"><span class="eyebrow">תערוכה ${idx+1} מתוך 18</span><div class="review-title"><h1>${esc(g.titleHe)}</h1><span class="review-year" dir="ltr">${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</span></div></div><div class="review-pictures">${g.artworkIds.map((id,i)=>`<button class="review-picture" data-zoom="${id}"><span class="review-art-number">${i+1}</span><img src="${artworks.get(id).imagePath}" alt="יצירה מתוך ${esc(g.titleHe)}"></button>`).join('')}</div><div class="review-bottom"><span class="pill">✦ ${named} משתתפים זיהו את התערוכה${mine?.bonuses.find(b=>b.collectionId===g.id)?.correct?' · גם אתם! +2 נק׳':''}</span><span class="small">השנה היא שנת התערוכה</span></div>${host?`${reviewAnswers(g)}${button('עריכת בונוסים','review-guesses','secondary review-guesses-button')}<nav class="review-controls">${button('→ הקודמת','previous','secondary',idx===0?'disabled':'')}<span>${idx+1} / 18</span>${idx===17?button('תוצאות','results'):button('הבאה ←','next')}</nav><details class="review-jump"><summary>מעבר לתערוכה</summary><div class="review-dots">${state.answers.map((c,i)=>`<button data-review-index="${i}" class="${i===idx?'active':''}" aria-label="${esc(c.titleHe)}" title="${esc(c.titleHe)}">${i+1}</button>`).join('')}</div></details>`:`<div class="following"><span class="pulse"></span>מסונכרן עם המסך הגדול</div>`}`;
 }
 function renderResults(screen){
  const mine=state.results.find(p=>p.id===state.me?.id);
- screen.innerHTML=`<section class="results-heading"><h1>תוצאות</h1>${mine?`<div class="my-score"><strong>${mine.total}</strong><span>הנקודות שלך<br><small>${mine.chronology} על הסדר + ${mine.bonus} בונוס</small></span></div>`:''}</section><section class="results-table"><div class="section-heading"><span class="muted">מתוך 136 נקודות</span></div><table><thead><tr><th>מקום</th><th>שם</th><th>סדר</th><th>בונוס</th><th>סה״כ</th></tr></thead><tbody>${state.results.map(p=>`<tr class="${p.id===mine?.id?'my-row':''}"><td>${p.rank===1?'✦ ':''}${p.rank}</td><th scope="row">${esc(p.name)}</th><td>${p.chronology}</td><td>${p.bonus}</td><td class="total">${p.total}</td></tr>`).join('')}</tbody></table></section><div class="button-row results-actions">${button('הסדר הנכון','all-answers','secondary')}${session.role==='host'?button('הורדת התוצאות','download','secondary'):''}${session.role==='host'?button('פתיחת משחק נוסף','new-game','text-button'):''}</div>`;
+ screen.innerHTML=`<section class="results-heading"><h1>תוצאות</h1>${mine?`<div class="my-score"><strong>${mine.total}</strong><span>הנקודות שלך<br><small>${mine.chronology} על הסדר + ${mine.bonus} בונוס</small></span></div>`:''}</section><section class="results-table"><div class="section-heading"><span class="muted">מתוך 136 נקודות</span></div><table><thead><tr><th>מקום</th><th>שם</th><th>סדר</th><th>בונוס</th><th>סה״כ</th></tr></thead><tbody>${state.results.map(p=>`<tr class="${p.id===mine?.id?'my-row':''}"><td>${p.rank===1?'✦ ':''}${p.rank}</td><th scope="row">${session.role==='host'?`<button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button>`:esc(p.name)}</th><td>${p.chronology}</td><td>${p.bonus}</td><td class="total">${p.total}</td></tr>`).join('')}</tbody></table></section><div class="button-row results-actions">${button('הסדר הנכון','all-answers','secondary')}${session.role==='host'?button('הורדת התוצאות','download','secondary'):''}${session.role==='host'?button('פתיחת משחק נוסף','new-game','text-button'):''}</div>`;
 }
 function reviewGuesses(){
  reviewDetailOpen=true;const g=state.answers[state.room.reviewIndex];
@@ -116,12 +159,13 @@ async function act(action){
  if(action==='detail-move'){moveDialog(selectedId);return;}
  if(action==='move-last'){const id=selectedId;modal.close();moveTo(id,51);return;}
  if(action==='undo'){if(undo.length){local.order=undo.pop();changed();render();}return;}
- if(action==='confirm-submit'){openModal(`<div class="confirm"><h2>לשלוח?</h2><p>לא ניתן לערוך את הסדר והניחושים אחרי השליחה.</p><div class="button-row">${button('כן, לשלוח','submit')}${button('חזרה','close-modal','secondary')}</div><p id="submit-error" class="form-error" role="alert"></p></div>`);return;}
- if(action==='submit'){
-  if(busy)return;busy=true;const b=$('[data-action="submit"]');b.disabled=true;b.textContent='שולחים…';clearTimeout(saveTimer);
-  try{const data=await request('/rooms/'+session.code+'/submit',{method:'POST',body:{order:local.order,guesses:local.guesses,revision:local.revision}});modal.close();applyState(data);toast('נשלח');}catch(e){$('#submit-error').textContent=e.message;b.disabled=false;b.textContent='ניסיון שליחה נוסף';}finally{busy=false;}return;
+ if(action==='confirm-submit'){openModal(`<div class="confirm"><h2>לשלוח?</h2><p>לא ניתן לערוך את הסדר אחרי השליחה. בשלב הבא מוסיפים שמות לתערוכות.</p><div class="button-row">${button('כן, לשלוח','submit')}${button('חזרה','close-modal','secondary')}</div><p id="submit-error" class="form-error" role="alert"></p></div>`);return;}
+ if(action==='confirm-names'){openModal(`<div class="confirm"><h2>לשלוח את השמות?</h2><p>לא ניתן לערוך את השמות אחרי השליחה.</p><div class="button-row">${button('כן, לשלוח','submit-names')}${button('חזרה','close-modal','secondary')}</div><p id="submit-error" class="form-error" role="alert"></p></div>`);return;}
+ if(action==='submit'||action==='submit-names'){
+  if(busy)return;busy=true;const b=$('[data-action="'+action+'"]');b.disabled=true;b.textContent='שולחים…';clearTimeout(saveTimer);
+  try{const data=await request('/rooms/'+session.code+(action==='submit'?'/order':'/submit'),{method:'POST',body:{order:local.order,guesses:local.guesses,revision:local.revision}});modal.close();applyState(data);toast(action==='submit'?'הסדר נשלח':'נשלח');}catch(e){$('#submit-error').textContent=e.message;b.disabled=false;b.textContent='ניסיון שליחה נוסף';}finally{busy=false;}return;
  }
- if(action==='help'){openModal(`<div class="help-content"><h2>איך משחקים?</h2><ol><li>החזיקו ציור וגררו לפי שנת התערוכה, מהמוקדם למאוחר. גרירה לקצה המסך גוללת את הרשימה.</li><li>לחצו על ציור להגדלה ולניחוש שם התערוכה.</li><li>שלחו כשסיימתם. עוברים על התשובות יחד במסך הגדול.</li></ol><p class="small">עד 100 נקודות על הסדר + 2 לכל תערוכה שזוהתה (עד 36). שנים זהות או חופפות יכולות להופיע בכל סדר ביניהן.</p><p class="small">הסדר נשמר אוטומטית. לחזרה, פתחו באותו דפדפן.</p>${button('סגירה','close-modal')}</div>`);return;}
+ if(action==='help'){openModal(`<div class="help-content"><h2>איך משחקים?</h2><ol><li>החזיקו ציור וגררו לפי שנת התערוכה, מהמוקדם למאוחר. גרירה לקצה המסך גוללת את הרשימה.</li><li>שלחו את הסדר, ואז הוסיפו שמות לתערוכות. אפשר להעתיק ולהדביק שם בין ציורים.</li><li>שלחו את השמות. עוברים על התשובות והניקוד יחד במסך הגדול.</li></ol><p class="small">עד 100 נקודות על הסדר + 2 לכל תערוכה שזוהתה (עד 36). שנים זהות או חופפות יכולות להופיע בכל סדר ביניהן.</p><p class="small">הסדר נשמר אוטומטית. לחזרה, פתחו באותו דפדפן.</p>${button('סגירה','close-modal')}</div>`);return;}
  if(action==='copy-join'){copy(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code);return;}
  if(action==='copy-host'){copy(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code+'#host='+session.token);return;}
  if(action==='fullscreen'){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('אפשר להגדיל את החלון דרך הדפדפן.');}return;}
@@ -138,6 +182,9 @@ document.addEventListener('click',e=>{
  if(dragging)return;
  const target=e.target.closest('button');if(!target)return;
  if(target.dataset.action)act(target.dataset.action);
+ if(target.dataset.copyName)copyName(target.dataset.copyName);
+ if(target.dataset.pasteName)pasteName(target.dataset.pasteName);
+ if(target.dataset.playerAnswers)playerAnswers(target.dataset.playerAnswers);
  if(target.dataset.detail)detail(target.dataset.detail);
  if(target.dataset.target){const id=selectedId,other=target.dataset.target;const remaining=local.order.filter(a=>a!==id),index=remaining.indexOf(other);modal.close();moveTo(id,index);}
  if(target.dataset.bonusPlayer)hostAction('bonus',{playerId:target.dataset.bonusPlayer,collectionId:state.answers[state.room.reviewIndex].id,correct:target.dataset.bonusCorrect==='true'});
@@ -147,7 +194,7 @@ document.addEventListener('click',e=>{
  if(target.dataset.zoom){const id=target.dataset.zoom;openModal(`<img class="zoom-image" src="${artworks.get(id).imagePath}" alt="יצירה בהגדלה">`,'zoom-modal');}
 });
 document.addEventListener('keydown',e=>{if(session?.role==='host'&&state?.room.phase==='review'&&!modal.open&&!['INPUT','TEXTAREA'].includes(e.target.tagName)){if(['ArrowLeft','PageDown'].includes(e.key)&&state.room.reviewIndex<17){e.preventDefault();act('next');}if(['ArrowRight','PageUp'].includes(e.key)&&state.room.reviewIndex>0){e.preventDefault();act('previous');}}});
-document.addEventListener('input',e=>{if(e.target.id==='guess-input'&&selectedId){local.guesses[selectedId]=e.target.value;changed();}});
+document.addEventListener('input',e=>{const id=e.target.dataset.nameArt;if(id&&state?.me?.orderSubmitted&&!state.me.submitted){local.guesses[id]=e.target.value;changed();const copyButton=$(`[data-copy-name="${id}"]`);if(copyButton)copyButton.disabled=!e.target.value.trim();}});
 document.addEventListener('submit',async e=>{
  if(e.target.id==='join-form'){
   e.preventDefault();if(busy)return;const form=e.target,fields=new FormData(form),code=String(fields.get('code')).trim(),name=String(fields.get('name')).trim();

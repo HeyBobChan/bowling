@@ -14,10 +14,10 @@ async function body(req){
 }
 async function payload(db,room,identity){
  const players=await all(db,'SELECT * FROM players WHERE room_code=? AND removed=0 ORDER BY joined_at,id',room.code);
- const result={room:{code:room.code,phase:room.phase,reviewIndex:room.review_index,expiresAt:room.expires_at},role:identity.role,players:players.map(p=>({id:p.id,name:p.name,submitted:!!p.submitted})),artworks:publicArtworks};
+ const result={room:{code:room.code,phase:room.phase,reviewIndex:room.review_index,expiresAt:room.expires_at},role:identity.role,players:players.map(p=>({id:p.id,name:p.name,submitted:!!p.submitted,orderSubmitted:!!(p.order_submitted||p.submitted)})),artworks:publicArtworks};
  if(identity.role==='player'){
   const p=players.find(p=>p.id===identity.id);if(!p)fail(403,'ההשתתפות שלך הוסרה מהמשחק.');
-  result.me={id:p.id,name:p.name,order:JSON.parse(p.order_json),guesses:JSON.parse(p.guesses_json),revision:p.revision,submitted:!!p.submitted};
+  result.me={id:p.id,name:p.name,order:JSON.parse(p.order_json),guesses:JSON.parse(p.guesses_json),revision:p.revision,submitted:!!p.submitted,orderSubmitted:!!(p.order_submitted||p.submitted)};
  }
  if(room.phase==='review'||room.phase==='results'){
   result.answers=collections.map(g=>({...g,artworkIds:artworks.filter(a=>a.collectionId===g.id).map(a=>a.id)}));
@@ -47,7 +47,7 @@ export async function api(req,env){
    if(!room)fail(503,'לא הצלחנו ליצור משחק. נסו שוב.');
    return json(await payload(db,room,{role:'host'}),201);
   }
-  const match=path.match(/^\/api\/rooms\/(\d{6})(?:\/(join|progress|submit|start|review|advance|results|remove|bonus))?$/);
+  const match=path.match(/^\/api\/rooms\/(\d{6})(?:\/(join|progress|order|submit|start|review|advance|results|remove|bonus))?$/);
   if(!match)fail(404,'העמוד לא נמצא.');
   const [,code,action]=match;let room=await first(db,'SELECT * FROM rooms WHERE code=?',code);
   if(!room||room.expires_at<Date.now())fail(404,'הקוד לא נמצא או שהמשחק הסתיים. בדקו את שש הספרות.');
@@ -71,14 +71,15 @@ export async function api(req,env){
   if(h===room.host_hash)identity={role:'host'};
   else {const p=await first(db,'SELECT id FROM players WHERE room_code=? AND token_hash=? AND removed=0',code,h);if(!p)fail(403,'אין הרשאה למשחק הזה.');identity={role:'player',id:p.id};}
   if(!action&&method==='GET')return json(await payload(db,room,identity));
-  if(['progress','submit'].includes(action)&&method===(action==='progress'?'PUT':'POST')){
+  if(['progress','order','submit'].includes(action)&&method===(action==='progress'?'PUT':'POST')){
    if(identity.role!=='player')fail(403,'הפעולה מיועדת למשתתפים.');
    const current=await first(db,'SELECT * FROM players WHERE id=?',identity.id);
-   if(!current.submitted){
+   if(!current.submitted&&!(action==='order'&&current.order_submitted)){
     let data;try{data=validateProgress(await body(req));}catch(e){if(e instanceof Problem)throw e;fail(400,e.message);}
     if(room.phase!=='playing')fail(409,'אפשר לשמור ולשלוח רק בזמן המשחק.');
+    if(current.order_submitted&&JSON.stringify(data.order)!==current.order_json)fail(409,'הסדר כבר נשלח. אפשר לערוך רק את שמות התערוכות.');
     if(data.revision<current.revision||(data.revision===current.revision&&(JSON.stringify(data.order)!==current.order_json||JSON.stringify(data.guesses)!==current.guesses_json)))fail(409,'קיימת שמירה חדשה יותר. רעננו לפני השליחה.');
-    const r=await run(db,"UPDATE players SET order_json=?,guesses_json=?,revision=?,submitted=?,updated_at=? WHERE id=? AND (revision<? OR (revision=? AND order_json=? AND guesses_json=?)) AND submitted=0 AND removed=0 AND EXISTS(SELECT 1 FROM rooms WHERE code=? AND phase='playing')",JSON.stringify(data.order),JSON.stringify(data.guesses),data.revision,action==='submit'?1:0,Date.now(),identity.id,data.revision,data.revision,JSON.stringify(data.order),JSON.stringify(data.guesses),code);
+    const r=await run(db,"UPDATE players SET order_json=?,guesses_json=?,revision=?,submitted=?,order_submitted=?,updated_at=? WHERE id=? AND (revision<? OR (revision=? AND order_json=? AND guesses_json=?)) AND submitted=0 AND removed=0 AND EXISTS(SELECT 1 FROM rooms WHERE code=? AND phase='playing')",JSON.stringify(data.order),JSON.stringify(data.guesses),data.revision,action==='submit'?1:0,(action==='order'||action==='submit'||current.order_submitted)?1:0,Date.now(),identity.id,data.revision,data.revision,JSON.stringify(data.order),JSON.stringify(data.guesses),code);
     if(!r.meta.changes)fail(409,'המשחק השתנה. רעננו ונסו שוב.');
    }
    room=await first(db,'SELECT * FROM rooms WHERE code=?',code);return json(await payload(db,room,identity));
