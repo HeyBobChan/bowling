@@ -4,14 +4,17 @@ const nameKey = 'marker-games-initials';
 const validName = /^(?:[A-Z]{3}|[א-ת]{3})$/u;
 const artifact = typeof __ARTIFACT__ !== 'undefined' && __ARTIFACT__;
 
-// Each game supplies a score at game over. Requests stay relative to the page so
-// both the Railway domain and the /kids/ reverse proxy use the same database.
+// Each game supplies a score at game over. Production can use the API's direct
+// origin when an embedding site's proxy only forwards GET requests.
 export function createLeaderboard({ gameId, form, boards, intro }) {
   if (artifact) {
     document.querySelectorAll('[data-shared-scores]').forEach((el) => { el.hidden = true; });
     return { begin() {}, finish() {} };
   }
-  const endpoint = new URL(`./api/leaderboards/${encodeURIComponent(gameId)}`, location.href);
+  const apiOrigin = import.meta.env.VITE_LEADERBOARD_API_ORIGIN;
+  const endpoint = apiOrigin
+    ? new URL(`/api/leaderboards/${encodeURIComponent(gameId)}`, apiOrigin)
+    : new URL(`./api/leaderboards/${encodeURIComponent(gameId)}`, location.href);
   const input = form.querySelector('input');
   const submit = form.querySelector('[type="submit"]');
   const skip = form.querySelector('[data-skip]');
@@ -33,7 +36,7 @@ export function createLeaderboard({ gameId, form, boards, intro }) {
     requests.add(controller);
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const response = await fetch(endpoint, { ...options, signal: controller.signal, cache: 'no-store' });
+      const response = await fetch(endpoint, { ...options, signal: controller.signal, cache: 'no-store', credentials: 'omit' });
       if (!response.ok) { const error = new Error('Request failed'); error.status = response.status; throw error; }
       return await response.json();
     } finally {

@@ -126,3 +126,20 @@ test('limits repeated submissions and recovers from a database outage without le
   assert.equal((await fetch(`${brokenBase}/api/leaderboards/main`)).status, 200);
   await closeServer(broken);
 });
+
+test('allows configured website origins to preflight and save without exposing credentials', async () => {
+  const app = await listen(createServer({ store, staticDir, allowedOrigins: ['https://matanbob.com'] }));
+  const url = `http://127.0.0.1:${app.address().port}/api/leaderboards/main`;
+  const headers = { Origin: 'https://matanbob.com', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' };
+  const preflight = await fetch(url, { method: 'OPTIONS', headers });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), headers.Origin);
+  assert.equal(preflight.headers.get('access-control-allow-credentials'), null);
+  const saved = await fetch(url, { method: 'POST', headers: { Origin: headers.Origin, 'Content-Type': 'application/json' }, body: JSON.stringify(payload()) });
+  assert.equal(saved.status, 201);
+  assert.equal(saved.headers.get('access-control-allow-origin'), headers.Origin);
+  const rejected = await fetch(url, { method: 'OPTIONS', headers: { ...headers, Origin: 'https://unlisted.example' } });
+  assert.equal(rejected.status, 403);
+  assert.equal(rejected.headers.get('access-control-allow-origin'), null);
+  await closeServer(app);
+});

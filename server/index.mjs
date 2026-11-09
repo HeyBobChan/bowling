@@ -11,7 +11,8 @@ if (process.env.DATABASE_URL) {
   const unavailable = async () => { throw new Error('No database'); };
   store = { check: unavailable, top: unavailable, save: unavailable, close: async () => {} };
 }
-const app = createServer({ store, trustProxy: process.env.NODE_ENV === 'production' ? 1 : false });
+const app = createServer({ store, trustProxy: process.env.NODE_ENV === 'production' ? 1 : false,
+  allowedOrigins: (process.env.LEADERBOARD_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean) });
 const server = app.listen(Number(process.env.PORT || 5200), '0.0.0.0', () => console.log('Games server ready.'));
 for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => {
   const timeout = setTimeout(() => process.exit(1), 10000).unref();
