@@ -1,5 +1,6 @@
 import './style.css';
 import qrcode from './qrcode.mjs';
+import { enableArtDragging } from './drag.js';
 const GAME_URL=new URL('./chana.html',location.href);
 const API_ROOT=import.meta.env.VITE_LEADERBOARD_API_ORIGIN?new URL('/api/leaderboards/chana',import.meta.env.VITE_LEADERBOARD_API_ORIGIN).href:new URL('./api/leaderboards/chana',location.href).href;
 const $=s=>document.querySelector(s), app=$('#app'),modal=$('#modal');
@@ -9,6 +10,7 @@ const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}cat
 const button=(label,action,kind='primary',extra='')=>`<button class="${kind}" data-action="${action}" ${extra}>${label}</button>`;
 let state=null,session=null,local=null,busy=false,saving=false,saveTimer,noticeTimer,pollTimer,lastSignature='',saveMessage='נשמר',view='join',selectedId=null;
 let artworks=new Map(),undo=[],pollError=false,reviewDetailOpen=false;
+let stopDragging=null,dragging=false;
 const url=new URL(location.href),roomParam=url.searchParams.get('room')||'';
 const brand=()=>`<a class="brand" href="${GAME_URL.pathname}" aria-label="חנה גולדברג — דף הבית"><span class="brand-mark">ח</span><span>חנה גולדברג</span></a>`;
 function toast(message){const n=$('#notice');n.textContent=message;n.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.hidden=true,5500);}
@@ -46,6 +48,7 @@ function updateHeader(){const s=$('#save-status');if(s){s.textContent=pollError?
 function qrHtml(){const q=qrcode(0,'M');q.addData(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code);q.make();return q.createSvgTag({cellSize:5,margin:12,scalable:true});}
 function playerList(){return `<ul class="players">${state.players.map(p=>`<li><span class="avatar">${esc([...p.name][0])}</span><span class="player-name">${esc(p.name)}</span><span class="player-state ${p.submitted?'done':''}">${p.submitted?'✓ נשלח':state.room.phase==='lobby'?'הצטרפו':'מסדרים…'}</span>${session.role==='host'&&!p.submitted?`<button class="remove" data-remove="${p.id}" aria-label="הסרת ${esc(p.name)}">×</button>`:''}</li>`).join('')||'<li class="empty">ממתינים למשתתפים</li>'}</ul>`;}
 function render(){
+ stopDragging?.();stopDragging=null;
  if(!state)return home();lastSignature=stateSignature(state);
  app.innerHTML=topbar()+`<main class="game-main ${session.role==='host'?'host-main':''}" id="screen"></main>`+footer();
  const screen=$('#screen');
@@ -63,9 +66,16 @@ function render(){
  updateHeader();if(reviewDetailOpen&&state.room.phase==='review'&&session.role==='host')reviewGuesses();
 }
 function renderTimeline(screen){
- screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">סדרו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה ולניחוש שם התערוכה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div>`;
+ screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">החזיקו וגררו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה ולניחוש שם התערוכה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid" aria-label="סדר היצירות">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div><span id="move-announcement" class="sr-only" role="status" aria-live="polite"></span>`;
+ stopDragging=enableArtDragging($('#art-grid'),{onDrop:draggedOrder,onDragging(active){dragging=active;}});
 }
-function card(id,i){const a=artworks.get(id);return `<article class="art-card" data-art="${id}" draggable="true"><div class="card-top"><span class="position">${i+1}</span>${local.guesses[id]?.trim()?'<span class="guess-mark" aria-label="נוסף ניחוש">✦</span>':''}</div><button class="art-image" data-detail="${id}" aria-label="הגדלה וניחוש ליצירה ${i+1}"><img src="${a.thumbPath}" width="${a.width}" height="${a.height}" alt="יצירה ${i+1} על הציר" loading="lazy" decoding="async"></button><button class="move-button" data-move="${id}" aria-label="הזזת יצירה ${i+1}">↕ הזזה</button></article>`;}
+function draggedOrder(order,id){
+ if(state.room.phase!=='playing'||state.me?.submitted)return;
+ undo.push([...local.order]);if(undo.length>20)undo.shift();local.order=order;changed();
+ $('[data-action="undo"]').disabled=false;
+ $('#move-announcement').textContent='היצירה הועברה למקום '+(order.indexOf(id)+1);
+}
+function card(id,i){const a=artworks.get(id);return `<article class="art-card" data-art="${id}"><div class="card-top"><span class="position">${i+1}</span>${local.guesses[id]?.trim()?'<span class="guess-mark" aria-label="נוסף ניחוש">✦</span>':''}</div><button class="art-image" data-detail="${id}" aria-label="הגדלה וניחוש ליצירה ${i+1}"><img src="${a.thumbPath}" width="${a.width}" height="${a.height}" alt="יצירה ${i+1} על הציר" loading="lazy" decoding="async"></button></article>`;}
 function persist(){if(!put('chana-progress-'+session.code,local))toast('השמירה בטלפון אינה זמינה. השאירו את הדף פתוח עד השליחה.');}
 function changed(){local.revision++;persist();saveMessage='נשמר בטלפון…';updateHeader();scheduleSave();}
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,700);}
@@ -111,7 +121,7 @@ async function act(action){
   if(busy)return;busy=true;const b=$('[data-action="submit"]');b.disabled=true;b.textContent='שולחים…';clearTimeout(saveTimer);
   try{const data=await request('/rooms/'+session.code+'/submit',{method:'POST',body:{order:local.order,guesses:local.guesses,revision:local.revision}});modal.close();applyState(data);toast('נשלח');}catch(e){$('#submit-error').textContent=e.message;b.disabled=false;b.textContent='ניסיון שליחה נוסף';}finally{busy=false;}return;
  }
- if(action==='help'){openModal(`<div class="help-content"><h2>איך משחקים?</h2><ol><li>סדרו לפי שנת התערוכה, מהמוקדם למאוחר. לחצו על ״הזזה״ לשינוי מיקום.</li><li>לחצו על ציור להגדלה ולניחוש שם התערוכה.</li><li>שלחו כשסיימתם. עוברים על התשובות יחד במסך הגדול.</li></ol><p class="small">עד 100 נקודות על הסדר + 2 לכל תערוכה שזוהתה (עד 36). שנים זהות או חופפות יכולות להופיע בכל סדר ביניהן.</p><p class="small">הסדר נשמר אוטומטית. לחזרה, פתחו באותו דפדפן.</p>${button('סגירה','close-modal')}</div>`);return;}
+ if(action==='help'){openModal(`<div class="help-content"><h2>איך משחקים?</h2><ol><li>החזיקו ציור וגררו לפי שנת התערוכה, מהמוקדם למאוחר. גרירה לקצה המסך גוללת את הרשימה.</li><li>לחצו על ציור להגדלה ולניחוש שם התערוכה.</li><li>שלחו כשסיימתם. עוברים על התשובות יחד במסך הגדול.</li></ol><p class="small">עד 100 נקודות על הסדר + 2 לכל תערוכה שזוהתה (עד 36). שנים זהות או חופפות יכולות להופיע בכל סדר ביניהן.</p><p class="small">הסדר נשמר אוטומטית. לחזרה, פתחו באותו דפדפן.</p>${button('סגירה','close-modal')}</div>`);return;}
  if(action==='copy-join'){copy(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code);return;}
  if(action==='copy-host'){copy(GAME_URL.origin+GAME_URL.pathname+'?room='+state.room.code+'#host='+session.token);return;}
  if(action==='fullscreen'){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('אפשר להגדיל את החלון דרך הדפדפן.');}return;}
@@ -125,10 +135,10 @@ async function act(action){
  }
 }
 document.addEventListener('click',e=>{
+ if(dragging)return;
  const target=e.target.closest('button');if(!target)return;
  if(target.dataset.action)act(target.dataset.action);
  if(target.dataset.detail)detail(target.dataset.detail);
- if(target.dataset.move)moveDialog(target.dataset.move);
  if(target.dataset.target){const id=selectedId,other=target.dataset.target;const remaining=local.order.filter(a=>a!==id),index=remaining.indexOf(other);modal.close();moveTo(id,index);}
  if(target.dataset.bonusPlayer)hostAction('bonus',{playerId:target.dataset.bonusPlayer,collectionId:state.answers[state.room.reviewIndex].id,correct:target.dataset.bonusCorrect==='true'});
  if(target.dataset.reviewIndex)hostAction('advance',{index:Number(target.dataset.reviewIndex)});
@@ -148,7 +158,6 @@ document.addEventListener('submit',async e=>{
  }
  if(e.target.id==='move-form'){e.preventDefault();const n=Number(new FormData(e.target).get('position'));if(Number.isInteger(n)&&n>=1&&n<=52){const id=selectedId;modal.close();moveTo(id,n-1);}}
 });
-let dragId=null;document.addEventListener('dragstart',e=>{const card=e.target.closest('[data-art]');if(card){dragId=card.dataset.art;e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move';}});document.addEventListener('dragover',e=>{if(dragId&&e.target.closest('[data-art]'))e.preventDefault();});document.addEventListener('drop',e=>{const card=e.target.closest('[data-art]');if(dragId&&card){e.preventDefault();moveTo(dragId,local.order.indexOf(card.dataset.art));}dragId=null;});document.addEventListener('dragend',()=>dragId=null);
 window.addEventListener('online',()=>{poll();scheduleSave();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();scheduleSave();}else if(local&&session&&state?.room.phase==='playing'&&!state.me?.submitted){persist();fetch(API_ROOT+'/rooms/'+session.code+'/progress',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.token},body:JSON.stringify({order:local.order,guesses:local.guesses,revision:local.revision}),keepalive:true}).catch(()=>{});}});
 modal.addEventListener('cancel',()=>{reviewDetailOpen=false;});

@@ -8,7 +8,7 @@ A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
 1. Connect a laptop to the TV/projector, open the game and choose **ניהול המשחק במסך הגדול**.
 2. Create a room and save the **private host recovery link**. Share the player QR code or player link only.
 3. Everyone enters a name on their phone. Confirm the participant list, then start. Joining closes at that point.
-4. Each person gets all 52 dated works in an independent shuffle. Use **הזזה** to choose a destination, or drag on desktop; undo is available. Tap an image for a larger view and an optional exhibition-name guess.
+4. Each person gets all 52 dated works in an independent shuffle. Hold a painting briefly and drag it into place on a phone, or drag directly with a mouse. The page scrolls near its edges and numbers update during the move. Undo is available. Tap an image for a larger view, an optional exhibition-name guess, or **שינוי מיקום** as a keyboard-accessible alternative.
 5. Everyone submits once. Submitted answers are locked. The host cannot reveal until every active participant has submitted. If someone leaves, explicitly remove that unsubmitted participant.
 6. Review 18 exhibitions together. The host advances by buttons or left/right arrows. Phones follow the host. The review panel shows each person's guesses and placements; the host may approve a close spelling for bonus credit.
 7. Reveal the scoreboard, then download the JSON results if desired. Rooms remain accessible for seven days. Rehearse with a few phones on the venue's Wi-Fi before the birthday.
@@ -59,6 +59,7 @@ hidden answers, idempotent create/join/submit, stale-save protection, custom-dom
 CORS and large drafts, removals, review gating, bonus corrections and 40 simulated
 concurrent participants, as well as existing arcade leaderboard regression tests.
 Run `npm run build` and `npm run test:site` for all eight pages.
+Run `npm run test:chana-drag` for RTL drop positions, grid gaps, incomplete rows and scrolling offsets.
 
 Browser rehearsal covers a host and two participants, a 390px phone layout, moving,
 undo, image zoom, name guesses, refresh recovery, disconnected submission/retry,
