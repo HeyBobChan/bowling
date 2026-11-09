@@ -1,6 +1,7 @@
 import './style.css';
 import qrcode from './qrcode.mjs';
 import { enableArtDragging } from './drag.js';
+import { createNavigationGuard } from './navigation-guard.js';
 const GAME_URL=new URL('./chana.html',location.href);
 const API_ROOT=import.meta.env.VITE_LEADERBOARD_API_ORIGIN?new URL('/api/leaderboards/chana',import.meta.env.VITE_LEADERBOARD_API_ORIGIN).href:new URL('./api/leaderboards/chana',location.href).href;
 const $=s=>document.querySelector(s), app=$('#app'),modal=$('#modal');
@@ -10,10 +11,24 @@ const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}cat
 const button=(label,action,kind='primary',extra='')=>`<button class="${kind}" data-action="${action}" ${extra}>${label}</button>`;
 let state=null,session=null,local=null,busy=false,saving=false,saveTimer,noticeTimer,pollTimer,lastSignature='',saveMessage='נשמר',view='join',selectedId=null;
 let artworks=new Map(),undo=[],pollError=false,reviewDetailOpen=false;
-let stopDragging=null,dragging=false;
+let stopDragging=null,dragging=false,orderView=null;
 let copiedName=typeof get('chana-copied-name')==='string'?get('chana-copied-name'):'';
 const url=new URL(location.href),roomParam=url.searchParams.get('room')||'';
 const brand=()=>`<a class="brand" href="${GAME_URL.pathname}" aria-label="חנה גולדברג — דף הבית"><span class="brand-mark">ח</span><span>חנה גולדברג</span></a>`;
+let resolveLeave;
+const leaveDialog=document.createElement('dialog');
+leaveDialog.className='leave-dialog';leaveDialog.setAttribute('aria-labelledby','leave-title');
+leaveDialog.innerHTML='<h2 id="leave-title">לצאת מהמשחק?</h2><div class="button-row"><button class="primary" data-stay autofocus>להישאר</button><button class="secondary" data-leave>לצאת</button></div>';
+document.body.append(leaveDialog);
+function finishLeave(value){leaveDialog.close();resolveLeave?.(value);resolveLeave=null;}
+leaveDialog.querySelector('[data-stay]').addEventListener('click',()=>finishLeave(false));
+leaveDialog.querySelector('[data-leave]').addEventListener('click',()=>finishLeave(true));
+leaveDialog.addEventListener('cancel',e=>{e.preventDefault();finishLeave(false);});
+const navigationGuard=createNavigationGuard({
+ confirmLeave:()=>new Promise(resolve=>{resolveLeave=resolve;leaveDialog.showModal();}),
+ closeOverlay:()=>{if(leaveDialog.open)return false;if(modal.open){reviewDetailOpen=false;modal.close();return true;}if(orderView){closeOrderResults();return true;}return false;},
+ onLeave:flushProgress,fallback:GAME_URL.pathname,
+});
 function toast(message){const n=$('#notice');n.textContent=message;n.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.hidden=true,5500);}
 async function request(path,{method='GET',body,token=session?.token}={}){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
@@ -24,10 +39,11 @@ async function request(path,{method='GET',body,token=session?.token}={}){
 }
 function footer(){return `<footer><span>היצירות © חנה גולדברג · <a href="https://www.chanagoldberg.com/" target="_blank" rel="noopener">לאתר האמנית</a></span></footer>`;}
 function home(){
+ navigationGuard.setActive(false);if(leaveDialog.open)finishLeave(false);
  view=url.searchParams.has('host')?'host':view;const last=get('chana-last');
  app.innerHTML=`<main class="landing"><div class="landing-copy">${brand()}<p class="lead">סדרו 52 יצירות לפי שנת התערוכה,<br>מהמוקדם למאוחר.</p><div class="join-panel">${view==='host'?`<h1>ניהול המשחק</h1>${button('פתיחת משחק חדש','create')}<button class="text-button" data-action="join-view">הצטרפות למשחק</button>`:`<h1>הצטרפות למשחק</h1><form id="join-form"><label>קוד המשחק<input id="room-code" name="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="off" maxlength="6" minlength="6" dir="ltr" placeholder="000000" value="${esc(roomParam)}" required></label><label>שם<input name="name" autocomplete="given-name" maxlength="30" placeholder="השם שלך" required></label><button class="primary" type="submit">הצטרפות</button><p class="form-error" role="alert"></p></form><button class="text-button" data-action="host-view">ניהול המשחק במסך הגדול</button>`}${last?.code?`<button class="resume" data-action="resume">חזרה למשחק ${esc(last.code)}</button>`:''}</div></div><div class="landing-art"><img src="./art/chana/cover.webp" alt="נוף שמיים ומים מתוך יצירותיה של חנה גולדברג"></div></main>${footer()}`;
 }
-function remember(s){session=s;put('chana-session-'+s.role+'-'+s.code,s);put('chana-last',s);const u=new URL(location);u.search='?room='+s.code;u.hash=s.role==='host'?'host='+s.token:'';history.replaceState({},'',u);}
+function remember(s){session=s;put('chana-session-'+s.role+'-'+s.code,s);put('chana-last',s);const u=new URL(location);u.search='?room='+s.code;u.hash=s.role==='host'?'host='+s.token:'';history.replaceState(history.state,'',u);}
 async function enter(data,s){remember(s);artworks=new Map(data.artworks.map(a=>[a.id,a]));state=data;undo=[];
  if(data.me){const saved=get('chana-progress-'+s.code);local=saved&&saved.playerId===data.me.id&&saved.revision>data.me.revision&&!data.me.submitted?saved:{playerId:data.me.id,order:data.me.order,guesses:data.me.guesses,revision:data.me.revision};if(local.revision>data.me.revision)saveMessage='שינויים שמורים בטלפון';}
  if(data.me?.orderSubmitted)local.order=[...data.me.order];
@@ -52,8 +68,10 @@ function playerList(){return `<ul class="players">${state.players.map(p=>`<li><s
 function render(){
  stopDragging?.();stopDragging=null;
  if(!state)return home();lastSignature=stateSignature(state);
+ navigationGuard.setActive(state.room.phase!=='results');if(state.room.phase==='results'&&leaveDialog.open)finishLeave(false);
  app.innerHTML=topbar()+`<main class="game-main ${session.role==='host'?'host-main':''}" id="screen"></main>`+footer();
  const screen=$('#screen');
+ if(orderView&&['review','results'].includes(state.room.phase)){renderOrderResults(screen);updateHeader();return;}
  if(state.room.phase==='lobby'){
   if(session.role==='host')screen.innerHTML=`<div class="host-heading"><h1>הצטרפות למשחק</h1><p>סרקו בטלפון והכניסו שם.</p></div><div class="lobby-layout"><section class="join-board"><div class="qr">${qrHtml()}</div><span class="muted">או נכנסים עם קוד המשחק</span><strong class="big-code" dir="ltr">${state.room.code}</strong><div class="button-row">${button('העתקת קישור','copy-join','secondary')}${button('מסך מלא','fullscreen','secondary')}</div></section><section class="attendance"><div class="section-heading"><h2>משתתפים</h2><span class="count">${state.players.length}</span></div>${playerList()}${button('התחלת המשחק','start','primary wide',state.players.length?'':'disabled')}<p class="small">ההצטרפות נסגרת עם תחילת המשחק.</p><button class="text-button" data-action="copy-host">העתקת קישור למנחה</button></section></div>`;
   else screen.innerHTML=`<section class="waiting"><span class="round-icon">✓</span><h1>ממתינים להתחלה</h1><div class="waiting-art"><img src="./art/chana/cover.webp" alt="ציור של חנה גולדברג"></div><span class="muted">${state.players.length} משתתפים</span></section>`;
@@ -100,13 +118,21 @@ function reviewAnswers(collection){
  }).join('')}</tbody></table></section>`;
 }
 function playerAnswers(id){
- if(session.role!=='host'||!state.submissions)return;
- const player=state.submissions.find(p=>p.id===id),score=state.results.find(p=>p.id===id);if(!player)return;
- const collectionByArt=new Map(state.answers.flatMap(g=>g.artworkIds.map(id=>[id,g])));
- openModal(`<div class="answers"><h2>${esc(player.name)} · ${score.total} נק׳</h2><div class="player-answer-grid">${player.order.map((id,i)=>{
-  const a=artworks.get(id),g=collectionByArt.get(id);
-  return `<article class="player-answer-card"><span class="position">${i+1}</span><img src="${a.thumbPath}" alt="יצירה במקום ${i+1}" loading="lazy"><p>${esc(player.guesses[id]?.trim()||'ללא ניחוש')}</p><small>${esc(g.titleHe)} · <bdi>${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</bdi></small></article>`;
- }).join('')}</div></div>`,'answers-modal');
+ if(!state.answers)return;
+ if(id!=='correct'&&!orderPlayers().some(p=>p.id===id))return;
+ orderView=id;reviewDetailOpen=false;if(modal.open)modal.close();render();window.scrollTo(0,0);
+}
+function orderPlayers(){return session.role==='host'?(state.submissions||[]):state.me?[state.me]:[];}
+function closeOrderResults(){orderView=null;render();window.scrollTo(0,0);}
+function renderOrderResults(screen){
+ const correct=orderView==='correct',players=orderPlayers(),player=players.find(p=>p.id===orderView),score=state.results.find(p=>p.id===orderView);
+ const groups=[...state.answers].sort((a,b)=>a.yearStart-b.yearStart||a.yearEnd-b.yearEnd),byArt=new Map(groups.flatMap(g=>g.artworkIds.map(id=>[id,g])));
+ const order=correct?groups.flatMap(g=>g.artworkIds):player.order;
+ screen.classList.add('order-screen');
+ screen.innerHTML=`<div class="order-toolbar">${button('→ חזרה','close-order','secondary')}<label for="order-player">הצגת הסדר</label><select id="order-player">${players.map(p=>`<option value="${p.id}" ${p.id===orderView?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="correct" ${correct?'selected':''}>הסדר הנכון</option></select></div><section class="order-heading"><h1>${correct?'הסדר הנכון':'הסדר של '+esc(player.name)}</h1>${score?`<div class="order-score"><strong>${score.chronology}<small>/100</small></strong><span>על הסדר</span><span class="muted">בונוס ${score.bonus} · סה״כ ${score.total}</span></div><p class="small">הניקוד לפי הסדר היחסי בין היצירות, לא לפי מספר המקום.</p>`:'<p class="small">יצירות מאותה שנה או מתקופות חופפות יכולות להופיע בכל סדר ביניהן.</p>'}</section><ol class="order-grid">${order.map((id,i)=>{
+  const a=artworks.get(id),g=byArt.get(id),guess=player?.guesses[id]?.trim();
+  return `<li class="order-card"><div class="order-card-top"><span class="position">${i+1}</span><bdi>${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</bdi></div><button data-zoom="${id}" aria-label="הגדלת יצירה ${i+1}"><img src="${a.imagePath}" alt="יצירה מתוך ${esc(g.titleHe)}" loading="lazy"></button><h2>${esc(g.titleHe)}</h2>${!correct?`<p>ניחוש: ${esc(guess||'—')}</p>`:''}</li>`;
+ }).join('')}</ol>`;
 }
 function renderTimeline(screen){
  screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">החזיקו וגררו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid" aria-label="סדר היצירות">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div><span id="move-announcement" class="sr-only" role="status" aria-live="polite"></span>`;
@@ -138,13 +164,13 @@ function renderReview(screen){
 }
 function renderResults(screen){
  const mine=state.results.find(p=>p.id===state.me?.id);
- screen.innerHTML=`<section class="results-heading"><h1>תוצאות</h1>${mine?`<div class="my-score"><strong>${mine.total}</strong><span>הנקודות שלך<br><small>${mine.chronology} על הסדר + ${mine.bonus} בונוס</small></span></div>`:''}</section><section class="results-table"><div class="section-heading"><span class="muted">מתוך 136 נקודות</span></div><table><thead><tr><th>מקום</th><th>שם</th><th>סדר</th><th>בונוס</th><th>סה״כ</th></tr></thead><tbody>${state.results.map(p=>`<tr class="${p.id===mine?.id?'my-row':''}"><td>${p.rank===1?'✦ ':''}${p.rank}</td><th scope="row">${session.role==='host'?`<button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button>`:esc(p.name)}</th><td>${p.chronology}</td><td>${p.bonus}</td><td class="total">${p.total}</td></tr>`).join('')}</tbody></table></section><div class="button-row results-actions">${button('הסדר הנכון','all-answers','secondary')}${session.role==='host'?button('הורדת התוצאות','download','secondary'):''}${session.role==='host'?button('פתיחת משחק נוסף','new-game','text-button'):''}</div>`;
+ screen.innerHTML=`<section class="results-heading"><h1>תוצאות</h1>${mine?`<div class="my-score"><strong>${mine.total}</strong><span>הנקודות שלך<br><small>${mine.chronology} על הסדר + ${mine.bonus} בונוס</small></span></div>`:''}</section><section class="results-table"><div class="section-heading"><span class="muted">מתוך 136 נקודות</span></div><table><thead><tr><th>מקום</th><th>שם</th><th>סדר</th><th>בונוס</th><th>סה״כ</th></tr></thead><tbody>${state.results.map(p=>`<tr class="${p.id===mine?.id?'my-row':''}"><td>${p.rank===1?'✦ ':''}${p.rank}</td><th scope="row">${session.role==='host'?`<button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button>`:esc(p.name)}</th><td>${p.chronology}</td><td>${p.bonus}</td><td class="total">${p.total}</td></tr>`).join('')}</tbody></table></section><div class="button-row results-actions">${button(session.role==='host'?'צפייה בסדרים':'הסדר שלי','orders','primary')}${button('הסדר הנכון','all-answers','secondary')}${session.role==='host'?button('הורדת התוצאות','download','secondary'):''}${session.role==='host'?button('פתיחת משחק נוסף','new-game','text-button'):''}</div>`;
 }
 function reviewGuesses(){
  reviewDetailOpen=true;const g=state.answers[state.room.reviewIndex];
  openModal(`<div class="review-guesses"><h2>${esc(g.titleHe)}</h2><p class="small">אפשר לאשר בונוס גם על שגיאת כתיב. 2 נקודות לתערוכה.</p>${state.submissions.map(p=>{const b=state.results.find(r=>r.id===p.id).bonuses.find(b=>b.collectionId===g.id),answers=g.artworkIds.map(id=>p.guesses[id]?.trim()).filter(Boolean),positions=g.artworkIds.map(id=>p.order.indexOf(id)+1);return `<section class="guess-review-row"><h3>${esc(p.name)}</h3><p>${answers.length?[...new Set(answers)].map(esc).join(' · '):'<span class="muted">לא נכתב ניחוש</span>'}</p><div class="guess-review-bottom"><small>מיקומים בציר: <bdi>${positions.join(', ')}</bdi></small><button class="${b.correct?'approved':'secondary'}" data-bonus-player="${p.id}" data-bonus-correct="${!b.correct}" aria-pressed="${b.correct}">${b.correct?'✓ בונוס מאושר · 2 נק׳':'אישור בונוס +2'}</button></div></section>`;}).join('')}</div>`,'answers-modal');
 }
-function allAnswers(){openModal(`<div class="answers"><h2>הסדר הנכון</h2>${state.answers.map(g=>`<section><div class="section-heading"><h3>${esc(g.titleHe)}</h3><span dir="ltr">${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</span></div><div class="answer-art">${g.artworkIds.map(id=>`<button data-zoom="${id}"><img src="${artworks.get(id).thumbPath}" alt="יצירה מתוך ${esc(g.titleHe)}" loading="lazy"></button>`).join('')}</div></section>`).join('')}</div>`,'answers-modal');}
+function allAnswers(){playerAnswers('correct');}
 async function hostAction(action,body){if(busy)return;busy=true;try{applyState(await request('/rooms/'+session.code+'/'+action,{method:'POST',body:body||{}}));}catch(e){toast(e.message);}finally{busy=false;}}
 async function copy(text){try{await navigator.clipboard.writeText(text);toast('הקישור הועתק');}catch{openModal(`<h2>הקישור שלך</h2><label>אפשר להעתיק מכאן<input readonly dir="ltr" value="${esc(text)}"></label>`);}}
 async function act(action){
@@ -173,6 +199,8 @@ async function act(action){
  if(['start','review','results'].includes(action)){hostAction(action);return;}
  if(action==='review-guesses'){reviewGuesses();return;}
  if(action==='all-answers'){allAnswers();return;}
+ if(action==='orders'){playerAnswers(session.role==='host'?state.results[0]?.id:state.me.id);return;}
+ if(action==='close-order'){closeOrderResults();return;}
  if(action==='new-game'){location.href=GAME_URL.pathname+'?host';return;}
  if(action==='download'){
   const data={room:state.room.code,scoring:{chronologyMax:100,bonusPerExhibition:2,totalMax:136},results:state.results,submissions:state.submissions,answers:state.answers};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chana-'+state.room.code+'-results.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return;
@@ -193,7 +221,8 @@ document.addEventListener('click',e=>{
  if(target.dataset.action==='remove-confirm'){const id=target.dataset.player;modal.close();hostAction('remove',{playerId:id});}
  if(target.dataset.zoom){const id=target.dataset.zoom;openModal(`<img class="zoom-image" src="${artworks.get(id).imagePath}" alt="יצירה בהגדלה">`,'zoom-modal');}
 });
-document.addEventListener('keydown',e=>{if(session?.role==='host'&&state?.room.phase==='review'&&!modal.open&&!['INPUT','TEXTAREA'].includes(e.target.tagName)){if(['ArrowLeft','PageDown'].includes(e.key)&&state.room.reviewIndex<17){e.preventDefault();act('next');}if(['ArrowRight','PageUp'].includes(e.key)&&state.room.reviewIndex>0){e.preventDefault();act('previous');}}});
+document.addEventListener('keydown',e=>{if(session?.role==='host'&&state?.room.phase==='review'&&!modal.open&&!leaveDialog.open&&!orderView&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){if(['ArrowLeft','PageDown'].includes(e.key)&&state.room.reviewIndex<17){e.preventDefault();act('next');}if(['ArrowRight','PageUp'].includes(e.key)&&state.room.reviewIndex>0){e.preventDefault();act('previous');}}});
+document.addEventListener('change',e=>{if(e.target.id==='order-player')playerAnswers(e.target.value);});
 document.addEventListener('input',e=>{const id=e.target.dataset.nameArt;if(id&&state?.me?.orderSubmitted&&!state.me.submitted){local.guesses[id]=e.target.value;changed();const copyButton=$(`[data-copy-name="${id}"]`);if(copyButton)copyButton.disabled=!e.target.value.trim();}});
 document.addEventListener('submit',async e=>{
  if(e.target.id==='join-form'){
@@ -206,7 +235,8 @@ document.addEventListener('submit',async e=>{
  if(e.target.id==='move-form'){e.preventDefault();const n=Number(new FormData(e.target).get('position'));if(Number.isInteger(n)&&n>=1&&n<=52){const id=selectedId;modal.close();moveTo(id,n-1);}}
 });
 window.addEventListener('online',()=>{poll();scheduleSave();});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();scheduleSave();}else if(local&&session&&state?.room.phase==='playing'&&!state.me?.submitted){persist();fetch(API_ROOT+'/rooms/'+session.code+'/progress',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.token},body:JSON.stringify({order:local.order,guesses:local.guesses,revision:local.revision}),keepalive:true}).catch(()=>{});}});
+function flushProgress(){if(local&&session&&state?.room.phase==='playing'&&!state.me?.submitted){persist();fetch(API_ROOT+'/rooms/'+session.code+'/progress',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.token},body:JSON.stringify({order:local.order,guesses:local.guesses,revision:local.revision}),keepalive:true}).catch(()=>{});}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();scheduleSave();}else flushProgress();});
 modal.addEventListener('cancel',()=>{reviewDetailOpen=false;});
 modal.addEventListener('click',e=>{if(e.target===modal){const r=modal.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){reviewDetailOpen=false;modal.close();}}});
 modal.addEventListener('close',()=>{if(state?.room.phase==='playing'&&state.me&&!state.me.submitted){const grid=$('#art-grid');if(grid)grid.innerHTML=local.order.map(card).join('');}});
