@@ -130,6 +130,25 @@
         "tint": "#ffffff",
         "action": "יאללה, קופצים"
       }
+    },
+    {
+      "id": "chana",
+      "page": "chana.html",
+      "path": "/chana.html",
+      "emoji": "🎨",
+      "title": "חיים בצבע · חוגגים לחנה",
+      "short": "חיים בצבע",
+      "accent": "#384f43",
+      "accentDark": "#283d32",
+      "artifact": null,
+      "lobby": {
+        "genre": "אמנות, זיכרונות ויום הולדת",
+        "description": "52 יצירות של חנה גולדברג: מסדרים על ציר הזמן בטלפון, מנחשים שמות תערוכות ונפגשים לסקירה משותפת על המסך הגדול.",
+        "image": "/art/chana/cover.webp",
+        "imageAlt": "נוף שמיים ומים בציור של חנה גולדברג",
+        "tint": "#f5f2e9",
+        "action": "מצטרפים לחגיגה"
+      }
     }
   ]
 }

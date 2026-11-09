@@ -1,0 +1,711 @@
+{
+  "collections": [
+    {
+      "id": "motherhood",
+      "titleHe": "אמהוּת",
+      "acceptedNamesHe": [
+        "אמהוּת",
+        "אמהות",
+        "אימהות"
+      ],
+      "yearStart": 1995,
+      "yearEnd": 1995,
+      "sourceUrl": "https://www.chanagoldberg.com/motherhood"
+    },
+    {
+      "id": "modest-exhibition",
+      "titleHe": "תערוכה צנועה",
+      "acceptedNamesHe": [
+        "תערוכה צנועה"
+      ],
+      "yearStart": 2002,
+      "yearEnd": 2002,
+      "sourceUrl": "https://www.chanagoldberg.com/modest-exhibition"
+    },
+    {
+      "id": "open-table",
+      "titleHe": "שולחן ערוך",
+      "acceptedNamesHe": [
+        "שולחן ערוך"
+      ],
+      "yearStart": 2003,
+      "yearEnd": 2003,
+      "sourceUrl": "https://www.chanagoldberg.com/open-table"
+    },
+    {
+      "id": "jerusalem-of-above",
+      "titleHe": "ירושלים של מעלה",
+      "acceptedNamesHe": [
+        "ירושלים של מעלה"
+      ],
+      "yearStart": 2006,
+      "yearEnd": 2006,
+      "sourceUrl": "https://www.chanagoldberg.com/jerusalem-of-above"
+    },
+    {
+      "id": "peak-of-my-blossom",
+      "titleHe": "בשיא פריחתי",
+      "acceptedNamesHe": [
+        "בשיא פריחתי"
+      ],
+      "yearStart": 2007,
+      "yearEnd": 2007,
+      "sourceUrl": "https://www.chanagoldberg.com/peak-of-my-blossom"
+    },
+    {
+      "id": "high-tension",
+      "titleHe": "מתח גבוה",
+      "acceptedNamesHe": [
+        "מתח גבוה"
+      ],
+      "yearStart": 2010,
+      "yearEnd": 2010,
+      "sourceUrl": "https://www.chanagoldberg.com/high-tension"
+    },
+    {
+      "id": "zion-and-others",
+      "titleHe": "ציון ואחרים",
+      "acceptedNamesHe": [
+        "ציון ואחרים"
+      ],
+      "yearStart": 2010,
+      "yearEnd": 2010,
+      "sourceUrl": "https://www.chanagoldberg.com/zion-and-others"
+    },
+    {
+      "id": "the-hidden-face",
+      "titleHe": "הסתר פנים",
+      "acceptedNamesHe": [
+        "הסתר פנים"
+      ],
+      "yearStart": 2012,
+      "yearEnd": 2012,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face"
+    },
+    {
+      "id": "are-the-waters-abated",
+      "titleHe": "הקלו המים",
+      "acceptedNamesHe": [
+        "הקלו המים"
+      ],
+      "yearStart": 2014,
+      "yearEnd": 2014,
+      "sourceUrl": "https://www.chanagoldberg.com/are-the-waters-abated"
+    },
+    {
+      "id": "surface",
+      "titleHe": "פני השטח",
+      "acceptedNamesHe": [
+        "פני השטח"
+      ],
+      "yearStart": 2015,
+      "yearEnd": 2015,
+      "sourceUrl": "https://www.chanagoldberg.com/surface"
+    },
+    {
+      "id": "to-the-desert",
+      "titleHe": "אל המדבר",
+      "acceptedNamesHe": [
+        "אל המדבר"
+      ],
+      "yearStart": 2016,
+      "yearEnd": 2016,
+      "sourceUrl": "https://www.chanagoldberg.com/to-the-desert"
+    },
+    {
+      "id": "the-hidden-face-take-2",
+      "titleHe": "הסתר פנים Take 2",
+      "acceptedNamesHe": [
+        "הסתר פנים Take 2",
+        "הסתר פנים טייק 2",
+        "הסתר פנים 2"
+      ],
+      "yearStart": 2017,
+      "yearEnd": 2017,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face-take-2"
+    },
+    {
+      "id": "the-golden-tray",
+      "titleHe": "מגש הזהב",
+      "acceptedNamesHe": [
+        "מגש הזהב"
+      ],
+      "yearStart": 2017,
+      "yearEnd": 2018,
+      "sourceUrl": "https://www.chanagoldberg.com/the-golden-tray"
+    },
+    {
+      "id": "my-line",
+      "titleHe": "קוים לדמותי",
+      "acceptedNamesHe": [
+        "קוים לדמותי",
+        "קווים לדמותי"
+      ],
+      "yearStart": 2018,
+      "yearEnd": 2018,
+      "sourceUrl": "https://www.chanagoldberg.com/my-line"
+    },
+    {
+      "id": "the-young-women-from-india",
+      "titleHe": "הנערות מהודו",
+      "acceptedNamesHe": [
+        "הנערות מהודו"
+      ],
+      "yearStart": 2018,
+      "yearEnd": 2018,
+      "sourceUrl": "https://www.chanagoldberg.com/the-young-women-from-india"
+    },
+    {
+      "id": "exposed",
+      "titleHe": "אמאמנית",
+      "acceptedNamesHe": [
+        "אמאמנית"
+      ],
+      "yearStart": 2019,
+      "yearEnd": 2019,
+      "sourceUrl": "https://www.chanagoldberg.com/exposed"
+    },
+    {
+      "id": "days-of-undesire",
+      "titleHe": "ימים אשר אין בהם חפץ",
+      "acceptedNamesHe": [
+        "ימים אשר אין בהם חפץ"
+      ],
+      "yearStart": 2023,
+      "yearEnd": 2023,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-thick-clouds-veil-him"
+    },
+    {
+      "id": "thick-clouds-veil-him",
+      "titleHe": "עבים סתר לו, ולא יראה",
+      "acceptedNamesHe": [
+        "עבים סתר לו, ולא יראה"
+      ],
+      "yearStart": 2025,
+      "yearEnd": 2025,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-exposed"
+    }
+  ],
+  "artworks": [
+    {
+      "id": "9cfe66aeaeca68c4",
+      "collectionId": "motherhood",
+      "imagePath": "art/chana/9cfe66aeaeca68c4.webp",
+      "thumbPath": "art/chana/thumbs/9cfe66aeaeca68c4.webp",
+      "width": 640,
+      "height": 452,
+      "sourceUrl": "https://www.chanagoldberg.com/motherhood",
+      "sourceOriginalId": "motherhood-01"
+    },
+    {
+      "id": "7030ee104c54339c",
+      "collectionId": "motherhood",
+      "imagePath": "art/chana/7030ee104c54339c.webp",
+      "thumbPath": "art/chana/thumbs/7030ee104c54339c.webp",
+      "width": 446,
+      "height": 640,
+      "sourceUrl": "https://www.chanagoldberg.com/motherhood",
+      "sourceOriginalId": "motherhood-02"
+    },
+    {
+      "id": "113e35c2bb0df66b",
+      "collectionId": "motherhood",
+      "imagePath": "art/chana/113e35c2bb0df66b.webp",
+      "thumbPath": "art/chana/thumbs/113e35c2bb0df66b.webp",
+      "width": 517,
+      "height": 640,
+      "sourceUrl": "https://www.chanagoldberg.com/motherhood",
+      "sourceOriginalId": "motherhood-03"
+    },
+    {
+      "id": "0efc2e1fa9f34787",
+      "collectionId": "modest-exhibition",
+      "imagePath": "art/chana/0efc2e1fa9f34787.webp",
+      "thumbPath": "art/chana/thumbs/0efc2e1fa9f34787.webp",
+      "width": 589,
+      "height": 709,
+      "sourceUrl": "https://www.chanagoldberg.com/modest-exhibition",
+      "sourceOriginalId": "modest-exhibition-01"
+    },
+    {
+      "id": "af11f2b4a5c491be",
+      "collectionId": "modest-exhibition",
+      "imagePath": "art/chana/af11f2b4a5c491be.webp",
+      "thumbPath": "art/chana/thumbs/af11f2b4a5c491be.webp",
+      "width": 683,
+      "height": 567,
+      "sourceUrl": "https://www.chanagoldberg.com/modest-exhibition",
+      "sourceOriginalId": "modest-exhibition-02"
+    },
+    {
+      "id": "4dc638430acb94cb",
+      "collectionId": "modest-exhibition",
+      "imagePath": "art/chana/4dc638430acb94cb.webp",
+      "thumbPath": "art/chana/thumbs/4dc638430acb94cb.webp",
+      "width": 593,
+      "height": 709,
+      "sourceUrl": "https://www.chanagoldberg.com/modest-exhibition",
+      "sourceOriginalId": "modest-exhibition-03"
+    },
+    {
+      "id": "5be6e440bc857bfa",
+      "collectionId": "open-table",
+      "imagePath": "art/chana/5be6e440bc857bfa.webp",
+      "thumbPath": "art/chana/thumbs/5be6e440bc857bfa.webp",
+      "width": 830,
+      "height": 553,
+      "sourceUrl": "https://www.chanagoldberg.com/open-table",
+      "sourceOriginalId": "open-table-01"
+    },
+    {
+      "id": "091dcd99613cdaf2",
+      "collectionId": "open-table",
+      "imagePath": "art/chana/091dcd99613cdaf2.webp",
+      "thumbPath": "art/chana/thumbs/091dcd99613cdaf2.webp",
+      "width": 804,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/open-table",
+      "sourceOriginalId": "open-table-02"
+    },
+    {
+      "id": "833a20f4b0e695e2",
+      "collectionId": "open-table",
+      "imagePath": "art/chana/833a20f4b0e695e2.webp",
+      "thumbPath": "art/chana/thumbs/833a20f4b0e695e2.webp",
+      "width": 830,
+      "height": 553,
+      "sourceUrl": "https://www.chanagoldberg.com/open-table",
+      "sourceOriginalId": "open-table-03"
+    },
+    {
+      "id": "0243dd1a0cb93241",
+      "collectionId": "jerusalem-of-above",
+      "imagePath": "art/chana/0243dd1a0cb93241.webp",
+      "thumbPath": "art/chana/thumbs/0243dd1a0cb93241.webp",
+      "width": 830,
+      "height": 517,
+      "sourceUrl": "https://www.chanagoldberg.com/jerusalem-of-above",
+      "sourceOriginalId": "jerusalem-of-above-01"
+    },
+    {
+      "id": "1cfa379459a46a88",
+      "collectionId": "jerusalem-of-above",
+      "imagePath": "art/chana/1cfa379459a46a88.webp",
+      "thumbPath": "art/chana/thumbs/1cfa379459a46a88.webp",
+      "width": 830,
+      "height": 472,
+      "sourceUrl": "https://www.chanagoldberg.com/jerusalem-of-above",
+      "sourceOriginalId": "jerusalem-of-above-02"
+    },
+    {
+      "id": "a2a01907d7d938c1",
+      "collectionId": "jerusalem-of-above",
+      "imagePath": "art/chana/a2a01907d7d938c1.webp",
+      "thumbPath": "art/chana/thumbs/a2a01907d7d938c1.webp",
+      "width": 805,
+      "height": 567,
+      "sourceUrl": "https://www.chanagoldberg.com/jerusalem-of-above",
+      "sourceOriginalId": "jerusalem-of-above-03"
+    },
+    {
+      "id": "f17a4872a3a51ef3",
+      "collectionId": "peak-of-my-blossom",
+      "imagePath": "art/chana/f17a4872a3a51ef3.webp",
+      "thumbPath": "art/chana/thumbs/f17a4872a3a51ef3.webp",
+      "width": 830,
+      "height": 513,
+      "sourceUrl": "https://www.chanagoldberg.com/peak-of-my-blossom",
+      "sourceOriginalId": "peak-of-my-blossom-01"
+    },
+    {
+      "id": "7315a235d646025c",
+      "collectionId": "peak-of-my-blossom",
+      "imagePath": "art/chana/7315a235d646025c.webp",
+      "thumbPath": "art/chana/thumbs/7315a235d646025c.webp",
+      "width": 830,
+      "height": 510,
+      "sourceUrl": "https://www.chanagoldberg.com/peak-of-my-blossom",
+      "sourceOriginalId": "peak-of-my-blossom-02"
+    },
+    {
+      "id": "9d102c73d1954e3d",
+      "collectionId": "peak-of-my-blossom",
+      "imagePath": "art/chana/9d102c73d1954e3d.webp",
+      "thumbPath": "art/chana/thumbs/9d102c73d1954e3d.webp",
+      "width": 404,
+      "height": 709,
+      "sourceUrl": "https://www.chanagoldberg.com/peak-of-my-blossom",
+      "sourceOriginalId": "peak-of-my-blossom-03"
+    },
+    {
+      "id": "f58cb17b5f0e0d22",
+      "collectionId": "high-tension",
+      "imagePath": "art/chana/f58cb17b5f0e0d22.webp",
+      "thumbPath": "art/chana/thumbs/f58cb17b5f0e0d22.webp",
+      "width": 462,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/high-tension",
+      "sourceOriginalId": "high-tension-01"
+    },
+    {
+      "id": "0891ca814d2d54cd",
+      "collectionId": "high-tension",
+      "imagePath": "art/chana/0891ca814d2d54cd.webp",
+      "thumbPath": "art/chana/thumbs/0891ca814d2d54cd.webp",
+      "width": 830,
+      "height": 552,
+      "sourceUrl": "https://www.chanagoldberg.com/high-tension",
+      "sourceOriginalId": "high-tension-02"
+    },
+    {
+      "id": "b1c50bcafca48994",
+      "collectionId": "high-tension",
+      "imagePath": "art/chana/b1c50bcafca48994.webp",
+      "thumbPath": "art/chana/thumbs/b1c50bcafca48994.webp",
+      "width": 513,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/high-tension",
+      "sourceOriginalId": "high-tension-03"
+    },
+    {
+      "id": "c16be0c398794ab1",
+      "collectionId": "zion-and-others",
+      "imagePath": "art/chana/c16be0c398794ab1.webp",
+      "thumbPath": "art/chana/thumbs/c16be0c398794ab1.webp",
+      "width": 589,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/zion-and-others",
+      "sourceOriginalId": "zion-and-others-01"
+    },
+    {
+      "id": "4110fd1de8ac7f41",
+      "collectionId": "zion-and-others",
+      "imagePath": "art/chana/4110fd1de8ac7f41.webp",
+      "thumbPath": "art/chana/thumbs/4110fd1de8ac7f41.webp",
+      "width": 579,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/zion-and-others",
+      "sourceOriginalId": "zion-and-others-02"
+    },
+    {
+      "id": "e81c09d613ebd674",
+      "collectionId": "zion-and-others",
+      "imagePath": "art/chana/e81c09d613ebd674.webp",
+      "thumbPath": "art/chana/thumbs/e81c09d613ebd674.webp",
+      "width": 497,
+      "height": 709,
+      "sourceUrl": "https://www.chanagoldberg.com/zion-and-others",
+      "sourceOriginalId": "zion-and-others-03"
+    },
+    {
+      "id": "60f26e23ecf08874",
+      "collectionId": "the-hidden-face",
+      "imagePath": "art/chana/60f26e23ecf08874.webp",
+      "thumbPath": "art/chana/thumbs/60f26e23ecf08874.webp",
+      "width": 583,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face",
+      "sourceOriginalId": "the-hidden-face-01"
+    },
+    {
+      "id": "676ce01ab1f95e4d",
+      "collectionId": "the-hidden-face",
+      "imagePath": "art/chana/676ce01ab1f95e4d.webp",
+      "thumbPath": "art/chana/thumbs/676ce01ab1f95e4d.webp",
+      "width": 584,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face",
+      "sourceOriginalId": "the-hidden-face-02"
+    },
+    {
+      "id": "ab46054876f50c06",
+      "collectionId": "the-hidden-face",
+      "imagePath": "art/chana/ab46054876f50c06.webp",
+      "thumbPath": "art/chana/thumbs/ab46054876f50c06.webp",
+      "width": 576,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face",
+      "sourceOriginalId": "the-hidden-face-03"
+    },
+    {
+      "id": "954d6f026703d0fd",
+      "collectionId": "are-the-waters-abated",
+      "imagePath": "art/chana/954d6f026703d0fd.webp",
+      "thumbPath": "art/chana/thumbs/954d6f026703d0fd.webp",
+      "width": 578,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/are-the-waters-abated",
+      "sourceOriginalId": "are-the-waters-abated-01"
+    },
+    {
+      "id": "c12afde1941e87cb",
+      "collectionId": "are-the-waters-abated",
+      "imagePath": "art/chana/c12afde1941e87cb.webp",
+      "thumbPath": "art/chana/thumbs/c12afde1941e87cb.webp",
+      "width": 830,
+      "height": 687,
+      "sourceUrl": "https://www.chanagoldberg.com/are-the-waters-abated",
+      "sourceOriginalId": "are-the-waters-abated-02"
+    },
+    {
+      "id": "5ef9f7301118dbd3",
+      "collectionId": "are-the-waters-abated",
+      "imagePath": "art/chana/5ef9f7301118dbd3.webp",
+      "thumbPath": "art/chana/thumbs/5ef9f7301118dbd3.webp",
+      "width": 576,
+      "height": 822,
+      "sourceUrl": "https://www.chanagoldberg.com/are-the-waters-abated",
+      "sourceOriginalId": "are-the-waters-abated-03"
+    },
+    {
+      "id": "a8f3b9a84378fc71",
+      "collectionId": "surface",
+      "imagePath": "art/chana/a8f3b9a84378fc71.webp",
+      "thumbPath": "art/chana/thumbs/a8f3b9a84378fc71.webp",
+      "width": 830,
+      "height": 567,
+      "sourceUrl": "https://www.chanagoldberg.com/surface",
+      "sourceOriginalId": "surface-01"
+    },
+    {
+      "id": "5edcc8455dfa66e7",
+      "collectionId": "surface",
+      "imagePath": "art/chana/5edcc8455dfa66e7.webp",
+      "thumbPath": "art/chana/thumbs/5edcc8455dfa66e7.webp",
+      "width": 830,
+      "height": 590,
+      "sourceUrl": "https://www.chanagoldberg.com/surface",
+      "sourceOriginalId": "surface-02"
+    },
+    {
+      "id": "98152014e6f7af26",
+      "collectionId": "surface",
+      "imagePath": "art/chana/98152014e6f7af26.webp",
+      "thumbPath": "art/chana/thumbs/98152014e6f7af26.webp",
+      "width": 830,
+      "height": 678,
+      "sourceUrl": "https://www.chanagoldberg.com/surface",
+      "sourceOriginalId": "surface-03"
+    },
+    {
+      "id": "815ea3a32f22f887",
+      "collectionId": "to-the-desert",
+      "imagePath": "art/chana/815ea3a32f22f887.webp",
+      "thumbPath": "art/chana/thumbs/815ea3a32f22f887.webp",
+      "width": 583,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/to-the-desert",
+      "sourceOriginalId": "to-the-desert-01"
+    },
+    {
+      "id": "86c6d31f2d29d51c",
+      "collectionId": "to-the-desert",
+      "imagePath": "art/chana/86c6d31f2d29d51c.webp",
+      "thumbPath": "art/chana/thumbs/86c6d31f2d29d51c.webp",
+      "width": 830,
+      "height": 612,
+      "sourceUrl": "https://www.chanagoldberg.com/to-the-desert",
+      "sourceOriginalId": "to-the-desert-02"
+    },
+    {
+      "id": "74179640bb64226d",
+      "collectionId": "to-the-desert",
+      "imagePath": "art/chana/74179640bb64226d.webp",
+      "thumbPath": "art/chana/thumbs/74179640bb64226d.webp",
+      "width": 830,
+      "height": 817,
+      "sourceUrl": "https://www.chanagoldberg.com/to-the-desert",
+      "sourceOriginalId": "to-the-desert-03"
+    },
+    {
+      "id": "95efaac6890cb52b",
+      "collectionId": "the-hidden-face-take-2",
+      "imagePath": "art/chana/95efaac6890cb52b.webp",
+      "thumbPath": "art/chana/thumbs/95efaac6890cb52b.webp",
+      "width": 830,
+      "height": 481,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face-take-2",
+      "sourceOriginalId": "the-hidden-face-take-2-01"
+    },
+    {
+      "id": "4c5fa715aa4af4d2",
+      "collectionId": "the-hidden-face-take-2",
+      "imagePath": "art/chana/4c5fa715aa4af4d2.webp",
+      "thumbPath": "art/chana/thumbs/4c5fa715aa4af4d2.webp",
+      "width": 830,
+      "height": 581,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face-take-2",
+      "sourceOriginalId": "the-hidden-face-take-2-02"
+    },
+    {
+      "id": "c61ef5515518f5f4",
+      "collectionId": "the-hidden-face-take-2",
+      "imagePath": "art/chana/c61ef5515518f5f4.webp",
+      "thumbPath": "art/chana/thumbs/c61ef5515518f5f4.webp",
+      "width": 830,
+      "height": 583,
+      "sourceUrl": "https://www.chanagoldberg.com/the-hidden-face-take-2",
+      "sourceOriginalId": "the-hidden-face-take-2-03"
+    },
+    {
+      "id": "c225232a36488057",
+      "collectionId": "the-golden-tray",
+      "imagePath": "art/chana/c225232a36488057.webp",
+      "thumbPath": "art/chana/thumbs/c225232a36488057.webp",
+      "width": 805,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/the-golden-tray",
+      "sourceOriginalId": "the-golden-tray-01"
+    },
+    {
+      "id": "be5d3be2a3971202",
+      "collectionId": "the-golden-tray",
+      "imagePath": "art/chana/be5d3be2a3971202.webp",
+      "thumbPath": "art/chana/thumbs/be5d3be2a3971202.webp",
+      "width": 830,
+      "height": 602,
+      "sourceUrl": "https://www.chanagoldberg.com/the-golden-tray",
+      "sourceOriginalId": "the-golden-tray-02"
+    },
+    {
+      "id": "bba4c05026bbdbff",
+      "collectionId": "the-golden-tray",
+      "imagePath": "art/chana/bba4c05026bbdbff.webp",
+      "thumbPath": "art/chana/thumbs/bba4c05026bbdbff.webp",
+      "width": 830,
+      "height": 599,
+      "sourceUrl": "https://www.chanagoldberg.com/the-golden-tray",
+      "sourceOriginalId": "the-golden-tray-03"
+    },
+    {
+      "id": "1179da63373c9807",
+      "collectionId": "my-line",
+      "imagePath": "art/chana/1179da63373c9807.webp",
+      "thumbPath": "art/chana/thumbs/1179da63373c9807.webp",
+      "width": 830,
+      "height": 359,
+      "sourceUrl": "https://www.chanagoldberg.com/my-line",
+      "sourceOriginalId": "my-line-01"
+    },
+    {
+      "id": "40ef86dce6ead053",
+      "collectionId": "my-line",
+      "imagePath": "art/chana/40ef86dce6ead053.webp",
+      "thumbPath": "art/chana/thumbs/40ef86dce6ead053.webp",
+      "width": 299,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/my-line",
+      "sourceOriginalId": "my-line-02"
+    },
+    {
+      "id": "8354e73ebb70fb58",
+      "collectionId": "my-line",
+      "imagePath": "art/chana/8354e73ebb70fb58.webp",
+      "thumbPath": "art/chana/thumbs/8354e73ebb70fb58.webp",
+      "width": 830,
+      "height": 368,
+      "sourceUrl": "https://www.chanagoldberg.com/my-line",
+      "sourceOriginalId": "my-line-03"
+    },
+    {
+      "id": "89df5c4f160c9366",
+      "collectionId": "the-young-women-from-india",
+      "imagePath": "art/chana/89df5c4f160c9366.webp",
+      "thumbPath": "art/chana/thumbs/89df5c4f160c9366.webp",
+      "width": 830,
+      "height": 140,
+      "sourceUrl": "https://www.chanagoldberg.com/the-young-women-from-india",
+      "sourceOriginalId": "the-young-women-from-india-01"
+    },
+    {
+      "id": "d70f12e25ba04934",
+      "collectionId": "exposed",
+      "imagePath": "art/chana/d70f12e25ba04934.webp",
+      "thumbPath": "art/chana/thumbs/d70f12e25ba04934.webp",
+      "width": 491,
+      "height": 800,
+      "sourceUrl": "https://www.chanagoldberg.com/exposed",
+      "sourceOriginalId": "exposed-01"
+    },
+    {
+      "id": "cba90fa0d30230ce",
+      "collectionId": "exposed",
+      "imagePath": "art/chana/cba90fa0d30230ce.webp",
+      "thumbPath": "art/chana/thumbs/cba90fa0d30230ce.webp",
+      "width": 576,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/exposed",
+      "sourceOriginalId": "exposed-02"
+    },
+    {
+      "id": "863b5b17831494a2",
+      "collectionId": "exposed",
+      "imagePath": "art/chana/863b5b17831494a2.webp",
+      "thumbPath": "art/chana/thumbs/863b5b17831494a2.webp",
+      "width": 830,
+      "height": 462,
+      "sourceUrl": "https://www.chanagoldberg.com/exposed",
+      "sourceOriginalId": "exposed-03"
+    },
+    {
+      "id": "ed8c0dc8d7e19bb2",
+      "collectionId": "days-of-undesire",
+      "imagePath": "art/chana/ed8c0dc8d7e19bb2.webp",
+      "thumbPath": "art/chana/thumbs/ed8c0dc8d7e19bb2.webp",
+      "width": 830,
+      "height": 604,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-thick-clouds-veil-him",
+      "sourceOriginalId": "days-of-undesire-01"
+    },
+    {
+      "id": "890f91993d91d068",
+      "collectionId": "days-of-undesire",
+      "imagePath": "art/chana/890f91993d91d068.webp",
+      "thumbPath": "art/chana/thumbs/890f91993d91d068.webp",
+      "width": 830,
+      "height": 596,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-thick-clouds-veil-him",
+      "sourceOriginalId": "days-of-undesire-02"
+    },
+    {
+      "id": "cd032a2e83c6463d",
+      "collectionId": "days-of-undesire",
+      "imagePath": "art/chana/cd032a2e83c6463d.webp",
+      "thumbPath": "art/chana/thumbs/cd032a2e83c6463d.webp",
+      "width": 702,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-thick-clouds-veil-him",
+      "sourceOriginalId": "days-of-undesire-03"
+    },
+    {
+      "id": "9d24e8d893aaab73",
+      "collectionId": "thick-clouds-veil-him",
+      "imagePath": "art/chana/9d24e8d893aaab73.webp",
+      "thumbPath": "art/chana/thumbs/9d24e8d893aaab73.webp",
+      "width": 725,
+      "height": 830,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-exposed",
+      "sourceOriginalId": "thick-clouds-veil-him-01"
+    },
+    {
+      "id": "3dee38414c94e6ce",
+      "collectionId": "thick-clouds-veil-him",
+      "imagePath": "art/chana/3dee38414c94e6ce.webp",
+      "thumbPath": "art/chana/thumbs/3dee38414c94e6ce.webp",
+      "width": 830,
+      "height": 632,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-exposed",
+      "sourceOriginalId": "thick-clouds-veil-him-02"
+    },
+    {
+      "id": "fcdc9de4231441cd",
+      "collectionId": "thick-clouds-veil-him",
+      "imagePath": "art/chana/fcdc9de4231441cd.webp",
+      "thumbPath": "art/chana/thumbs/fcdc9de4231441cd.webp",
+      "width": 830,
+      "height": 447,
+      "sourceUrl": "https://www.chanagoldberg.com/copy-of-exposed",
+      "sourceOriginalId": "thick-clouds-veil-him-03"
+    }
+  ]
+}

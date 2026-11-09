@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { readFile } from 'node:fs/promises';
+import { chanaDatabase } from './chana-db.mjs';
 
 const fields = 'submission_id AS id, game_id AS game, name, score, created_at AS "createdAt"';
 const order = 'score DESC, created_at ASC, submission_id ASC';
@@ -26,6 +27,17 @@ export async function createStore(connectionString) {
   client.release();
 
   return {
+    async chanaTransaction(key, callback) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['chana:' + key]);
+        const result = await callback(chanaDatabase(client));
+        await client.query('COMMIT');
+        return result;
+      } catch (error) { await client.query('ROLLBACK'); throw error; }
+      finally { client.release(); }
+    },
     async check() { await pool.query('SELECT 1'); },
     async top(game) {
       const result = await pool.query(`SELECT ${fields} FROM leaderboard_scores WHERE game_id = $1 ORDER BY ${order} LIMIT 10`, [game]);

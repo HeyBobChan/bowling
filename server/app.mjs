@@ -1,5 +1,6 @@
 import express from 'express';
 import compression from 'compression';
+import { chanaRouter } from './chana-router.mjs';
 import { rateLimit } from 'express-rate-limit';
 import { resolve } from 'node:path';
 
@@ -24,12 +25,13 @@ export function createServer({ store, staticDir = resolve(import.meta.dirname, '
     const allowed = allowedOrigins.includes(req.get('Origin'));
     if (allowed) {
       res.set('Access-Control-Allow-Origin', req.get('Origin'));
-      res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Allow-Methods', req.path.startsWith('/chana') ? 'GET, POST, PUT, OPTIONS' : 'GET, POST, OPTIONS');
+      res.set('Access-Control-Allow-Headers', req.path.startsWith('/chana') ? 'Content-Type, Authorization' : 'Content-Type');
     }
     if (req.method === 'OPTIONS') return res.sendStatus(allowed ? 204 : 403);
     next();
   });
+  app.use('/api/chana', chanaRouter({ store, allowedOrigins }));
   const limiter = (limit) => rateLimit({ windowMs: 60000, limit, standardHeaders: 'draft-8',
     legacyHeaders: false, message: { error: 'too_many_requests' } });
   app.use('/api', limiter(180));
