@@ -117,22 +117,28 @@ function reviewAnswers(collection){
   return `<tr><th scope="row"><button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button></th>${collection.artworkIds.map(id=>`<td>${esc(p.guesses[id]?.trim()||'—')}<small>מיקום ${p.order.indexOf(id)+1}</small></td>`).join('')}<td class="answer-score"><strong>${score.total}</strong><small>סדר ${score.chronology} · בונוס ${score.bonus}</small></td></tr>`;
  }).join('')}</tbody></table></section>`;
 }
-function playerAnswers(id){
+function playerAnswers(id,{keepScroll=false}={}){
  if(!state.answers)return;
  if(id!=='correct'&&!orderPlayers().some(p=>p.id===id))return;
- orderView=id;reviewDetailOpen=false;if(modal.open)modal.close();render();window.scrollTo(0,0);
+ const scrollY=keepScroll?window.scrollY:0;
+ orderView=id;reviewDetailOpen=false;if(modal.open)modal.close();render();window.scrollTo(0,scrollY);
 }
 function orderPlayers(){return session.role==='host'?(state.submissions||[]):state.me?[state.me]:[];}
 function closeOrderResults(){orderView=null;render();window.scrollTo(0,0);}
 function renderOrderResults(screen){
  const correct=orderView==='correct',players=orderPlayers(),player=players.find(p=>p.id===orderView),score=state.results.find(p=>p.id===orderView);
  const groups=[...state.answers].sort((a,b)=>a.yearStart-b.yearStart||a.yearEnd-b.yearEnd),byArt=new Map(groups.flatMap(g=>g.artworkIds.map(id=>[id,g])));
- const order=correct?groups.flatMap(g=>g.artworkIds):player.order;
+ const correctOrder=groups.flatMap(g=>g.artworkIds),order=correct?correctOrder:player.order,compare=session.role==='host'&&!correct;
  screen.classList.add('order-screen');
- screen.innerHTML=`<div class="order-toolbar">${button('→ חזרה','close-order','secondary')}<label for="order-player">הצגת הסדר</label><select id="order-player">${players.map(p=>`<option value="${p.id}" ${p.id===orderView?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="correct" ${correct?'selected':''}>הסדר הנכון</option></select></div><section class="order-heading"><h1>${correct?'הסדר הנכון':'הסדר של '+esc(player.name)}</h1>${score?`<div class="order-score"><strong>${score.chronology}<small>/100</small></strong><span>על הסדר</span><span class="muted">בונוס ${score.bonus} · סה״כ ${score.total}</span></div><p class="small">הניקוד לפי הסדר היחסי בין היצירות, לא לפי מספר המקום.</p>`:'<p class="small">יצירות מאותה שנה או מתקופות חופפות יכולות להופיע בכל סדר ביניהן.</p>'}</section><ol class="order-grid">${order.map((id,i)=>{
-  const a=artworks.get(id),g=byArt.get(id),guess=player?.guesses[id]?.trim();
-  return `<li class="order-card"><div class="order-card-top"><span class="position">${i+1}</span><bdi>${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</bdi></div><button data-zoom="${id}" aria-label="הגדלת יצירה ${i+1}"><img src="${a.imagePath}" alt="יצירה מתוך ${esc(g.titleHe)}" loading="lazy"></button><h2>${esc(g.titleHe)}</h2>${!correct?`<p>ניחוש: ${esc(guess||'—')}</p>`:''}</li>`;
- }).join('')}</ol>`;
+ const toolbar=`<div class="order-toolbar">${button('→ חזרה','close-order','secondary')}<label for="order-player">הצגת הסדר</label><select id="order-player">${players.map(p=>`<option value="${p.id}" ${p.id===orderView?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="correct" ${correct?'selected':''}>הסדר הנכון</option></select></div>`;
+ const heading=`<section class="order-heading"><h1>${correct?'הסדר הנכון':'הסדר של '+esc(player.name)}</h1>${score?`<div class="order-score"><strong>${score.chronology}<small>/100</small></strong><span>על הסדר</span><span class="muted">בונוס ${score.bonus} · סה״כ ${score.total}</span></div><p class="small">הניקוד לפי הסדר היחסי בין היצירות, לא לפי מספר המקום.</p>`:'<p class="small">יצירות מאותה שנה או מתקופות חופפות יכולות להופיע בכל סדר ביניהן.</p>'}</section>`;
+ function orderCard(id,i,owner,tag='li',label=''){
+  const a=artworks.get(id),g=byArt.get(id),guess=owner?.guesses[id]?.trim();
+  return `<${tag} class="order-card"><div class="order-card-top"><span class="position">${i+1}</span><bdi>${g.yearStart===g.yearEnd?g.yearStart:g.yearStart+'–'+g.yearEnd}</bdi></div><button data-zoom="${id}" aria-label="הגדלת יצירה ${i+1}${label?' — '+esc(label):''}"><img src="${a.imagePath}" alt="יצירה מתוך ${esc(g.titleHe)}" loading="lazy"></button><h2>${esc(g.titleHe)}</h2>${owner?`<p>ניחוש: ${esc(guess||'—')}</p>`:''}</${tag}>`;
+ }
+ if(compare){
+  screen.innerHTML=heading+`<div class="comparison-sticky">${toolbar}<div class="comparison-headings"><h2>הסדר של ${esc(player.name)}</h2><h2>הסדר הנכון</h2></div></div><ol class="order-comparison" aria-label="השוואת הסדרים">${order.map((id,i)=>`<li class="order-comparison-row" aria-label="מקום ${i+1}">${orderCard(id,i,player,'article',player.name)}${orderCard(correctOrder[i],i,null,'article','הסדר הנכון')}</li>`).join('')}</ol>`;
+ }else screen.innerHTML=toolbar+heading+`<ol class="order-grid">${order.map((id,i)=>orderCard(id,i,player)).join('')}</ol>`;
 }
 function renderTimeline(screen){
  screen.innerHTML=`<section class="timeline-heading"><div><h1>סדר היצירות</h1></div><span class="piece-count">52<small>יצירות</small></span></section><p class="instructions">החזיקו וגררו לפי שנת התערוכה, מהמוקדם למאוחר.<br>לחצו על ציור להגדלה.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span>${button('ביטול הזזה אחרונה','undo','text-button',undo.length?'':'disabled')}</div><div class="timeline-edge"><span>מוקדם ↑</span></div><div class="art-grid" id="art-grid" aria-label="סדר היצירות">${local.order.map(card).join('')}</div><div class="timeline-edge end"><span>↓ מאוחר</span></div><div class="submit-bar">${button('שליחת הסדר','confirm-submit','primary wide')}</div><span id="move-announcement" class="sr-only" role="status" aria-live="polite"></span>`;
@@ -222,7 +228,7 @@ document.addEventListener('click',e=>{
  if(target.dataset.zoom){const id=target.dataset.zoom;openModal(`<img class="zoom-image" src="${artworks.get(id).imagePath}" alt="יצירה בהגדלה">`,'zoom-modal');}
 });
 document.addEventListener('keydown',e=>{if(session?.role==='host'&&state?.room.phase==='review'&&!modal.open&&!leaveDialog.open&&!orderView&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){if(['ArrowLeft','PageDown'].includes(e.key)&&state.room.reviewIndex<17){e.preventDefault();act('next');}if(['ArrowRight','PageUp'].includes(e.key)&&state.room.reviewIndex>0){e.preventDefault();act('previous');}}});
-document.addEventListener('change',e=>{if(e.target.id==='order-player')playerAnswers(e.target.value);});
+document.addEventListener('change',e=>{if(e.target.id==='order-player')playerAnswers(e.target.value,{keepScroll:session.role==='host'&&orderView!=='correct'&&e.target.value!=='correct'});});
 document.addEventListener('input',e=>{const id=e.target.dataset.nameArt;if(id&&state?.me?.orderSubmitted&&!state.me.submitted){local.guesses[id]=e.target.value;changed();const copyButton=$(`[data-copy-name="${id}"]`);if(copyButton)copyButton.disabled=!e.target.value.trim();}});
 document.addEventListener('submit',async e=>{
  if(e.target.id==='join-form'){

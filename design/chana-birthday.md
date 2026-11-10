@@ -71,9 +71,12 @@ All artwork is © Chana Goldberg, sourced from https://www.chanagoldberg.com/.
 ## Navigation and order review
 
 Phone sorting and naming use larger two-column cards. Submitted sequences open as
-a full, normally scrolling page, with a sticky selector for each participant and
-the correct chronology. The host can open a sequence from a player's name during
-review or from the results. Participants can inspect their own sequence. Years and
+a full, normally scrolling page. On the host screen, the selected participant
+appears beside the correct chronology in 52 paired rows; both columns share the
+page scroll. Column headings and the participant selector stay visible. Switching
+participants keeps the current scroll position. Correct-order-only viewing and
+the participant phone view remain available. The host can open a sequence from a
+player's name during review or from the results. Participants can inspect their own sequence. Years and
 exhibitions are shown without marking shifted slot numbers as incorrect.
 
 Chronology still compares all definitely ordered pairs (0–100), with ties and
