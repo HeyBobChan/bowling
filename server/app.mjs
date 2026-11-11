@@ -77,7 +77,9 @@ export function createServer({ store, staticDir = resolve(import.meta.dirname, '
   app.use('/api', (_req, res) => res.status(404).json({ error: 'not_found' }));
   // Preserve the static site's caching and real 404s; no SPA fallback.
   app.use('/assets', express.static(resolve(staticDir, 'assets'), { immutable: true, maxAge: '1y', index: false }));
+  // Games are linked without a suffix (/chana); older /chana.html links keep working.
   app.use(express.static(staticDir, {
+    extensions: ['html'],
     setHeaders(res, path) { if (path.endsWith('.html')) res.set('Cache-Control', 'no-cache'); },
   }));
   app.use((_req, res) => res.status(404).type('text').send('Not found'));

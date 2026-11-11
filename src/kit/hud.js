@@ -68,12 +68,13 @@ export function createHud(app, { gameId, music: musicOpts = null } = {}) {
     stopMusic() { music.stop(); },
 
     // "more games" links come from games.json, never from hand-edited HTML; an artifact can
-    // only link to the games that have been published as artifacts
+    // only link to the games that have been published as artifacts. Local links are relative,
+    // so the pages also work under a path prefix (matanbob.com/kids/)
     renderLinks() {
       const others = manifest.games.filter((g) => g.id !== gameId && (!useArtifactLinks || g.artifact));
       document.querySelectorAll('.other-game').forEach((el) => {
         el.innerHTML = 'עוד משחקים: ' + others
-          .map((g) => `<a href="${useArtifactLinks ? g.artifact : g.path}" style="color:${g.accent}">${g.emoji} ${g.short}</a>`)
+          .map((g) => `<a href="${useArtifactLinks ? g.artifact : '.' + g.path}" style="color:${g.accent}">${g.emoji} ${g.short}</a>`)
           .join(' · ');
       });
     },

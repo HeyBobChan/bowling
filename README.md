@@ -8,20 +8,20 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 
 | Game | Page | The kid's rule |
 |---|---|---|
-| 🎳 **כדור באולינג בורח** (Bowling Escape) | `/bowling.html` | The world only moves when the ball moves. Every strike is worth ten, the crowd of monsters keeps growing the longer you roll, and the lane twists and turns forever. |
-| ⚽ **פנדלים בנגיחה** (Header Penalties) | `/pendel.html` | Read the keeper's lean, head the lob into the corner he isn't. Five kicks a round; two players can take turns as keeper. |
-| 🦖 **דינו במבוך** (Dino Maze) | `/dino.html` | Eat fifteen little dinos in an endless maze, dodge the dragon's flame, find the exit before the dragons get angry. |
-| 🥊 **חתול ביער** (Punch Game) | `/punch.html` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
-| 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski.html` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
-| 🤸 **קופצים מעל הרעים** (Jump Over the Bad Guys) | `/jump.html` | Pick one of three box characters, walk both ways and jump over the bad guys who want to eat you — flipping feet, head, feet, head. Climb the green towers; the cute one double-jumps, the scary one slams down with a roar, the regular one glides on its wing. Once in a while the monster king stomps in and blocks the way: dodge his hands, then climb his sleeping hand and arm and bounce off his head to get over him. A 2D canvas game, not three.js. |
-| 🐾 **שחור לבן ביפו** (Jaffa Hop) | `/jaffa.html` | A black-and-white dog hops along Jerusalem Boulevard in Jaffa, dodging Wolt delivery riders and youths on electric scooters. Collect bones (+10) and rice bags (+50 and five seconds of protection), shelter in ficus plazas, and beat your best score. Original Arabic-inspired music and a completely black-and-white pencil streetscape using the actual characters from the drawing. |
+| 🎳 **כדור באולינג בורח** (Bowling Escape) | `/bowling` | The world only moves when the ball moves. Every strike is worth ten, the crowd of monsters keeps growing the longer you roll, and the lane twists and turns forever. |
+| ⚽ **פנדלים בנגיחה** (Header Penalties) | `/pendel` | Read the keeper's lean, head the lob into the corner he isn't. Five kicks a round; two players can take turns as keeper. |
+| 🦖 **דינו במבוך** (Dino Maze) | `/dino` | Eat fifteen little dinos in an endless maze, dodge the dragon's flame, find the exit before the dragons get angry. |
+| 🥊 **חתול ביער** (Punch Game) | `/punch` | Stretch-punch the whole forest, dash out of trouble, survive wave after wave. A second cat can join. |
+| 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
+| 🤸 **קופצים מעל הרעים** (Jump Over the Bad Guys) | `/jump` | Pick one of three box characters, walk both ways and jump over the bad guys who want to eat you — flipping feet, head, feet, head. Climb the green towers; the cute one double-jumps, the scary one slams down with a roar, the regular one glides on its wing. Once in a while the monster king stomps in and blocks the way: dodge his hands, then climb his sleeping hand and arm and bounce off his head to get over him. A 2D canvas game, not three.js. |
+| 🐾 **שחור לבן ביפו** (Jaffa Hop) | `/jaffa` | A black-and-white dog hops along Jerusalem Boulevard in Jaffa, dodging Wolt delivery riders and youths on electric scooters. Collect bones (+10) and rice bags (+50 and five seconds of protection), shelter in ficus plazas, and beat your best score. Original Arabic-inspired music and a completely black-and-white pencil streetscape using the actual characters from the drawing. |
 
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
 
 ## Chana’s birthday game
 
-**חיים בצבע** is at `/chana.html` (https://matanbob.com/kids/chana.html). A host creates a room on the main screen; guests sort 52 works on their phones, submit, then review the correct exhibition dates and names together. See [event setup and scoring](design/chana-birthday.md). It shares the existing Railway PostgreSQL service.
+**חיים בצבע** is at `/chana` (https://matanbob.com/kids/chana). A host creates a room on the main screen; guests sort 52 works on their phones, submit, then review the correct exhibition dates and names together. See [event setup and scoring](design/chana-birthday.md). It shares the existing Railway PostgreSQL service.
 
 ## Run it
 
@@ -59,6 +59,10 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 - `games.json` — the one list of games: page, title, colour, published artifact URL. The
   Vite config, the "more games" links on every intro card and the artifact build all read
   it, so adding a game touches one file plus its own page and source.
+- Addresses have no `.html` suffix. Each game is still its own HTML file (`page` in
+  `games.json`); the server resolves `/chana` to `chana.html`, and `src/kit/clean-url.js`
+  shortens an older `.html` link in the address bar without a reload. Links between
+  games are relative, so they also work under matanbob.com/kids/.
 - `src/kit/` — the shared engine:
   - `app.js` renderer, scene, lights, marker outlines (three's `OutlineEffect`) and the
     frame loop; `?sim` in the URL stops the loop so tests can step it by hand

@@ -16,7 +16,7 @@ assert.equal(new Set(games.map((g) => g.id)).size, games.length, 'Duplicate game
 
 for (const game of games) {
   assert.notEqual(game.page, 'index.html', 'The index is reserved for the roster');
-  assert.equal(game.path, `/${game.page}`);
+  assert.equal(game.path, `/${game.page.replace(/\.html$/, '')}`, 'Games are linked without the .html suffix');
   assert.ok(lobby.includes(`href="${game.path}"`), `Missing roster link: ${game.id}`);
   assert.ok(lobby.includes(`id="title-${game.id}"`), `Missing accessible title: ${game.id}`);
   const html = readFileSync(resolve(output, game.page), 'utf8');
@@ -27,7 +27,8 @@ for (const game of games) {
 for (const page of ['index.html', ...games.map((g) => g.page)]) {
   const html = readFileSync(resolve(output, page), 'utf8');
   for (const [, url] of html.matchAll(/(?:src|href)="(\/[^"#?]*)"/g)) {
-    assert.ok(existsSync(resolve(output, url === '/' ? 'index.html' : url.slice(1))), `${page}: missing ${url}`);
+    const file = resolve(output, url === '/' ? 'index.html' : url.slice(1));
+    assert.ok(existsSync(file) || existsSync(`${file}.html`), `${page}: missing ${url}`);
   }
 }
 console.log(`Site verified: roster, ${games.length} game pages, return links, and all HTML asset references.`);

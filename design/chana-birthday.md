@@ -1,7 +1,8 @@
 # חיים בצבע — חוגגים לחנה
 
-A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
-(`/kids/chana.html` through matanbob.com). It appears in the main game roster.
+A Hebrew birthday game for phones and a shared host screen, at `/chana`
+(`/kids/chana` through matanbob.com; older `.html` links and QR codes still open).
+It appears in the main game roster.
 
 ## Running the birthday
 

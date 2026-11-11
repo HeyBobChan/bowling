@@ -2,7 +2,7 @@ import './style.css';
 import qrcode from './qrcode.mjs';
 import { enableArtDragging } from './drag.js';
 import { createNavigationGuard } from './navigation-guard.js';
-const GAME_URL=new URL('./chana.html',location.href);
+const GAME_URL=new URL('./chana',location.href);
 const API_ROOT=import.meta.env.VITE_LEADERBOARD_API_ORIGIN?new URL('/api/leaderboards/chana',import.meta.env.VITE_LEADERBOARD_API_ORIGIN).href:new URL('./api/leaderboards/chana',location.href).href;
 const $=s=>document.querySelector(s), app=$('#app'),modal=$('#modal');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
