@@ -3,7 +3,7 @@
     {
       "id": "main",
       "page": "bowling.html",
-      "path": "/bowling.html",
+      "path": "/bowling",
       "emoji": "🎳",
       "title": "כדור באולינג בורח",
       "short": "באולינג בורח",
@@ -22,7 +22,7 @@
     {
       "id": "pendel",
       "page": "pendel.html",
-      "path": "/pendel.html",
+      "path": "/pendel",
       "emoji": "⚽",
       "title": "פנדלים בנגיחה",
       "short": "פנדלים בנגיחה",
@@ -41,7 +41,7 @@
     {
       "id": "dino",
       "page": "dino.html",
-      "path": "/dino.html",
+      "path": "/dino",
       "emoji": "🦖",
       "title": "דינו במבוך",
       "short": "דינו במבוך",
@@ -58,7 +58,7 @@
     {
       "id": "punch",
       "page": "punch.html",
-      "path": "/punch.html",
+      "path": "/punch",
       "emoji": "🥊",
       "title": "חתול ביער",
       "short": "חתול ביער",
@@ -77,7 +77,7 @@
     {
       "id": "ski",
       "page": "ski.html",
-      "path": "/ski.html",
+      "path": "/ski",
       "emoji": "🎿",
       "title": "רוקרוק בשלג",
       "short": "רוקרוק בשלג",
@@ -96,7 +96,7 @@
     {
       "id": "jump",
       "page": "jump.html",
-      "path": "/jump.html",
+      "path": "/jump",
       "emoji": "🤸",
       "title": "קופצים מעל הרעים",
       "short": "קופצים מעל הרעים",
@@ -115,7 +115,7 @@
     {
       "id": "jaffa",
       "page": "jaffa.html",
-      "path": "/jaffa.html",
+      "path": "/jaffa",
       "emoji": "🐾",
       "title": "שחור לבן ביפו · Jaffa Hop",
       "short": "שחור לבן ביפו",
@@ -134,7 +134,7 @@
     {
       "id": "chana",
       "page": "chana.html",
-      "path": "/chana.html",
+      "path": "/chana",
       "emoji": "🎨",
       "title": "חנה גולדברג",
       "short": "סדר היצירות",

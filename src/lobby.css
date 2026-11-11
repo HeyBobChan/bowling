@@ -52,4 +52,4 @@ h2 { font-size: 1.6875rem; line-height: 1.3; letter-spacing: -.7px; font-weight:
   .game-card:hover { transform: none; }
 }
 /* Jaffa's original drawing belongs to its monochrome pencil world. */
-.game-card[href="/jaffa.html"] .game-art img { filter: grayscale(1); }
+.game-card[href$="/jaffa"] .game-art img { filter: grayscale(1); }

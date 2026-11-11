@@ -1,7 +1,8 @@
 # חיים בצבע — חוגגים לחנה
 
-A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
-(`/kids/chana.html` through matanbob.com). It appears in the main game roster.
+A Hebrew birthday game for phones and a shared host screen, at `/chana`
+(`/kids/chana` through matanbob.com; older `.html` links and QR codes still open).
+It appears in the main game roster.
 
 ## Running the birthday
 
@@ -10,7 +11,7 @@ A Hebrew birthday game for phones and a shared host screen, at `/chana.html`
 3. Everyone enters a name on their phone. Confirm the participant list, then start. Joining closes at that point.
 4. Each person gets all 52 dated works in an independent shuffle. Hold a painting briefly and drag it into place on a phone, or drag directly with a mouse. The page scrolls near its edges and numbers update during the move. Undo is available. Tap an image for a larger view or **שינוי מיקום** as a keyboard-accessible alternative.
 5. Submit the order to lock it, then enter exhibition-name guesses on the next screen. Every painting has copy/paste buttons; guesses remain optional. Submit the names to finish. The host cannot reveal until every active participant has finished both steps. If someone leaves, explicitly remove that unfinished participant.
-6. Review 18 exhibitions together. The host advances by buttons or left/right arrows. Phones follow the host. The main screen shows every person's guesses, placements and total score next to the correct exhibition. Click a player's name to inspect all 52 submitted positions and guesses. The host may approve a close spelling for bonus credit.
+6. Review 18 exhibitions together. The host advances by buttons or left/right arrows. Phones follow the host. Under the correct exhibition, the main screen shows every guest as a compact card: where they placed its paintings, what they guessed, and ✦ +2 if they named it. The cards flow with the page, so a whole party fits on a TV. Order scores and totals are not shown, or sent to any browser, until the scoreboard. Click a player's name to inspect all 52 submitted positions and guesses. Close spellings are accepted automatically and marked **התאמה קרובה** in the bonus editor, where the host can approve or revoke any bonus.
 7. Reveal the scoreboard, then download the JSON results if desired. Rooms remain accessible for seven days. Rehearse with a few phones on the venue's Wi-Fi before the birthday.
 
 No time limit is imposed. Internet is needed to join, sync, submit and follow review.
@@ -27,8 +28,13 @@ Chronology earns 0–100 points: the percentage of correctly ordered definite
 earlier/later pairs, rounded to an integer (1,242 pairs). Same-year and overlapping
 ranges impose no internal ordering. Each distinct exhibition correctly named earns
 2 points, at most 36. Multiple correct guesses within an exhibition earn one bonus.
-Niqqud, punctuation, spaces and Latin letter case are ignored. The host can correct
-bonus judgments during shared review. Equal totals share a rank.
+Niqqud, punctuation, spaces, final-letter forms, Latin letter case and spelling with
+or without ו/י are ignored. Beyond that, a name of six letters or more may contain
+one typo (a missing, extra, wrong or swapped letter), and two from twelve letters.
+Shorter names must match, because one letter makes another word (אמהות / אמנות).
+For a title of four words or more, its first three words are enough. Numbers must
+agree, so הסתר פנים and הסתר פנים Take 2 never stand in for each other. The host
+can correct bonus judgments during shared review. Equal totals share a rank.
 
 ## Implementation and hosting
 
@@ -43,7 +49,8 @@ bonus judgments during shared review. Equal totals share a rank.
 Player/host capabilities are UUIDs stored hashed server-side. Host recovery uses
 URL fragments. Tokens never appear in public room responses. No player accounts or
 contact details are required. The browser receives no dates, exhibition names or
-chronologically ordered catalogue until shared review starts.
+chronologically ordered catalogue until shared review starts, and no order scores,
+totals or ranks until the host opens the results.
 
 The existing `VITE_LEADERBOARD_API_ORIGIN` build setting points writes directly at
 Railway because the matanbob.com `/kids/` proxy forwards reads but rejects POSTs.
@@ -54,7 +61,7 @@ sharing Wi-Fi do not exhaust the arcade leaderboard's shared-IP limit.
 ## Validation
 
 Run `TEST_DATABASE_URL=... npm run test:server` against a disposable **UTF-8**
-PostgreSQL database. It covers scoring/ties/aliases, independent shuffles, authorization,
+PostgreSQL database. It covers scoring/ties/aliases, close spellings, independent shuffles, authorization,
 hidden answers, idempotent create/join/submit, chronology locking before name entry, stale-save protection, custom-domain
 CORS and large drafts, removals, review gating, bonus corrections and 40 simulated
 concurrent participants, as well as existing arcade leaderboard regression tests.

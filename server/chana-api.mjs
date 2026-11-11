@@ -1,4 +1,4 @@
-import {collections,artworks,publicArtworks,shuffledIds,validateProgress,ranked} from './chana-game.mjs';
+import {collections,artworks,publicArtworks,shuffledIds,validateProgress,ranked,reviewed} from './chana-game.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 class Problem extends Error {constructor(status,message){super(message);this.status=status;}}
 const fail=(status,message)=>{throw new Problem(status,message);};
@@ -21,7 +21,7 @@ async function payload(db,room,identity){
  }
  if(room.phase==='review'||room.phase==='results'){
   result.answers=collections.map(g=>({...g,artworkIds:artworks.filter(a=>a.collectionId===g.id).map(a=>a.id)}));
-  result.results=ranked(players.filter(p=>p.submitted));
+  result.results=(room.phase==='results'?ranked:reviewed)(players.filter(p=>p.submitted));
   if(identity.role==='host')result.submissions=players.filter(p=>p.submitted).map(p=>({id:p.id,name:p.name,order:JSON.parse(p.order_json),guesses:JSON.parse(p.guesses_json)}));
  }
  return result;

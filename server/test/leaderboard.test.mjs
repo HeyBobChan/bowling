@@ -33,6 +33,7 @@ before(async () => {
   staticDir = await mkdtemp(join(tmpdir(), 'leaderboard-static-'));
   await mkdir(join(staticDir, 'assets'));
   await writeFile(join(staticDir, 'index.html'), '<h1>Games</h1>');
+  await writeFile(join(staticDir, 'game.html'), '<h1>Game page</h1>');
   await writeFile(join(staticDir, 'assets/test.js'), 'console.log("game");');
   await migrateDatabase(connectionString);
   store = await createStore(connectionString);
@@ -224,4 +225,14 @@ test('coalesces reads and enforces a global ceiling even when client addresses c
     await Promise.all(Array.from({ length: 10 }, () => fetch(`${origin}/healthz`)));
     assert.equal(health, 1);
   } finally { await closeServer(cached); }
+});
+test('game pages load with or without the .html suffix; unknown pages stay real 404s', async () => {
+  for (const path of ['/game', '/game.html', '/game?room=123456']) {
+    const response = await fetch(base + path);
+    assert.equal(response.status, 200, path);
+    assert.equal(response.headers.get('cache-control'), 'no-cache', path);
+    assert.match(await response.text(), /Game page/);
+  }
+  assert.equal((await fetch(base + '/missing')).status, 404);
+  assert.equal((await fetch(base + '/game/')).status, 404);
 });
