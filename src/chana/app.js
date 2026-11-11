@@ -90,7 +90,7 @@ function updateNamesProgress(){
  const count=$('#named-count');if(count)count.textContent=Object.values(local.guesses).filter(v=>v.trim()).length+' / 52';
 }
 function renderNames(screen){
- screen.innerHTML=`<section class="timeline-heading"><h1>שמות התערוכות</h1><span class="pill" id="named-count" dir="ltr"></span></section><p class="instructions">נחשו את שמות התערוכות לבונוס. אפשר לדלג.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span></div><div class="names-grid">${local.order.map((id,i)=>{
+ screen.innerHTML=`<section class="timeline-heading"><h1>שמות התערוכות</h1><span class="pill" id="named-count" dir="ltr"></span></section><p class="instructions">נחשו את שמות התערוכות לבונוס. אפשר לדלג, וגם כתיב קרוב מתקבל.</p><div class="timeline-tools"><span class="save-status" id="save-status" role="status">${esc(saveMessage)}</span></div><div class="names-grid">${local.order.map((id,i)=>{
   const a=artworks.get(id),guess=local.guesses[id]||'';
   return `<article class="name-card"><span class="position">${i+1}</span><button class="name-image" data-zoom="${id}" aria-label="הגדלת יצירה ${i+1}"><img src="${a.thumbPath}" alt="יצירה ${i+1}" loading="lazy"></button><input data-name-art="${id}" aria-label="שם התערוכה ליצירה ${i+1}" value="${esc(guess)}" maxlength="100" placeholder="שם התערוכה" autocomplete="off" dir="auto"><div class="name-buttons"><button class="secondary" data-copy-name="${id}" aria-label="העתקת שם מיצירה ${i+1}" ${guess.trim()?'':'disabled'}>העתקה</button><button class="secondary" data-paste-name="${id}" aria-label="הדבקת שם ליצירה ${i+1}" ${copiedName?'':'disabled'}>הדבקה</button></div></article>`;
  }).join('')}</div><div class="submit-bar">${button('שליחת השמות','confirm-names','primary wide')}</div>`;
@@ -110,12 +110,14 @@ function pasteName(id){
  const copyButton=$(`[data-copy-name="${id}"]`);if(copyButton)copyButton.disabled=false;
  changed();
 }
+// Host review: every guest is a compact card so the whole party fits on the big
+// screen. Order scores and totals are kept for the results screen.
 function reviewAnswers(collection){
- const scores=new Map(state.results.map(p=>[p.id,p]));
- return `<section class="review-answers" tabindex="0" aria-label="תשובות המשתתפים"><table><thead><tr><th>שם</th>${collection.artworkIds.map((_,i)=>`<th>ציור ${i+1}</th>`).join('')}<th>ניקוד</th></tr></thead><tbody>${state.submissions.map(p=>{
-  const score=scores.get(p.id);
-  return `<tr><th scope="row"><button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button></th>${collection.artworkIds.map(id=>`<td>${esc(p.guesses[id]?.trim()||'—')}<small>מיקום ${p.order.indexOf(id)+1}</small></td>`).join('')}<td class="answer-score"><strong>${score.total}</strong><small>סדר ${score.chronology} · בונוס ${score.bonus}</small></td></tr>`;
- }).join('')}</tbody></table></section>`;
+ const bonuses=new Map(state.results.map(p=>[p.id,p.bonuses.find(b=>b.collectionId===collection.id)]));
+ return `<p class="small review-legend">ליד כל שם — המקומות שקיבלו הציורים. מתחת — הניחוש.</p><section class="review-board" aria-label="תשובות המשתתפים">${state.submissions.map(p=>{
+  const named=bonuses.get(p.id)?.correct,guesses=[...new Set(collection.artworkIds.map(id=>p.guesses[id]?.trim()).filter(Boolean))];
+  return `<article class="review-guest${named?' named':''}"><div class="review-guest-top"><button class="player-answers-link" data-player-answers="${p.id}">${esc(p.name)}</button><small aria-label="מקומות"><bdi>${collection.artworkIds.map(id=>p.order.indexOf(id)+1).join(' · ')}</bdi></small></div><p>${named?'<span class="review-bonus">✦ +2</span> ':''}${guesses.length?guesses.map(esc).join(' · '):'<span class="muted">—</span>'}</p></article>`;
+ }).join('')}</section>`;
 }
 function playerAnswers(id,{keepScroll=false}={}){
  if(!state.answers)return;
@@ -126,7 +128,7 @@ function playerAnswers(id,{keepScroll=false}={}){
 function orderPlayers(){return session.role==='host'?(state.submissions||[]):state.me?[state.me]:[];}
 function closeOrderResults(){orderView=null;render();window.scrollTo(0,0);}
 function renderOrderResults(screen){
- const correct=orderView==='correct',players=orderPlayers(),player=players.find(p=>p.id===orderView),score=state.results.find(p=>p.id===orderView);
+ const correct=orderView==='correct',players=orderPlayers(),player=players.find(p=>p.id===orderView),score=state.room.phase==='results'?state.results.find(p=>p.id===orderView):null;
  const groups=[...state.answers].sort((a,b)=>a.yearStart-b.yearStart||a.yearEnd-b.yearEnd),byArt=new Map(groups.flatMap(g=>g.artworkIds.map(id=>[id,g])));
  const correctOrder=groups.flatMap(g=>g.artworkIds),order=correct?correctOrder:player.order,compare=session.role==='host'&&!correct;
  screen.classList.add('order-screen');
@@ -174,7 +176,7 @@ function renderResults(screen){
 }
 function reviewGuesses(){
  reviewDetailOpen=true;const g=state.answers[state.room.reviewIndex];
- openModal(`<div class="review-guesses"><h2>${esc(g.titleHe)}</h2><p class="small">אפשר לאשר בונוס גם על שגיאת כתיב. 2 נקודות לתערוכה.</p>${state.submissions.map(p=>{const b=state.results.find(r=>r.id===p.id).bonuses.find(b=>b.collectionId===g.id),answers=g.artworkIds.map(id=>p.guesses[id]?.trim()).filter(Boolean),positions=g.artworkIds.map(id=>p.order.indexOf(id)+1);return `<section class="guess-review-row"><h3>${esc(p.name)}</h3><p>${answers.length?[...new Set(answers)].map(esc).join(' · '):'<span class="muted">לא נכתב ניחוש</span>'}</p><div class="guess-review-bottom"><small>מיקומים בציר: <bdi>${positions.join(', ')}</bdi></small><button class="${b.correct?'approved':'secondary'}" data-bonus-player="${p.id}" data-bonus-correct="${!b.correct}" aria-pressed="${b.correct}">${b.correct?'✓ בונוס מאושר · 2 נק׳':'אישור בונוס +2'}</button></div></section>`;}).join('')}</div>`,'answers-modal');
+ openModal(`<div class="review-guesses"><h2>${esc(g.titleHe)}</h2><p class="small">כתיב קרוב מאושר אוטומטית ומסומן ״התאמה קרובה״. אפשר לאשר או לבטל כל בונוס · 2 נקודות לתערוכה.</p>${state.submissions.map(p=>{const b=state.results.find(r=>r.id===p.id).bonuses.find(b=>b.collectionId===g.id),answers=g.artworkIds.map(id=>p.guesses[id]?.trim()).filter(Boolean),positions=g.artworkIds.map(id=>p.order.indexOf(id)+1);return `<section class="guess-review-row"><h3>${esc(p.name)}</h3><p>${answers.length?[...new Set(answers)].map(esc).join(' · '):'<span class="muted">לא נכתב ניחוש</span>'}${b.close&&!b.manual?'<span class="close-match">התאמה קרובה</span>':''}</p><div class="guess-review-bottom"><small>מיקומים בציר: <bdi>${positions.join(', ')}</bdi></small><button class="${b.correct?'approved':'secondary'}" data-bonus-player="${p.id}" data-bonus-correct="${!b.correct}" aria-pressed="${b.correct}">${b.correct?'✓ בונוס מאושר · 2 נק׳':'אישור בונוס +2'}</button></div></section>`;}).join('')}</div>`,'answers-modal');
 }
 function allAnswers(){playerAnswers('correct');}
 async function hostAction(action,body){if(busy)return;busy=true;try{applyState(await request('/rooms/'+session.code+'/'+action,{method:'POST',body:body||{}}));}catch(e){toast(e.message);}finally{busy=false;}}

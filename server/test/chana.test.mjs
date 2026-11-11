@@ -34,6 +34,12 @@ test('bonus matching normalizes niqqud, spacing and punctuation but not unrelate
  assert.equal(normalizeName(' אמהוּת! '),normalizeName('אמהות'));assert.equal(normalizeName('הסתר פנים TAKE 2'),normalizeName('הסתר פנים take 2'));
  const id=artworks.find(a=>a.collectionId==='my-line').id;assert.equal(score(ordered,{[id]:'  קווים לדמותי! '}).bonus,2);assert.equal(score(ordered,{[id]:'קווים'}).bonus,0);
 });
+test('close spellings and the opening of a long title earn the bonus; other names, numbers and short words do not',()=>{
+ const bonus=(c,guess)=>score(ordered,{[artworks.find(a=>a.collectionId===c).id]:guess}).bonuses.find(b=>b.collectionId===c);
+ for(const [c,guess] of [['thick-clouds-veil-him','עבים סתר לו'],['thick-clouds-veil-him','עבים סתר לו, ולא ייראה'],['open-table','שלחן ערוך'],['open-table','שולחן עורך'],['the-hidden-face','הסתרת פנים'],['the-hidden-face-take-2','הסתר פנים טיק 2'],['exposed','אמא אמנית'],['the-golden-tray','מגש זהב'],['days-of-undesire','ימים שאין בהם חפץ']]){const b=bonus(c,guess);assert.equal(b.correct,true,guess);assert.equal(b.close,true,guess);}
+ for(const [c,guess] of [['motherhood','אמנות'],['jerusalem-of-above','ירושלים של מטה'],['the-golden-tray','מגש הכסף'],['the-hidden-face-take-2','הסתר פנים'],['the-hidden-face','הסתר פנים 2'],['the-hidden-face-take-2','הסתר פנים 3'],['open-table','שולחן'],['high-tension','מתח נמוך'],['are-the-waters-abated','וי']])assert.equal(bonus(c,guess).correct,false,guess);
+ assert.equal(bonus('open-table','שולחן ערוך').close,false);assert.equal(score(ordered,guesses).bonuses.some(b=>b.close),false);
+});
 test('invalid/missing/repeated artwork, oversized guesses and invalid revisions rejected',()=>{
  for(const order of [ordered.slice(1),[...ordered.slice(1),ordered[1]],[...ordered.slice(1),'fake']])assert.throws(()=>validateProgress({order,guesses:{},revision:1}));
  assert.throws(()=>validateProgress({order:ordered,guesses:{[ordered[0]]:'x'.repeat(101)},revision:1}));
@@ -68,10 +74,13 @@ test('all must submit, drafts persist, stale saves rejected, submission immutabl
  assert.equal((await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}})).status,409);
  const retry=await call('/rooms/'+code+'/submit',{method:'POST',token:p,body:{...progress,order:[...ordered].reverse(),revision:4}});assert.deepEqual(retry.me.order,ordered);
  await call('/rooms/'+code+'/submit',{method:'POST',token:p2,body:{order:[...ordered].reverse(),guesses:{},revision:1}});
- const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.room.phase,'review');assert.equal(review.answers.length,18);assert.equal(review.results[0].total,136);assert.equal(review.results[1].total,0);assert.equal(review.submissions.length,2);
- assert.equal((await call('/rooms/'+code,{token:p})).submissions,undefined);
+ const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.room.phase,'review');assert.equal(review.answers.length,18);assert.equal(review.submissions.length,2);
+ // Shared review carries name bonuses only: order scores, totals and ranks wait for the results.
+ assert.deepEqual(review.results.map(r=>Object.keys(r)),[['id','name','bonuses'],['id','name','bonuses']]);assert.equal(review.results[0].bonuses.filter(b=>b.correct).length,18);
+ const phone=await call('/rooms/'+code,{token:p});assert.equal(phone.submissions,undefined);assert.ok(!/"(total|chronology|rank|correctPairs)"/.test(JSON.stringify(phone)));
  await call('/rooms/'+code+'/advance',{method:'POST',token:h,body:{index:17}});assert.equal((await call('/rooms/'+code,{token:p2})).room.reviewIndex,17);
- assert.equal((await call('/rooms/'+code+'/results',{method:'POST',token:h,body:{}})).room.phase,'results');
+ const results=await call('/rooms/'+code+'/results',{method:'POST',token:h,body:{}});assert.equal(results.room.phase,'results');
+ assert.deepEqual(results.results.map(r=>[r.total,r.rank]),[[136,1],[0,2]]);assert.equal((await call('/rooms/'+code,{token:p2})).results[0].total,136);
 });
 test('host can remove an absent unsubmitted player; removed token loses access',async t=>{
  const call=game(t),{h,p,code}=await setup(call),absent=crypto.randomUUID();const joined=await call('/rooms/'+code+'/join',{method:'POST',body:{playerToken:absent,name:'עזבתי'}});
@@ -97,7 +106,8 @@ test('order submission locks chronology while names remain editable until final 
  assert.equal((await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}})).status,409);
  const final=await call('/rooms/'+code+'/submit',{method:'POST',token:p,body:names});assert.equal(final.me.submitted,true);
  const late=await call('/rooms/'+code+'/progress',{method:'PUT',token:p,body:{...names,guesses:{},revision:3}});assert.deepEqual(late.me.guesses,guesses);
- const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.results[0].total,136);assert.deepEqual(review.submissions[0].guesses,guesses);
+ const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.results[0].bonuses.filter(b=>b.correct).length,18);assert.deepEqual(review.submissions[0].guesses,guesses);
+ assert.equal((await call('/rooms/'+code+'/results',{method:'POST',token:h,body:{}})).results[0].total,136);
 });
 test('host can award/revoke a reviewed spelling bonus; player cannot and total/rank persist',async t=>{
  const call=game(t),{h,p,code,player}=await setup(call),payload={playerId:player.me.id,collectionId:collections[0].id,correct:true};
@@ -106,9 +116,12 @@ test('host can award/revoke a reviewed spelling bonus; player cannot and total/r
  await call('/rooms/'+code+'/submit',{method:'POST',token:p,body:{order:ordered,guesses:{},revision:1}});
  await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});
  assert.equal((await call('/rooms/'+code+'/bonus',{method:'POST',token:p,body:payload})).status,403);
- const accepted=await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:payload});assert.equal(accepted.results[0].total,102);
- assert.equal((await call('/rooms/'+code,{token:p})).results[0].bonus,2);
- const revoked=await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:{...payload,correct:false}});assert.equal(revoked.results[0].total,100);
+ const accepted=await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:payload});assert.equal(accepted.results[0].bonuses[0].correct,true);assert.equal(accepted.results[0].total,undefined);
+ assert.equal((await call('/rooms/'+code,{token:p})).results[0].bonuses[0].correct,true);
+ const revoked=await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:{...payload,correct:false}});assert.equal(revoked.results[0].bonuses[0].correct,false);
+ await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:payload});
+ const final=await call('/rooms/'+code+'/results',{method:'POST',token:h,body:{}});assert.equal(final.results[0].total,102);assert.equal(final.results[0].rank,1);
+ assert.equal((await call('/rooms/'+code+'/bonus',{method:'POST',token:h,body:{...payload,correct:false}})).results[0].total,100);
 });
 test('Railway HTTP route accepts custom-domain preflights and >2KB drafts without sharing the arcade limiter',async t=>{
  const app=createServer({store,allowedOrigins:['https://matanbob.com']});const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));
@@ -134,5 +147,6 @@ test('shared-room transactions preserve final drafts and support a 40-participan
  assert.equal((await call('/rooms/'+code,{token:p})).me.revision,3);
  assert.equal((await call('/rooms/'+code+'/progress',{method:'PUT',token:p,body:{order:[...ordered].reverse(),guesses:{},revision:3}})).status,409);
  await Promise.all(tokens.map(token=>call('/rooms/'+code+'/submit',{method:'POST',token,body:{order:ordered,guesses:{},revision:4}})));
- const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.room.phase,'review');assert.equal(review.results.length,40);assert.ok(review.results.every(r=>r.total===100&&r.rank===1));
+ const review=await call('/rooms/'+code+'/review',{method:'POST',token:h,body:{}});assert.equal(review.room.phase,'review');assert.equal(review.results.length,40);
+ const results=await call('/rooms/'+code+'/results',{method:'POST',token:h,body:{}});assert.ok(results.results.every(r=>r.total===100&&r.rank===1));
 });
