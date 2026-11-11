@@ -149,6 +149,25 @@
         "tint": "#f5f2e9",
         "action": "הצטרפות"
       }
+    },
+    {
+      "id": "abra",
+      "page": "abra.html",
+      "path": "/abra",
+      "emoji": "✨",
+      "title": "אברא כדברא",
+      "short": "אברא כדברא",
+      "accent": "#2b4bd7",
+      "accentDark": "#1d35a8",
+      "artifact": null,
+      "lobby": {
+        "genre": "קסם של מילים",
+        "description": "כותבים מילה, והיא קמה לחיים: כלב שעשוי מהאותיות כלב, ים שעשוי מהמילה ים. את זה המציא Claude. אין לו טושים, יש לו רק מילים.",
+        "image": "/images/abra-original.webp",
+        "imageAlt": "הציור של Claude: שמש, עץ, כלב ופרפרים, וכולם עשויים מהאותיות של השמות שלהם",
+        "tint": "#f8f6ec",
+        "action": "כותבים עולם"
+      }
     }
   ]
 }

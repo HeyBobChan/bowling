@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f8f6ec" />
+  <meta name="description" content="אברא כדברא: כותבים מילה, והיא קמה לחיים, עשויה כולה מהאותיות של עצמה." />
+  <title>אברא כדברא · המשחקייה של ב׳3</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✨%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/src/abra.css" />
+</head>
+<body>
+  <canvas id="page" aria-label="דף מחברת. מה שכותבים בשורות למטה קם לחיים למעלה."></canvas>
+  <h1 class="sr-only">אברא כדברא</h1>
+  <div id="live" class="sr-only" aria-live="polite"></div>
+  <nav id="bar" class="bar" aria-label="כלים" hidden>
+    <button id="btn-done" class="pill" type="button">סיימתי</button>
+    <button id="btn-book" class="pill" type="button">המילים שלי <b id="found-count">0</b></button>
+    <button id="btn-help" class="pill round" type="button" aria-label="איך משחקים">?</button>
+    <button id="btn-sound" class="pill round" type="button" aria-label="צליל">♪</button>
+  </nav>
+  <button id="skip" class="skip" type="button" hidden>לדלג</button>
+  <section id="dock" class="dock" aria-label="מקלדת" data-off>
+    <div id="chips" class="chips" aria-label="רעיונות למילים"></div>
+    <div id="keys" class="keys"></div>
+    <div class="actions">
+      <button id="key-erase" class="key wide" type="button" aria-label="מחיקת אות">מחיקה</button>
+      <button id="key-space" class="key space" type="button" aria-label="רווח">רווח</button>
+      <button id="key-cast" class="key cast" type="button">אברא כדברא</button>
+    </div>
+  </section>
+  <div id="ending" class="ending" hidden>
+    <button id="end-save" class="pill big" type="button">לשמור תמונה</button>
+    <button id="end-back" class="pill big" type="button">חזרה לעולם שלי</button>
+    <button id="end-new" class="pill big" type="button">דף חדש</button>
+  </div>
+  <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" hidden>
+    <div class="sheet">
+      <button id="panel-close" class="pill round close" type="button" aria-label="סגירה">×</button>
+      <h2 id="panel-title"></h2>
+      <div id="panel-body"></div>
+    </div>
+  </div>
+  <div id="load-error" class="load-error" hidden>
+    <h2>הדף לא נפתח</h2>
+    <p>המשחק הזה צריך דפדפן עם WebGL2.</p>
+    <a href="/">חזרה לכל המשחקים</a>
+  </div>
+  <script type="module" src="/src/abra.js"></script>
+</body>
+</html>

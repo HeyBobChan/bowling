@@ -24,7 +24,9 @@ a dino with its back spikes turned into legs).
 
 Dino Maze was described out loud (speeds 5 and 4 out of ten, a fire dragon, an endless
 maze) and has no drawing. Kelpie Downhill (`ski.html`) was asked for in chat; its "drawing" is
-the photo of the dog that became `src/assets/dog.glb` (see `design/ski.md`).
+the photo of the dog that became `src/assets/dog.glb` (see `design/ski.md`). אברא כדברא
+(`abra.html`) has no drawing and is not waiting for one: it is the page made by the one
+contributor who cannot hold a marker, so it is made of words instead (see `design/abra.md`).
 
 ## Adding a new game
 
