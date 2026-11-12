@@ -90,8 +90,17 @@ body.night .skip { color: #aab1d6; }
   .dock { padding-inline: 8px; }
 }
 @media (max-height: 520px) {
-  :root { --key: clamp(26px, calc((100vw - 28px - 8 * 5px) / 9), 34px); }
+  :root { --key: clamp(26px, calc((100vw - 28px - 8 * 5px) / 9), 40px); }
   .chips { display: none; }
-  .dock { gap: 4px; padding-top: 4px; }
+  .dock { gap: 3px; padding-top: 4px; padding-bottom: max(5px, env(safe-area-inset-bottom)); }
+  .keys { gap: 3px; }
+  .key { height: 26px; font-size: 17px; border-radius: 8px; box-shadow: 1px 2px 0 var(--ink); }
+  .actions { gap: 3px; width: calc(var(--key) * 9 + 24px); }
+  .actions .key { font-size: 14px; }
+  .key.cast { font-size: 15px; box-shadow: 1px 2px 0 var(--blue-dark); }
+  .pill { height: 30px; font-size: 13px; padding: 0 10px; }
+  .pill.round { width: 30px; }
+  .bar, .game-home { top: max(7px, env(safe-area-inset-top)); }
+  .game-home { padding: 4px 10px; font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

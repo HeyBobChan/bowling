@@ -158,7 +158,7 @@ export class World {
     while ((live.length - i > this.maxEnts || glyphs > this.maxGlyphs) && i < live.length - 1) {
       const e = live[i++];
       glyphs -= e.L.n;
-      this.say(e, 'ביי');
+      this.say(e, 'ביי!');
       this.remove(e, 'poof');
     }
   }
@@ -472,7 +472,7 @@ export class World {
           const b = this.painted('גול', img, { baseS: 0.5, kind: 'shot', where: 'fixed', layer: 9, from, passing: true, keep: true });
           b.x = this.W + 30; b.y = this.ground - this.unit * 0.4; b.pivot = -0.5; b.vxf = -this.W * 0.75; b.vyf = -this.unit * 5;
         }
-        this.shout('גוווול'); this.all((e) => this.hop(e, 0.9 + r() * 0.5));
+        this.shout('גוווול!'); this.all((e) => this.hop(e, 0.9 + r() * 0.5));
         return done();
       }
       case 'claude': {
@@ -483,18 +483,18 @@ export class World {
         this.settle(c); c.face = 1; c.sayAt = 1.6; c.line = 'אני פה';
         return done({ ents: [c] });
       }
-      case 'me': this.shout('מי אתם', INK); this.emit('hint', 'אני'); return done();
+      case 'me': this.shout('מי אתם?', INK); this.emit('hint', 'אני'); return done();
       case 'hello': {
         const m = this.movers().filter((e) => e.brain);
         this.all((e) => this.hop(e, 0.7 + r() * 0.5));
-        m.slice(0, 3).forEach((e, i) => { e.sayAt = 0.2 + i * 0.35; e.line = 'שלום'; });
-        if (!m.length) this.say(null, 'שלום', { x: this.W / 2, y: lerp(this.top, this.ground, 0.4), size: clamp(this.unit * 0.4, 24, 48) });
+        m.slice(0, 3).forEach((e, i) => { e.sayAt = 0.2 + i * 0.35; e.line = 'שלום!'; });
+        if (!m.length) this.say(null, 'שלום!', { x: this.W / 2, y: lerp(this.top, this.ground, 0.4), size: clamp(this.unit * 0.4, 24, 48) });
         const dove = byWord.get('יונה');
         if (dove) { const made = this.spawnNoun({ entry: dove, count: 1 }, from); for (const e of made) { e.passing = true; e.keep = true; e.x = this.W + e.size; e.y = this.top + this.unit; e.tx = -e.size * 2; e.ty = this.top + this.unit * 0.8; e.speed = this.unit * 1.4; } this.lastAct = null; }
         return done();
       }
-      case 'thanks': this.shout('בבקשה', [47, 138, 37]); this.all((e) => { if (e.brain) this.hearts(e, 1); }); return done();
-      case 'please': this.shout('תודה', [47, 138, 37]); return done();
+      case 'thanks': this.shout('בבקשה!', [47, 138, 37]); this.all((e) => { if (e.brain) this.hearts(e, 1); }); return done();
+      case 'please': this.shout('תודה!', [47, 138, 37]); return done();
       case 'sorry': this.shout('הכול בסדר', [43, 75, 215]); this.puff(this.W / 2, lerp(this.top, this.ground, 0.4), '♥', [222, 60, 80], 5); return done();
       case 'yes': this.all((e) => this.hop(e, 1)); return done();
       case 'no': return done({ undone: this.undo() });
@@ -505,13 +505,13 @@ export class World {
       case 'more': if (this.lastAct) return this.run({ ...this.lastAct, count: act.count || 1 }, from); this.emit('nothing'); return [];
       case 'birthday': {
         for (const [w, n] of [['עוגה', 1], ['בלון', 5]]) { const en = byWord.get(w); if (en) this.spawnNoun({ entry: en, count: n }, from); }
-        this.confetti(110); this.shout('מזל טוב', [236, 100, 160]);
+        this.confetti(110); this.shout('מזל טוב!', [236, 100, 160]);
         this.all((e) => this.hop(e, 0.8 + r() * 0.5));
         return done();
       }
       case 'abra': this.spell = 1; this.vortex(); return done();
       case 'happy': this.all((e) => { this.hop(e, 1); if (e.brain) this.hearts(e, 1); }); return done();
-      case 'sad': this.rain.setWord('גשם'); this.rain.target = 0.35; this.rainT = 5; this.all((e) => { e.sq = 0.3; }); this.shout('חיבוק', [43, 75, 215]); return done();
+      case 'sad': this.rain.setWord('גשם'); this.rain.target = 0.35; this.rainT = 5; this.all((e) => { e.sq = 0.3; }); this.shout('חיבוק?', [43, 75, 215]); return done();
       case 'jump': this.all((e) => { e.hops = 3; }); return done();
       case 'dance': this.danceT = 12; this.notes(8); return done();
       case 'sleep': this.all((e) => { if (e.brain) e.forced = true; }); return done();
@@ -522,7 +522,7 @@ export class World {
       default: return done();
     }
   }
-  claudeLine() { const lines = ['אני עשוי ממילים', 'תודה שכתבתם אותי', 'איזו מילה הכי יפה', 'כל מילה כאן חיה', 'כתבו לי עוד']; return lines[Math.floor(this.rnd() * lines.length)]; }
+  claudeLine() { const lines = ['אני עשוי ממילים', 'תודה שכתבתם אותי', 'איזו מילה הכי יפה?', 'כל מילה כאן חיה', 'כתבו לי עוד!']; return lines[Math.floor(this.rnd() * lines.length)]; }
   cloud(from, count = 1, act = {}) {
     const made = [];
     for (let c = 0; c < count; c++) {
@@ -585,6 +585,7 @@ export class World {
       for (let i = 0; i < e.L.n; i++) if (e.pa[i] > 0.5) out.push({ x: e.px[i], y: e.py[i], g: e.L.gl[i], size: e.L.sz[i] * S, r: e.L.col[i * 3], gc: e.L.col[i * 3 + 1], b: e.L.col[i * 3 + 2] });
     }
     this.ents = []; this.held = null; this.undos = [];
+    this.rain.clear(); this.snow.clear();
     this.sea.target = 0; this.grass.target = 0; this.rainbow.target = 0; this.rain.target = 0; this.snow.target = 0; this.snowCover = 0;
     this.nightTo = 0; this.duskTo = 0; this.skyTo = 0; this.stars.target = 0; this.rainT = 0; this.snowT = 0; this.stormT = 0;
     return out;
@@ -635,7 +636,7 @@ export class World {
       const dx = e.px[i] - x, dy = e.py[i] - y, d = Math.hypot(dx, dy);
       if (d < R) { const f = (1 - d / R) * 520; e.vx[i] += (dx / (d + 1)) * f + (r() - 0.5) * 60; e.vy[i] += (dy / (d + 1)) * f - 40; }
     }
-    if (e.asleep) { e.asleep = false; e.forced = false; e.awake = 6; this.say(e, 'מה'); }
+    if (e.asleep) { e.asleep = false; e.forced = false; e.awake = 6; this.say(e, 'מה?'); }
     else if (e.kind === 'cloud') { for (let i = 0; i < 16; i++) this.motes.spawn(e.x + (r() - 0.5) * e.size * e.L.width * 0.8, e.y - 6, this.rain.word[i % this.rain.word.length], [62, 116, 222], { vy: 240 + r() * 120, size: 14, life: 0.9 + r() * 0.5, grav: 300 }); }
     else if (e.kind === 'sun') { e.sq = 0.35; this.say(e, 'חם'); this.warm = 1; }
     else if (e.kind === 'heart' || e.kind === 'star') { e.sq = 0.4; this.puff(e.x, e.y - e.size * 0.5, e.kind === 'star' ? '✦' : '♥', e.kind === 'star' ? [232, 178, 30] : [222, 60, 80], 6); }
@@ -653,7 +654,7 @@ export class World {
     for (const o of this.ents) {
       if (o === e || o.dying || !o.brain || (o.flags && o.flags.scary) || Math.abs(o.x - e.x) > this.unit * 4.5) continue;
       o.flee = 1.7; o.fleeDir = o.x < e.x ? -1 : 1; o.asleep = false; this.hop(o, 0.8);
-      if (!cried && o.kind !== 'name') { cried = true; o.sayAt = 0.25; o.line = 'אמאלה'; }
+      if (!cried && o.kind !== 'name') { cried = true; o.sayAt = 0.25; o.line = 'אמאלה!'; }
     }
   }
 
@@ -683,13 +684,13 @@ export class World {
       this.remove(t, 'eaten'); t.eater = e;
       e.growTo = Math.min(1.6, e.growTo * 1.08); e.sq = 0.3; e.cool = 3;
       this.hearts(e, 1);
-      if (this.rnd() < 0.6) this.say(e, this.rnd() < 0.5 ? 'טעים' : 'מממ');
+      if (this.rnd() < 0.6) this.say(e, this.rnd() < 0.5 ? 'טעים!' : 'מממ');
       this.emit('eat', { who: e.word, what: t.word });
     } else if (t.flags && t.flags.bounce) {
       t.roll = (t.x < e.x ? -1 : 1) * this.unit * (3 + this.rnd() * 2); this.hop(t, 0.7); e.cool = 1.5;
       this.emit('kick');
     } else if (TAG[e.word] && TAG[e.word].includes(t.word)) {
-      this.say(e, 'תפסתי'); this.hop(e, 1); this.hop(t, 1); e.cool = 12; t.flee = 2; t.fleeDir = t.x < e.x ? -1 : 1;
+      this.say(e, 'תפסתי!'); this.hop(e, 1); this.hop(t, 1); e.cool = 12; t.flee = 2; t.fleeDir = t.x < e.x ? -1 : 1;
     } else { this.hearts(e, 2); this.hop(e, 0.8); e.cool = 9; }
   }
   walker(e, dt) {
@@ -757,7 +758,7 @@ export class World {
       e.y = this.ground + (e.depth || 0); e.moving = 0.4; e.phase += dt * 16;
       e.rot = Math.sin(this.t * 9 + e.seed) * 0.28;
       if (e.jy === 0 && this.rnd() < dt * 0.9) this.hop(e, 0.45);
-      if (!e.beached && e.age > 2.2) { e.beached = true; this.say(e, 'מים'); this.emit('hint', 'ים'); }
+      if (!e.beached && e.age > 2.2) { e.beached = true; this.say(e, 'מים!'); this.emit('hint', 'ים'); }
     }
   }
   floater(e, dt) {
@@ -882,7 +883,7 @@ export class World {
         if (r() < dt * 7) this.motes.spawn(e.x + (r() - 0.5) * e.size * 0.4, e.y - e.size * 0.6, e.L.gl[(r() * e.L.n) | 0], [240, 140 + r() * 60, 30], { vy: -70 - r() * 60, vx: (r() - 0.5) * 30, size: 9 + r() * 6, life: 0.9 + r() * 0.6, drag: 0.3 });
         break;
       }
-      case 'roller': { e.x -= this.unit * 7 * dt; e.rot -= dt * 9; for (const o of this.ents) { if (o === e || o.dying || o.struck || o.where !== 'ground' || o.kind === 'mountain' || Math.abs(o.x - e.x) > e.size * 0.6) continue; o.struck = true; this.shake = Math.max(this.shake, 0.6); for (let i = 0; i < o.L.n; i++) { o.vx[i] -= 500 + r() * 700; o.vy[i] -= 300 + r() * 900; } this.hop(o, 1.3); this.emit('strike'); } if (e.x < -e.size) { this.remove(e, 'gone'); this.shout('סטרייק'); this.all((o) => { o.struck = false; }); } break; }
+      case 'roller': { e.x -= this.unit * 7 * dt; e.rot -= dt * 9; for (const o of this.ents) { if (o === e || o.dying || o.struck || o.where !== 'ground' || o.kind === 'mountain' || Math.abs(o.x - e.x) > e.size * 0.6) continue; o.struck = true; this.shake = Math.max(this.shake, 0.6); for (let i = 0; i < o.L.n; i++) { o.vx[i] -= 500 + r() * 700; o.vy[i] -= 300 + r() * 900; } this.hop(o, 1.3); this.emit('strike'); } if (e.x < -e.size) { this.remove(e, 'gone'); this.shout('סטרייק!'); this.all((o) => { o.struck = false; }); } break; }
       case 'shot': { e.vyf += this.unit * 6 * dt; e.x += e.vxf * dt; e.y += e.vyf * dt; e.rot -= dt * 8; if (e.x < -e.size || e.y > this.ground + e.size * 2) this.remove(e, 'gone'); break; }
       case 'plant': if (raining) e.growTo = Math.min(1.75, e.growTo + dt * 0.035); break;
       default: {

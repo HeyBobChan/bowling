@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "test:site": "node scripts/check-site.mjs",
     "test:chana-drag": "node --test tests/unit/chana-drag.mjs",
-    "test:chana-navigation": "node --test tests/unit/chana-navigation.mjs"
+    "test:chana-navigation": "node --test tests/unit/chana-navigation.mjs",
+    "test:abra-lexicon": "node --test tests/unit/abra-lexicon.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.25.0",

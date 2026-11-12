@@ -129,10 +129,11 @@ const sourcesOf = (items) => {
 function measure() {
   const W = innerWidth, H = innerHeight;
   const dockH = CARD ? 0 : dock.offsetHeight;
-  const ts = clamp(W / 27, 21, 33), rule = Math.round(ts * 1.62);
-  const nLines = CARD ? 1 : H - dockH > 700 ? 3 : 2;
+  const short = H < 520;                       // a phone held sideways
+  const ts = clamp(Math.min(W / 27, H / 21), 19, 33), rule = Math.round(ts * 1.62);
+  const nLines = CARD || short ? 1 : H - dockH > 700 ? 3 : 2;
   const ground = Math.round(H - dockH - nLines * rule - 8);
-  const top = CARD ? 24 : 56;
+  const top = CARD ? 24 : short ? 46 : 56;
   const unit = clamp(Math.min((ground - top) * 0.25, W * 0.19), 48, 140);
   const margin = Math.round(W - Math.max(16, W * 0.04));
   geo = { W, H, dockH, ts, rule, nLines, ground, top, unit, margin, right: margin - ts * 0.5, left: Math.max(12, W * 0.035) };
@@ -185,7 +186,7 @@ function cast() {
   casts++;
   setTimeout(renderChips, 900);
 }
-let casts = 0, isDark = false;
+let casts = 0, isDark = false, picturesReady = () => true;
 
 // ---------- typing ----------
 function type(ch) {
@@ -271,15 +272,13 @@ function renderChips() {
     if (!w) break;
     if (!picks.includes(w)) picks.push(w);
   }
+  // now and then, an invitation to say who is writing
+  if (!playerName && casts >= 2 && !picks.includes('אני') && picks.length === 3 && rnd() < 0.5) picks[2] = 'אני';
   for (const w of picks.slice(0, 3)) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip' + (w === 'אני' ? ' hint' : ''); b.textContent = w === 'אני' ? 'אני + השם שלכם' : w;
     b.addEventListener('click', () => { if (w === 'אני') autoType('אני ', null); else autoType(w); });
     box.appendChild(b);
-  }
-  if (!playerName && casts >= 2 && !picks.includes('אני') && box.children.length === 3 && rnd() < 0.5) {
-    const b = box.lastChild; b.className = 'chip hint'; b.textContent = 'אני + השם שלכם';
-    b.replaceWith(b.cloneNode(true)); box.lastChild.addEventListener('click', () => autoType('אני ', null));
   }
 }
 function nudgeChips() { const box = $('chips'); box.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 300 }); }
@@ -308,7 +307,7 @@ function layIntro(lines) {
 function hurry() {
   if (phase !== 'intro') return;
   wake();
-  if (intro.t < intro.total) intro.t = intro.total; else beginReveal();
+  if (intro.t < intro.total) intro.t = intro.total; else if (picturesReady()) beginReveal(); else intro.hold = 99;
 }
 const reveal = { t: 0, queue: [], from: null, done: false };
 function beginReveal() {
@@ -364,7 +363,8 @@ function drawIntro() {
 // ---------- the ending: the world folds back into the words it was ----------
 const story = { items: [], t: 0, blob: null, pool: null, slots: [] };
 function listWords() {
-  const uniq = [...new Set(history.map((h) => h.replace(/\.$/, '')))];
+  // "אני גבריאל" goes into the story as the name alone
+  const uniq = [...new Set(history.map((h) => h.replace(/\.$/, '').replace(/^אני /, '')))];
   const shown = uniq.slice(-12);
   const extra = uniq.length - shown.length;
   if (!shown.length) return '';
@@ -570,7 +570,7 @@ function step(dt) {
   time += dt;
   if (phase === 'intro') {
     if (intro.t < intro.total) intro.t += dt;
-    else { intro.hold += dt; if (intro.hold > 1.7) beginReveal(); }
+    else { intro.hold += dt; if (intro.hold > (calm ? 10 : 1.7) && picturesReady()) beginReveal(); }
     world.env.ruleAll = 1;
   } else if (phase === 'reveal') stepReveal(dt);
   else if (phase === 'story' || phase === 'sign') { story.t += dt; world.env.ruleAll = Math.min(1, world.env.ruleAll + dt * 1.2); }
@@ -601,7 +601,13 @@ function frame(now) {
 
 // ---------- start ----------
 async function start() {
-  const [fontsOk, sprites] = await Promise.all([loadFonts(), loadSprites()]);
+  // The opening needs no pictures, so the writing starts as soon as the font is in and the
+  // sheet of shapes arrives meanwhile. If it never arrives, every word still walks as itself.
+  const sprites = { real: null, failed: false, get(e) { return this.real ? this.real.get(e) : null; }, has(e) { return this.real ? this.real.has(e) : false; } };
+  const sheet = loadSprites().then((s) => { sprites.real = s; }, () => { sprites.failed = true; });
+  const fontsOk = await loadFonts();
+  if (SIM || CARD) await sheet;
+  picturesReady = () => !!sprites.real || sprites.failed;
   renderer = createRenderer(canvas, buildAtlas());
   if (!renderer) { $('load-error').hidden = false; return; }
   world = new World({ sprites, rnd, mobile, calm });
@@ -631,7 +637,7 @@ async function start() {
   $('btn-done').addEventListener('click', startStory);
   $('panel-close').addEventListener('click', closePanel);
   $('panel').addEventListener('pointerdown', (e) => { if (e.target === $('panel')) closePanel(); });
-  $('skip').addEventListener('click', () => { wake(); intro.t = intro.total; beginReveal(); });
+  $('skip').addEventListener('click', () => { wake(); intro.t = intro.total; if (picturesReady()) beginReveal(); else intro.hold = 99; });
   $('end-save').addEventListener('click', saveImage);
   $('end-back').addEventListener('click', () => leaveStory(false));
   $('end-new').addEventListener('click', () => leaveStory(true));
