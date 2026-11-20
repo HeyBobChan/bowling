@@ -15,7 +15,7 @@ const PORT = 8700 + Math.floor(Math.random() * 200);
 const BASE = `http://localhost:${PORT}/`;
 
 const server = spawn(process.execPath, [resolve(root, 'server.mjs')], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined });
 let failed = false;
 const step = async (name, fn) => {
   try { await fn(); console.log('ok   ' + name); }

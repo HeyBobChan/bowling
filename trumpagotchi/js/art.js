@@ -79,7 +79,7 @@
     const suit = level < 8 ? '#7b8494' : level < 14 ? mix('#7b8494', NAVY, (level - 7) / 6) : NAVY;
     return {
       level: level, t: t, vol: vol, hair: hair, skin: skin, suit: suit,
-      tie: level < 5 ? '#6b7fa8' : RED,
+      tie: o.tie || (level < 5 ? '#6b7fa8' : RED),
       tieLen: level >= 50 ? 28 : 9 + Math.round(17 * t),
       ring: o.humble ? 0 : Math.max(0, (skinT - 0.45) * 1.8),
       squint: t > 0.35 && !o.humble,
@@ -438,7 +438,7 @@
     R(g, wx - 2, wy - 2, ww + 4, wh + 4, sc === 'apt' ? '#95683f' : '#fbf8ee');
     const night = sky(g, wx, wy, ww, wh, env.hour);
     skyline(g, wx, wy, ww, wh, sc, night, env);
-    if (env.season === 'july4' || env.season === 'newyear') fireworks(g, wx, wy, ww, wh, f);
+    if (env.season === 'july4' || env.season === 'newyear' || env.season === 'newyearseve') fireworks(g, wx, wy, ww, wh, f);
     if (env.season === 'christmas') for (let i = 0; i < 9; i++) R(g, wx + ((i * 17 + f) % ww), wy + ((i * 11 + Math.floor(f / 2)) % wh), 1, 1, '#ffffff');
     R(g, wx + ww / 2 - 1, wy, 2, wh, sc === 'apt' ? '#95683f' : '#fbf8ee'); R(g, wx, wy + 19, ww, 2, sc === 'apt' ? '#95683f' : '#fbf8ee');
     R(g, wx - 4, wy + wh + 2, ww + 8, 3, sc === 'apt' ? '#7a5533' : shade(trim, -0.1));
@@ -450,7 +450,7 @@
     }
 
     // --- bunting for campaign season
-    if (env.bunting) {
+    if (env.bunting || env.festive) {
       for (let i = 0; i < 16; i++) { const c = [RED, WHITE, '#3558b8'][i % 3]; ellipse(g, 5 + i * 10, 2, 5, 5, c); R(g, i * 10, 0, 10, 2, c); }
     }
 
@@ -536,6 +536,21 @@
       R(g, 118, 58, 10, 6, '#f7c7d4'); R(g, 118, 58, 10, 2, WHITE); for (let i = 0; i < 4; i++) { R(g, 119 + i * 2, 55, 1, 3, '#7ad1ff'); if (f % 6 < 4) R(g, 119 + i * 2, 54, 1, 1, GOLD_L); }
       for (const b of [[20, 30, RED], [28, 24, '#3558b8'], [140, 14, GOLD]]) { ellipse(g, b[0], b[1] + ((f >> 3) & 1), 4, 5, b[2]); R(g, b[0], b[1] + 6, 1, 14, '#6b6b6b'); }
     }
+    if (env.season === 'easter') { // eggs left over from the roll
+      [[16, 106, '#7ad1ff'], [26, 111, '#ff9ec4'], [36, 104, GOLD_L], [137, 112, '#b9f2a6'], [146, 107, '#c9a7ff']].forEach(function (e) {
+        ellipse(g, e[0], e[1], 3, 4, e[2]); R(g, e[0] - 2, e[1], 5, 1, WHITE);
+      });
+    }
+    if (env.season === 'superbowl') { ellipse(g, 131, 60, 5, 3, '#7a4a22'); R(g, 129, 59, 5, 1, WHITE); R(g, 131, 58, 1, 3, WHITE); }
+    if (env.season === 'hamburger') { A.item(g, 'hamberder', 120, 59); A.item(g, 'hamberder', 131, 59); A.item(g, 'hamberder', 126, 52); }
+    if (env.season === 'blackfriday') { R(g, 118, 52, 22, 11, RED); R(g, 119, 53, 20, 9, WHITE); A.text(g, 'SALE', 122, 55, RED); R(g, 128, 63, 2, 2, '#6b6b6b'); }
+    if (env.season === 'groundhog') { // he is on the windowsill, checking for his shadow
+      ellipse(g, 66, 54, 4, 5, '#7a5533'); R(g, 63, 48, 6, 4, '#8a6540'); R(g, 64, 49, 1, 1, INK); R(g, 67, 49, 1, 1, INK); R(g, 65, 51, 2, 1, WHITE); R(g, 70, 58, 6, 1, 'rgba(0,0,0,0.25)');
+    }
+    if (env.season === 'friday13') { // a black cat has taken the desk
+      R(g, 118, 58, 9, 6, INK); R(g, 125, 54, 5, 5, INK); R(g, 125, 53, 1, 1, INK); R(g, 129, 53, 1, 1, INK); R(g, 126, 56, 1, 1, GOLD_L); R(g, 128, 56, 1, 1, GOLD_L); R(g, 115, 55, 3, 2, INK); R(g, 114, 53, 2, 3, INK);
+    }
+    if (env.season === 'stpatrick') [[18, 30], [146, 60], [40, 70]].forEach(function (c) { R(g, c[0], c[1], 2, 2, '#1f9d55'); R(g, c[0] + 3, c[1], 2, 2, '#1f9d55'); R(g, c[0] + 1, c[1] + 2, 3, 2, '#1f9d55'); R(g, c[0] + 2, c[1] + 4, 1, 3, '#157a41'); });
     if (env.season === 'valentine') for (let i = 0; i < 4; i++) { const hx = 14 + i * 40, hy = 20 + ((f + i * 9) % 30); R(g, hx, hy, 2, 2, '#ff6b9a'); R(g, hx + 3, hy, 2, 2, '#ff6b9a'); R(g, hx, hy + 2, 5, 2, '#ff6b9a'); R(g, hx + 1, hy + 4, 3, 1, '#ff6b9a'); R(g, hx + 2, hy + 5, 1, 1, '#ff6b9a'); }
   };
 

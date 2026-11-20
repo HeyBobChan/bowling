@@ -36,10 +36,11 @@ npm run build:single # writes dist/trumpagotchi.html (about 220 KB)
 | **Five needs** | Food, Ego, Fun, Glow (hair and tan) and Energy fade in real time, including while the page is closed. |
 | **Tremendousness** | Every bit of care earns it; keeping all his needs above half earns more each hour. It never drops below the start of his current stage. |
 | **Ten stages** | Regular Don, The Kid from Queens, The Developer, The Mogul, The TV Boss, The Candidate, The Nominee, The 45th (level 45, new oval office), The 47th (level 47), Tremendous Form (level 50). |
-| **Five voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM. Every line has all five. |
-| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. |
+| **Five voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM. Every situation has lines in all five: about 700 in total, so he rarely repeats himself. |
+| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 70 briefings, so more than two months pass before one comes round again. |
 | **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of decor, each with a perk. |
-| **The long game** | Daily streaks, 36 executive orders to collect (one a day), 35 trophies, seasonal events (the Thanksgiving turkey pardon, Christmas, his birthday, the Fourth, and more), and at level 50 he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
+| **The long game** | Daily streaks, 72 executive orders to collect (one a day), 37 trophies, and at level 50 he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
+| **The calendar** | Twenty special days, each with its own greeting, a one-off briefing and, mostly, something in the room: New Year, Groundhog Day, the big game, Valentine's, Presidents' Day, St. Patrick's (green tie), April Fools', Easter, National Hamberder Day, his birthday, the Fourth, Labor Day, Halloween, Thanksgiving week (the turkey pardon), Black Friday, all of December, New Year's Eve, any Friday the 13th, and February 29th. |
 | **Every device** | Optional cloud save: a secret keeper code puts the same pet on any phone or computer. No account. |
 | **If you vanish** | He sleeps through the night on his own. A day or two of neglect turns him humble; after three or four days he leaves a note and goes golfing, and you can win him back. He never dies. |
 
@@ -181,13 +182,14 @@ tests/                simulation and API tests (Node), two browser tests
 ## Tests
 
 ```bash
-npm test             # 28 rule and balance tests and 10 cloud-save API tests, plain Node
+npm test             # 32 rule, balance and content tests and 10 cloud-save API tests, plain Node
 npm run test:browser # headless Chromium: the first minutes (12 checks), then two devices sharing a pet
 ```
 
 Set `TEST_DATABASE_URL` to the `trumpagotchi_app` connection of a migrated database and
 `npm test` runs the cloud-save tests against PostgreSQL as well. The browser tests and
-`npm run icons` need Playwright with Chromium available.
+`npm run icons` need Playwright with Chromium available; set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`
+to use a particular browser binary.
 
 Add `?debug` to the URL for a time-travel panel at the bottom of Settings (skip hours, add
 levels). `?reset` starts from a fresh egg, on `localhost` or a local file only: on a public
@@ -198,5 +200,26 @@ address a link must not be able to erase a visitor's pet.
 The numbers that shape the experience are in `js/game.js`: need decay rates in `step`, the
 level curve in `G.cumXp`, income in `G.incomePerHour`, and the thresholds for humility and
 storming off. The pacing test at the bottom of `tests/sim.test.mjs` fails if a change makes
-the game much faster or slower than intended. New lines, foods, decor, briefings, orders and
-trophies are plain data in `js/content.js`; the content test checks they are complete.
+the game much faster or slower than intended.
+
+## Adding writing
+
+Everything he says, signs and is told is plain data in `js/content.js`:
+
+- `C.LINES`: what he says in each situation, as five lists, humble to MAXIMUM. Add a line to
+  any list. `{food}`, `{n}`, `{tariff}`, `{hours}`, `{real}` and `{claimed}` are filled in
+  only for the situations that already use them.
+- `C.POST`: word banks and templates for his posts, again per register, plus the 3 AM ones.
+- `C.BRIEFINGS`: the daily briefings. Each is a situation and three choices, each with its
+  effects and what happens. Keep the tremendousness between 24 and 40 so pacing holds.
+- `C.SEASONS`, `C.SEASON_BRIEFINGS` and `C.seasonFor`: the special days.
+- `C.ORDERS`: the collectible orders. Only ever add to the end: saves refer to them by position.
+- `C.NEWS`, `C.COMPLIMENTS`, `C.AWAY_EVENTS`, `C.HUMBLE_LINES` and the deal lists.
+
+`npm test` checks the writing is complete and consistent: five registers everywhere, three
+choices per briefing, no placeholder the game will not fill, a briefing and a greeting for
+every special day, and that every special day actually occurs.
+
+The voice stays affectionate and silly: the hair, the tie, the superlatives, the hamberders.
+Every line is invented. It does not quote him, and it stays away from real people other
+than him and from anything that is not funny in real life.

@@ -44,270 +44,311 @@
   const L = function (t0, t1, t2, t3, t4) { return [t0, t1, t2, t3, t4]; };
   C.LINES = {
     greet: L(
-      ['Oh, hello. Nice to see you again.', 'Hi. I hope I’m not bothering you.'],
-      ['You’re back. Good. I had some ideas.', 'There you are. Let’s get to work.'],
-      ['You’re back! Smart. Very smart of you.', 'Welcome back. I’ve been doing great, by the way. Really great.'],
-      ['Look who’s back! Everyone comes back. Everyone.', 'You missed me. I can tell. People always miss me.'],
-      ['THE GREATEST CARETAKER RETURNS! Well, second greatest. After me.', 'WELCOME BACK! It was TREMENDOUS without you. Even better with you. Maybe.']
+      ['Oh, hello. Nice to see you again.', 'Hi. I hope I’m not bothering you.', 'You came back. That’s very kind of you.', 'Hello! I tidied up a little while you were out.', 'Good to see you. I didn’t touch anything.'],
+      ['You’re back. Good. I had some ideas.', 'There you are. Let’s get to work.', 'Good timing. I was just thinking about me.', 'Back already? Smart. Things happen here.', 'Hey. I’ve been busy. Good busy.'],
+      ['You’re back! Smart. Very smart of you.', 'Welcome back. I’ve been doing great, by the way. Really great.', 'Look who’s here. You picked a great day. Every day is.', 'Good, you’re here. I did some winning while you were gone.', 'You’re back. I kept the place beautiful. Look at it.'],
+      ['Look who’s back! Everyone comes back. Everyone.', 'You missed me. I can tell. People always miss me.', 'You’re back. The office is setting records. Ask anyone.', 'There you are. I told them you’d be back. I’m always right.', 'Welcome back to the best-run office anywhere. Believe me.'],
+      ['THE GREATEST CARETAKER RETURNS! Well, second greatest. After me.', 'WELCOME BACK! It was TREMENDOUS without you. Even better with you. Maybe.', 'YOU’RE BACK! Just in time for more WINNING!', 'LOOK WHO IT IS! My FAVORITE caretaker! Don’t tell the others!', 'BACK AGAIN! Nobody stays away. NOBODY!']
     ),
     greetLong: L(
-      ['You were gone a while. That’s okay. I understand.'],
-      ['Where were you? I waited. Patiently, I’d say.'],
-      ['You were gone forever. Not nice. Not nice at all.'],
-      ['Where WERE you? Very disloyal. I’m watching you.'],
-      ['{hours} HOURS! Very unfair treatment. Worst absence in HISTORY. Now feed me!']
+      ['You were gone a while. That’s okay. I understand.', 'I wondered if you’d forgotten me. It’s fine if you did.', 'Welcome back. I kept myself busy. Quietly.'],
+      ['Where were you? I waited. Patiently, I’d say.', 'Long time. I managed. Mostly.', 'You took your time. I noticed.'],
+      ['You were gone forever. Not nice. Not nice at all.', '{hours} hours. I counted. I’m a great counter.', 'I had to compliment myself the whole time. Exhausting.'],
+      ['Where WERE you? Very disloyal. I’m watching you.', '{hours} hours without applause. Can you imagine?', 'I almost replaced you. I had a list. A very good list.'],
+      ['{hours} HOURS! Very unfair treatment. Worst absence in HISTORY. Now feed me!', 'GONE for {hours} HOURS! A total DISGRACE! ...I missed you. Don’t tell anyone.', 'FINALLY! I was about to put a TARIFF on your absence!']
     ),
     greetMorning: L(
-      ['Good morning. I slept fine, thank you for asking.'],
-      ['Morning. Big day. I can feel it.'],
-      ['Good morning! I slept great. The best sleep.'],
-      ['I barely slept. Didn’t need to. Tremendous stamina.'],
-      ['GOOD MORNING to everyone, even the HATERS and LOSERS!']
+      ['Good morning. I slept fine, thank you for asking.', 'Morning. I hope you slept well.', 'Good morning. I made the bed. Sort of.'],
+      ['Morning. Big day. I can feel it.', 'Good morning. I’m ready. Are you ready?', 'Up and at it. I’ve got a good feeling.'],
+      ['Good morning! I slept great. The best sleep.', 'Morning. I already won twice today. In my head.', 'Good morning. I look rested. I always look rested.'],
+      ['I barely slept. Didn’t need to. Tremendous stamina.', 'Good morning. I’ve been up for hours, winning.', 'Morning! The birds were singing about me. I heard them.'],
+      ['GOOD MORNING to everyone, even the HATERS and LOSERS!', 'A BEAUTIFUL morning! The BEST morning! I ordered it myself!', 'RISE AND SHINE! Mostly SHINE. That’s me!']
     ),
     idleHappy: L(
-      ['This is nice. Thank you for looking after me.', 'I’m content. Is that okay to say?', 'I think I’m doing an adequate job.', 'I hope I’m not taking up too much room.'],
-      ['I’m doing well. Really well, actually.', 'I’ve got good instincts. Always have.', 'I could run this place. Just saying.', 'People like me. I’ve noticed that.'],
-      ['Everything’s going great. Everyone says so.', 'I have the best office. Look at it. Beautiful.', 'Nobody does it better than me. Nobody.', 'I have the best words. I really do.'],
-      ['We’re winning so much. Aren’t you tired of winning?', 'Many people are saying this is the best-run office ever.', 'I know more about offices than anybody. Believe me.', 'A very stable genius lives here. Me. It’s me.'],
-      ['We are WINNING like NEVER BEFORE! Thank you for your attention to this matter!', 'TREMENDOUS things are happening. The likes of which NOBODY has ever seen!', 'They said it couldn’t be done. I did it. In RECORD time!', 'Strong men come up to me, tears in their eyes. “Sir,” they say. EVERY time!']
+      ['This is nice. Thank you for looking after me.', 'I’m content. Is that okay to say?', 'I think I’m doing an adequate job.', 'I hope I’m not taking up too much room.', 'Lovely day. I don’t deserve it, but here we are.',
+        'I was just admiring the window. It’s a good window.', 'If you need the desk, I can move.', 'I read a pamphlet today. Cover to cover.', 'I’m happy when you’re happy.', 'Is my tie alright? I tied it myself.'],
+      ['I’m doing well. Really well, actually.', 'I’ve got good instincts. Always have.', 'I could run this place. Just saying.', 'People like me. I’ve noticed that.', 'I had an idea. A pretty good one.',
+        'I look good today. Not bragging. Just noticing.', 'This office has potential. Like me.', 'I’m thinking bigger. You should too.', 'I shook a guy’s hand today. Firm. He remembered it.', 'Somebody should write this down.'],
+      ['Everything’s going great. Everyone says so.', 'I have the best office. Look at it. Beautiful.', 'Nobody does it better than me. Nobody.', 'I have the best words. I really do.', 'I’d put my name on this room. Maybe I will.',
+        'I know quality. I am quality.', 'They’ll make a show about this. Great ratings.', 'My instincts are incredible. They’re never wrong. Almost never. Never.', 'I just had a great thought. All my thoughts are great.', 'You’re lucky to be here. I’m lucky too. Mostly you.'],
+      ['We’re winning so much. Aren’t you tired of winning?', 'Many people are saying this is the best-run office ever.', 'I know more about offices than anybody. Believe me.', 'A very stable genius lives here. Me. It’s me.', 'They’re talking about us everywhere. Good things. The best things.',
+        'Nobody’s ever seen anything like this. That’s what they tell me.', 'I aced a test once. Five words. In order. They were amazed.', 'I could stand in the middle of this office and everyone would clap.', 'People call. They say, “Sir, how do you do it?” I say, “Talent.”', 'Frankly, I’m a little too good at this.'],
+      ['We are WINNING like NEVER BEFORE! Thank you for your attention to this matter!', 'TREMENDOUS things are happening. The likes of which NOBODY has ever seen!', 'They said it couldn’t be done. I did it. In RECORD time!', 'Strong men come up to me, tears in their eyes. “Sir,” they say. EVERY time!', 'This is the GREATEST office in the HISTORY of offices! Maybe of ANYTHING!',
+        'Everything is PERFECT. I checked. PERFECT!', 'They’re measuring the MOUNTAIN. For ME. I heard it from very good people!', 'The numbers are INCREDIBLE. All of them. Even the ones we don’t have yet!', 'BEAUTIFUL. Just BEAUTIFUL. I’m talking about ME!', 'Person. Woman. Man. Camera. TV. Still got it. A PERFECT score!']
     ),
     hungry: L(
-      ['Sorry to bother you, but I’m a little hungry.', 'Could I maybe have something to eat? If it’s no trouble.'],
-      ['I could eat. I could definitely eat.'],
-      ['I’m hungry. Where’s my burger? I was promised burgers.'],
-      ['No food! Can you believe it? A disgrace. Get me a hamberder.'],
-      ['I am STARVING! The WORST food shortage in the history of this office!', 'HAMBERDERS. NOW. Thank you!']
+      ['Sorry to bother you, but I’m a little hungry.', 'Could I maybe have something to eat? If it’s no trouble.', 'My stomach made a noise. I apologize.', 'Anything is fine. Even a small thing.'],
+      ['I could eat. I could definitely eat.', 'Is it lunch? It feels like lunch.', 'A burger would be good right about now.', 'I think better on a full stomach.'],
+      ['I’m hungry. Where’s my burger? I was promised burgers.', 'A man of my caliber shouldn’t have to ask twice.', 'I’m wasting away. Look at me. Still great, but wasting.', 'Somebody get me a hamberder. A good one.'],
+      ['No food! Can you believe it? A disgrace. Get me a hamberder.', 'I’ve never been treated so hungrily. Nobody has.', 'They feed everyone else. Very unfair.', 'Hungry! Worst kitchen in the country, and I’ve seen kitchens.'],
+      ['I am STARVING! The WORST food shortage in the history of this office!', 'HAMBERDERS. NOW. Thank you!', 'My patience is OVER! Completely OVER! Until I get a BURGER!', 'FEED ME! Thank you for your attention to this matter!']
     ),
     bored: L(
-      ['I wouldn’t mind doing something. Whenever you have time.'],
-      ['It’s quiet. Too quiet. Let’s do a deal or something.'],
-      ['I’m bored. Let’s golf. I’m a great golfer, you know.'],
-      ['Boring! This is low energy. Get me to a golf course.'],
-      ['So BORING! Schedule a RALLY. Or golf. Or a rally AT golf!']
+      ['I wouldn’t mind doing something. Whenever you have time.', 'I counted the ceiling tiles. There are a few.', 'Maybe a little game? Only if you want.', 'I’ll just stand here. That’s fine too.'],
+      ['It’s quiet. Too quiet. Let’s do a deal or something.', 'I’ve got energy to burn.', 'Let’s make something happen.', 'A round of golf wouldn’t kill anybody.'],
+      ['I’m bored. Let’s golf. I’m a great golfer, you know.', 'Nothing’s happening. I make things happen. Let me.', 'A deal. A rally. Something with applause.', 'This is beneath my talents. Entertain me.'],
+      ['Boring! This is low energy. Get me to a golf course.', 'I haven’t won anything in minutes. Unacceptable.', 'Where’s the crowd? There’s supposed to be a crowd.', 'So boring. The most boring it’s ever been. Fix it.'],
+      ['So BORING! Schedule a RALLY. Or golf. Or a rally AT golf!', 'LOW ENERGY in here! I need a DEAL! A BIG one!', 'NOTHING is happening! That’s NEVER happened before!', 'I am BORED. BIGLY. Do something!']
     ),
     needEgo: L(
-      ['Do you think I’m doing okay? Be honest.'],
-      ['Say something nice. I’ve earned it.'],
-      ['Nobody’s told me I’m great in almost an hour. Weird.'],
-      ['Where’s the applause? There’s usually applause.'],
-      ['My ratings are DOWN! Rigged! Somebody tell me I’m the best. QUICKLY!']
+      ['Do you think I’m doing okay? Be honest.', 'I hope I’m not a disappointment.', 'A kind word would be nice. No pressure.', 'Am I any good at this? You can tell me.'],
+      ['Say something nice. I’ve earned it.', 'A little appreciation goes a long way.', 'I did good today. Somebody should mention it.', 'Nobody’s noticed my tie. It’s a good tie.'],
+      ['Nobody’s told me I’m great in almost an hour. Weird.', 'I’m still incredible. Just checking that you know.', 'It’s been quiet. Too quiet for someone this good.', 'Feel free to say something. About me. Good things.'],
+      ['Where’s the applause? There’s usually applause.', 'People used to line up to compliment me. Around the block.', 'I shouldn’t have to say it myself. But I will. I’m great.', 'Very little praise today. Very unfair.'],
+      ['My ratings are DOWN! Rigged! Somebody tell me I’m the best. QUICKLY!', 'NOBODY has praised me in MINUTES! A NATIONAL DISGRACE!', 'SAY IT! Say I’m TREMENDOUS! Everyone else does!', 'The applause has STOPPED! Who STOPPED it?!']
     ),
     needGlow: L(
-      ['My hair’s a bit of a mess. Sorry about that.'],
-      ['I need a comb. A man needs a comb.'],
-      ['The hair isn’t right. It has to be right.'],
-      ['I’m looking pale. PALE! Get the bronzer.'],
-      ['The hair is DEFLATING! This is a NATIONAL EMERGENCY!']
+      ['My hair’s a bit of a mess. Sorry about that.', 'I think I look a little tired. Do I?', 'I should comb this. I keep forgetting.', 'I caught my reflection. I looked away.'],
+      ['I need a comb. A man needs a comb.', 'The hair’s not sitting right.', 'I’m looking a little flat. Let’s fix it.', 'A touch-up wouldn’t hurt.'],
+      ['The hair isn’t right. It has to be right.', 'I’m not at full glow. People will notice.', 'This is not my best look. And I only have best looks.', 'Get the spray. The good spray.'],
+      ['I’m looking pale. PALE! Get the bronzer.', 'The swoop is drooping. This cannot stand.', 'I look almost ordinary. Do something.', 'They’ll take pictures. I need the glow.'],
+      ['The hair is DEFLATING! This is a NATIONAL EMERGENCY!', 'I am losing the GLOW! Get the BRONZER! ALL of it!', 'The SWOOP has FALLEN! Raise it IMMEDIATELY!', 'I look NORMAL! This is the WORST thing that has EVER happened!']
     ),
     tired: L(
-      ['I’m getting sleepy. Is it bedtime?'],
-      ['Long day. I could use some rest.'],
-      ['I’m not tired. I’m never tired. ...Maybe a little.'],
-      ['Low energy is for other people. But dim the lights anyway.'],
-      ['I have the BEST stamina. Tremendous. Now turn off the lights. Quietly!']
+      ['I’m getting sleepy. Is it bedtime?', 'I might close my eyes for a moment. Sorry.', 'It’s been a long day. A nice one.', 'I could use a rest, if that’s alright.'],
+      ['Long day. I could use some rest.', 'I’m running low. Not empty. Low.', 'Let’s wrap it up soon.', 'A little sleep and I’ll be even better.'],
+      ['I’m not tired. I’m never tired. ...Maybe a little.', 'My eyes are resting. I’m still listening.', 'Even the best need to recharge. Briefly.', 'I’ve been great all day. It takes a lot out of you.'],
+      ['Low energy is for other people. But dim the lights anyway.', 'I’m not yawning. That’s a power breath.', 'I could go all night. I just don’t want to.', 'Bring me a Diet Coke or a pillow. Your call.'],
+      ['I have the BEST stamina. Tremendous. Now turn off the lights. Quietly!', 'NOT tired! Just resting my eyes. POWERFULLY!', 'I NEVER sleep! ...Wake me in four hours!', 'So much WINNING. Even I need to lie down!']
     ),
     ate: L(
-      ['Thank you. That {food} was very nice.', 'Mm. I appreciate the {food}.'],
-      ['Good {food}. Really good.', 'That hit the spot. Good {food}.'],
-      ['Great {food}. One of the best I’ve had. And I’ve had a lot.'],
-      ['Tremendous {food}. Nobody eats {food} like me. Nobody.'],
-      ['The GREATEST {food} in the HISTORY of {food}! People are saying it!']
+      ['Thank you. That {food} was very nice.', 'Mm. I appreciate the {food}.', 'Oh, {food}. You shouldn’t have.', 'That was plenty. Thank you.', 'Delicious. May I be excused?'],
+      ['Good {food}. Really good.', 'That hit the spot. Good {food}.', 'Now that’s what I call {food}.', 'Good {food} is good {food}. I always say that.', 'Solid {food}. I’d order it again.'],
+      ['Great {food}. One of the best I’ve had. And I’ve had a lot.', 'I know {food}. That was great {food}.', 'That {food}? Fantastic. I have great taste.', 'Very classy {food}. I could tell right away.', 'People don’t know how good {food} can be. I know.'],
+      ['Tremendous {food}. Nobody eats {food} like me. Nobody.', 'Best {food} in the country. Maybe the world. They tell me.', 'That {food} was so good. Everybody’s talking about it.', 'I may be the greatest {food} eater of all time.', 'The {food} was perfect. Like everything I do.'],
+      ['The GREATEST {food} in the HISTORY of {food}! People are saying it!', 'WOW! That {food}! UNBELIEVABLE! A TEN!', 'They don’t make {food} like that anymore. I DO!', 'PERFECT {food}! Thank you for your attention to this {food}!', 'INCREDIBLE {food}! I’m naming it after MYSELF!']
+    ),
+    // A few foods get lines of their own; the rest use the general ones above.
+    ate_steak: L(
+      ['Oh my. Steak. This is too generous.', 'Well done? Whatever is easiest for the kitchen.'],
+      ['Good steak. Cooked all the way. The right way.', 'Pass the ketchup, please.'],
+      ['Well done, with ketchup. People laugh. Then they try it.', 'A steak like me: no pink, all class.'],
+      ['The chef wanted medium rare. The chef is no longer with us. Different restaurant.', 'Ketchup on steak. The experts hate it. The experts are wrong.'],
+      ['WELL DONE! Like EVERYTHING I do!', 'KETCHUP ON STEAK! It’s called WINNING!']
+    ),
+    ate_chicken: L(
+      ['A whole bucket? I’ll save some for later.', 'Thank you. I’ll use a napkin.'],
+      ['Good chicken. Crispy.', 'I’ll use a knife and fork. It’s cleaner.'],
+      ['Knife and fork, like a gentleman. A bucket is fine dining if I’m holding it.', 'Eleven secret herbs. I know at least twelve.'],
+      ['I eat it with silverware. They mock me. They’re jealous of the silverware.', 'Greasy fingers ruin the hair. Everyone knows that.'],
+      ['The BUCKET is EMPTY! I WON the bucket!', 'FRIED CHICKEN on FINE CHINA! That’s CLASS!']
+    ),
+    ate_tacobowl: L(
+      ['A taco in a bowl. How clever. Thank you.', 'Is the bowl edible? I don’t want to be rude.'],
+      ['Good taco bowl. You eat the bowl. Smart design.'],
+      ['The best taco bowls are made in my building. Everybody knows it.'],
+      ['I ate the bowl. Total commitment. That’s leadership.'],
+      ['The TACO BOWL! A BOWL you can EAT! GENIUS! Probably MINE!']
+    ),
+    ate_cake: L(
+      ['Cake? Is it somebody’s birthday? Thank you.', 'Just a small slice. Oh, that is the small slice. Okay.'],
+      ['Good cake. Chocolate. Can’t go wrong.'],
+      ['A beautiful piece of chocolate cake. I know a beautiful cake when I see one.'],
+      ['The most beautiful piece of chocolate cake you’ve ever seen. And I ate it.'],
+      ['The MOST BEAUTIFUL chocolate cake in the WORLD! Big decisions get made over cake like this!']
+    ),
+    ate_icecream: L(
+      ['One scoop is plenty. Oh, two? That’s too kind.'],
+      ['Two scoops. I could get used to this.'],
+      ['Two scoops for me. One for everyone else. That’s just fair.'],
+      ['Everybody else gets one scoop. I checked. Good system.'],
+      ['TWO SCOOPS! I EARNED the second scoop! By being ME!']
     ),
     ateCoke: L(
-      ['A soda? How thoughtful.'],
-      ['Diet Coke. Good choice.'],
-      ['Diet Coke. I should get a button for this. A big one.'],
-      ['That’s number {n} today. I’m very disciplined.'],
-      ['DIET COKE NUMBER {n}! A PERFECT beverage!']
+      ['A soda? How thoughtful.', 'Bubbles! Thank you.', 'I’ll sip it slowly.'],
+      ['Diet Coke. Good choice.', 'Cold. Crisp. Good.', 'That’s the stuff.'],
+      ['Diet Coke. I should get a button for this. A big one.', 'Number {n}. I’m pacing myself.', 'Diet Coke: the drink of winners. One winner, mainly.'],
+      ['That’s number {n} today. I’m very disciplined.', '{n} Diet Cokes. It’s called hydration.', 'Diet. Because I’m an athlete.'],
+      ['DIET COKE NUMBER {n}! A PERFECT beverage!', 'NUMBER {n}! The button WORKS!', '{n} today! A NEW RECORD! By ME!']
     ),
     ateSalad: L(
-      ['Oh, a salad. That’s healthy. Thank you!'],
-      ['Salad. Hm. Okay. I’ll eat around it.'],
-      ['A salad? What is this, a punishment?'],
-      ['Lettuce! Very unfair. I’m putting a tariff on this. {tariff}%.'],
-      ['RADICAL LEFT LETTUCE! {tariff}% TARIFF, effective IMMEDIATELY!']
+      ['Oh, a salad. That’s healthy. Thank you!', 'Leaves! Crunchy. Very thoughtful.', 'I do like a cucumber.'],
+      ['Salad. Hm. Okay. I’ll eat around it.', 'Is there a burger under this?', 'Green. Very green.'],
+      ['A salad? What is this, a punishment?', 'I’ll eat it. But I’ll remember.', 'This is what food eats.'],
+      ['Lettuce! Very unfair. I’m putting a tariff on this. {tariff}%.', 'A salad. From my own caretaker. {tariff}% tariff. Effective now.', 'They sent leaves. I’m sending a {tariff}% tariff.'],
+      ['RADICAL LEFT LETTUCE! {tariff}% TARIFF, effective IMMEDIATELY!', 'A SALAD?! The tariff is now {tariff}%! And RISING!', 'LEAVES! On MY plate! {tariff}% TARIFF! Thank you for your attention to this matter!']
     ),
     full: L(
-      ['No thank you, I couldn’t possibly eat more.'],
-      ['I’m full. Maybe later.'],
-      ['I’m full. First time that’s ever happened.'],
-      ['Even I have limits. Very few. This is one.'],
-      ['FULL! The most full anyone has EVER been!']
+      ['No thank you, I couldn’t possibly eat more.', 'I’m quite full. Thank you, though.', 'Maybe save it for someone hungrier.'],
+      ['I’m full. Maybe later.', 'Not right now. I’m good.', 'Hold that thought. And that burger.'],
+      ['I’m full. First time that’s ever happened.', 'Even greatness has a capacity.', 'Later. I’m digesting a victory.'],
+      ['Even I have limits. Very few. This is one.', 'I’m full. The fullest. Nobody’s been this full.', 'Not now. I ate like a champion already.'],
+      ['FULL! The most full anyone has EVER been!', 'NO MORE! I have WON lunch!', 'I am at CAPACITY! A RECORD capacity!']
     ),
     praised: L(
-      ['Oh! That’s very kind. I don’t know what to say.', 'You really think so? Thank you.'],
-      ['I appreciate that. It’s true, too.'],
-      ['True. Very true. You have great judgment.'],
-      ['So true. Everybody says it. You said it best, though.'],
-      ['CORRECT! Finally, somebody HONEST! You’re hired!']
+      ['Oh! That’s very kind. I don’t know what to say.', 'You really think so? Thank you.', 'I’m blushing. Is that noticeable?', 'That means a lot. I’ll try to live up to it.', 'Me? Surely you mean someone else.'],
+      ['I appreciate that. It’s true, too.', 'Thank you. I’ve been working on it.', 'Nice of you to notice.', 'Keep going. I’m listening.', 'I thought so too. Good to hear it.'],
+      ['True. Very true. You have great judgment.', 'You know quality when you see it.', 'Correct. Say it louder.', 'I’ve been saying that for years.', 'That’s what everyone tells me. You said it nicely.'],
+      ['So true. Everybody says it. You said it best, though.', 'Finally. Somebody who gets it.', 'You’re a very smart person. I can tell, because you agree with me.', 'They should put that on a plaque.', 'True. All of it. Even the parts you left out.'],
+      ['CORRECT! Finally, somebody HONEST! You’re hired!', 'YES! Write that down! Put it on a BUILDING!', 'SO TRUE! The TRUEST thing ever said!', 'THANK YOU! You are now my FAVORITE!', 'EXACTLY! Tell EVERYONE! Start with THEM!']
     ),
     insulted: L(
-      ['You’re right. I’ll try to do better.'],
-      ['Hm. I don’t love that.'],
-      ['Wrong. And frankly, rude.'],
-      ['Nasty! A very nasty thing to say.'],
-      ['YOU’RE FIRED! ...Fine, you’re rehired. But WATCH IT!']
+      ['You’re right. I’ll try to do better.', 'Oh. That’s fair. Thank you for telling me.', 'I needed to hear that. I think.'],
+      ['Hm. I don’t love that.', 'That stung a little.', 'I’ll pretend I didn’t hear that.'],
+      ['Wrong. And frankly, rude.', 'I don’t know where you’re getting your information.', 'That’s not what the others say. The others are nicer.'],
+      ['Nasty! A very nasty thing to say.', 'Who told you that? Give me a name.', 'Disloyal. Very disloyal. I’m writing it down.'],
+      ['YOU’RE FIRED! ...Fine, you’re rehired. But WATCH IT!', 'FAKE NEWS! From my OWN caretaker!', 'WRONG! TOTALLY WRONG! Get out! ...Come back. Bring a burger.']
     ),
     notNeeded: L(
-      ['I’m okay for now, thank you.'],
-      ['I’m good. Maybe later.'],
-      ['I’m already perfect at the moment.'],
-      ['You can’t improve on this. Try again later.'],
-      ['ALREADY PERFECT! There is nothing to improve!']
+      ['I’m okay for now, thank you.', 'That’s alright. Save it.', 'I’m all set. You’re very attentive.'],
+      ['I’m good. Maybe later.', 'Not now. I’m in good shape.', 'Hold on to that.'],
+      ['I’m already perfect at the moment.', 'Can’t improve on this. Not right now.', 'You’re gilding the gold. I respect it. Later.'],
+      ['You can’t improve on this. Try again later.', 'I’m at one hundred percent. Maybe one hundred ten.', 'Nothing to fix. I looked.'],
+      ['ALREADY PERFECT! There is nothing to improve!', 'I am at MAXIMUM! Come back when I’m merely EXCELLENT!', 'PERFECTION doesn’t need a TOUCH-UP!']
     ),
     petted: L(
-      ['Hee. That tickles.', 'Oh! Hello.'],
-      ['Easy. This suit is new.'],
-      ['Careful. This is a very expensive suit.'],
-      ['Everyone wants to touch greatness. I get it.'],
-      ['YES, I’m REAL! And SPECTACULAR!']
+      ['Hee. That tickles.', 'Oh! Hello.', 'That’s nice. Thank you.', 'A pat! I’ll take it.'],
+      ['Easy. This suit is new.', 'Hey. Okay. Fine.', 'A little respect for the jacket.', 'Friendly. I like friendly.'],
+      ['Careful. This is a very expensive suit.', 'Yes, it’s really me.', 'Touching greatness. Bold move.', 'Mind the lapels. They’re the best lapels.'],
+      ['Everyone wants to touch greatness. I get it.', 'People wait in line for this. You just walked up.', 'Gentle. This is a historic suit.', 'I allow it. Briefly.'],
+      ['YES, I’m REAL! And SPECTACULAR!', 'You TOUCHED me! You’ll tell your GRANDCHILDREN!', 'CAREFUL! That’s a TREMENDOUS shoulder!', 'HANDS! ...Fine. ONE pat!']
     ),
     hair: L(
-      ['It’s just regular hair. Go ahead.'],
-      ['Watch the hair, please.'],
-      ['Not the hair! It took an hour.'],
-      ['DON’T touch the hair. It’s real. It’s mine.'],
-      ['HANDS OFF THE HAIR! It’s a NATIONAL TREASURE!']
+      ['It’s just regular hair. Go ahead.', 'Oh, that’s my hair. It’s nothing special.', 'It does that on its own. Sorry.', 'Feel free. It’s only hair.'],
+      ['Watch the hair, please.', 'Easy up there.', 'I just combed that.', 'It’s starting to have a shape. Leave it.'],
+      ['Not the hair! It took an hour.', 'Don’t. It’s structural.', 'Hands off. That’s load-bearing.', 'You wouldn’t touch a painting. Don’t touch this.'],
+      ['DON’T touch the hair. It’s real. It’s mine.', 'It’s all real. I’ll prove it. No, I won’t. Step back.', 'People pay to stand near this hair.', 'That swoop is a protected landmark.'],
+      ['HANDS OFF THE HAIR! It’s a NATIONAL TREASURE!', 'The HAIR is OFF LIMITS! To EVERYONE!', 'You have TOUCHED the SWOOP! There will be CONSEQUENCES!', 'It’s REAL! It’s MINE! It’s MAGNIFICENT! Back AWAY!']
     ),
     groomSpray: L(
-      ['Is that a lot of hairspray? It feels like a lot.'],
-      ['A little more on top. Good.'],
-      ['More. MORE. It has to hold in the wind.'],
-      ['Hairspray was stronger in the old days. This is okay.'],
-      ['THE HAIR IS PERFECT! Engineers STUDY this hair!']
+      ['Is that a lot of hairspray? It feels like a lot.', 'Oh, it’s cold. And sticky. Thank you.', 'Will it stay like that? Forever?'],
+      ['A little more on top. Good.', 'That’s holding. I like that.', 'Now we’re getting somewhere.'],
+      ['More. MORE. It has to hold in the wind.', 'Don’t be shy with it. Empty the can.', 'It should survive a helicopter. That’s the standard.'],
+      ['Hairspray was stronger in the old days. This is okay.', 'They say it’s bad for the air. My hair is in a sealed room. Explain that.', 'Coat it. Like a ship.'],
+      ['THE HAIR IS PERFECT! Engineers STUDY this hair!', 'MAXIMUM HOLD! Not even a HURRICANE!', 'SPRAY IT ALL! This is INFRASTRUCTURE!']
     ),
     groomTan: L(
-      ['Am I... orange? Is that normal?'],
-      ['A healthy glow. I like it.'],
-      ['Good color. Very good color. Like a champion.'],
-      ['It’s the lighting. I always look this good.'],
-      ['A PERFECT GLOW! Totally NATURAL!']
+      ['Am I... orange? Is that normal?', 'It’s a bit bright. Is it supposed to be?', 'I look like I’ve been somewhere sunny. I haven’t.'],
+      ['A healthy glow. I like it.', 'Some color. Good.', 'I look like I golf. I like that.'],
+      ['Good color. Very good color. Like a champion.', 'Don’t forget around the eyes. Actually, forget around the eyes.', 'That’s the glow of success.'],
+      ['It’s the lighting. I always look this good.', 'Natural. Completely natural. Stop looking so closely.', 'They ask what my secret is. Good genes. And this.'],
+      ['A PERFECT GLOW! Totally NATURAL!', 'I am RADIANT! The SUN is jealous!', 'GOLDEN! Like EVERYTHING I own!']
     ),
     groomComb: L(
-      ['Thank you. I never know what to do with it.'],
-      ['Sweep it forward. No, back. Both.'],
-      ['It’s a complicated structure. Very advanced.'],
-      ['Nobody understands this hair. I do. Only me.'],
-      ['FORWARD, then BACK, then UP! Like a beautiful golden WAVE!']
+      ['Thank you. I never know what to do with it.', 'That’s much neater. I look like a nice young man.', 'A side part? Sure. Whatever you think.'],
+      ['Sweep it forward. No, back. Both.', 'A little more lift in front.', 'That’s a look. I’m starting a look.'],
+      ['It’s a complicated structure. Very advanced.', 'Forward, across, and back. Don’t ask questions.', 'You’re combing a masterpiece. No pressure.'],
+      ['Nobody understands this hair. I do. Only me.', 'It’s an architectural achievement. I’m a builder, you know.', 'Careful. One wrong move and it’s just hair.'],
+      ['FORWARD, then BACK, then UP! Like a beautiful golden WAVE!', 'The SWOOP is RESTORED! Alert the MEDIA!', 'A PERFECT comb! They’ll teach it in SCHOOLS!']
     ),
     sleep: L(
-      ['Goodnight. Thank you for today.'],
-      ['Okay. Lights out. Big day tomorrow.'],
-      ['I sleep great. Maybe four hours. That’s all I need.'],
-      ['Wake me if there’s news. About me.'],
-      ['GOODNIGHT to all, even the haters! ...Leave the phone on the pillow.']
+      ['Goodnight. Thank you for today.', 'Sleep well. I’ll be quiet.', 'Lights out? Okay. Sweet dreams.'],
+      ['Okay. Lights out. Big day tomorrow.', 'Goodnight. I earned this one.', 'I’ll sleep on a few ideas.'],
+      ['I sleep great. Maybe four hours. That’s all I need.', 'Goodnight. I’ll be dreaming about deals.', 'Wake me if anything great happens. It will.'],
+      ['Wake me if there’s news. About me.', 'Goodnight. I sleep like a winner. On my back, undefeated.', 'Leave the TV on. Low. The one about me.'],
+      ['GOODNIGHT to all, even the haters! ...Leave the phone on the pillow.', 'The GREATEST sleep is about to begin!', 'LIGHTS OUT! I’ll be WINNING in my DREAMS!']
     ),
     wake: L(
-      ['Good morning. I hope you slept well too.'],
-      ['I’m up. Let’s go.'],
-      ['I’m up! Refreshed! What did they say about me?'],
-      ['I’m awake. I was barely asleep. Always alert.'],
-      ['I’M BACK! Did the ratings go up while I slept? Of course they did!']
+      ['Good morning. I hope you slept well too.', 'Oh. Hello. Is it time?', 'I’m up. I’ll make the bed.'],
+      ['I’m up. Let’s go.', 'Okay. Awake. What’s first?', 'Good sleep. Ready.'],
+      ['I’m up! Refreshed! What did they say about me?', 'Awake and already better than yesterday.', 'I had a dream I was winning. Then I woke up and I was.'],
+      ['I’m awake. I was barely asleep. Always alert.', 'What did I miss? Nothing. Nothing happens without me.', 'Up. The country can relax now.'],
+      ['I’M BACK! Did the ratings go up while I slept? Of course they did!', 'AWAKE! The WINNING resumes!', 'GOOD MORNING! Or WHATEVER it is! I’m UP!']
     ),
     notTired: L(
-      ['I’m not really sleepy yet.'],
-      ['Not tired. Let’s keep going.'],
-      ['I’m not tired. I’m never tired.'],
-      ['Sleep is for the low-energy people.'],
-      ['NOT TIRED! I have TREMENDOUS stamina!']
+      ['I’m not really sleepy yet.', 'Could I stay up a little longer?', 'I’m still wide awake, sorry.'],
+      ['Not tired. Let’s keep going.', 'Sleep? Now? No.', 'I’ve got hours left in me.'],
+      ['I’m not tired. I’m never tired.', 'Bed is for people with nothing to do.', 'I’m too good right now to stop.'],
+      ['Sleep is for the low-energy people.', 'You can’t put this much energy in a bed.', 'I’ll sleep when the winning stops. So, never.'],
+      ['NOT TIRED! I have TREMENDOUS stamina!', 'SLEEP?! I just got STARTED!', 'I am WIDE AWAKE! The MOST awake!']
     ),
     lowEnergy: L(
-      ['I’m too tired for that. Sorry.'],
-      ['I need to rest first.'],
-      ['I’d win, obviously. But later.'],
-      ['Not now. Even champions recharge. Briefly.'],
-      ['LATER! Get me a DIET COKE first!']
+      ['I’m too tired for that. Sorry.', 'Could we rest first?', 'I don’t think I have it in me right now.'],
+      ['I need to rest first.', 'Not on this little sleep.', 'Give me a minute. Or a nap.'],
+      ['I’d win, obviously. But later.', 'Champions rest. Then they win.', 'I’m saving my energy for something bigger.'],
+      ['Not now. Even champions recharge. Briefly.', 'I could do it in my sleep. So let me sleep.', 'My energy is fine. It’s just elsewhere.'],
+      ['LATER! Get me a DIET COKE first!', 'I am NOT low energy! I am STRATEGICALLY RESTING!', 'FIRST a Diet Coke. THEN I win!']
     ),
     golfWin: L(
-      ['It went in! Was that luck? Probably luck.'],
-      ['Good round. I’ve got a natural swing.'],
-      ['Great round. I win a lot of club championships.'],
-      ['Another championship. They keep giving them to me.'],
-      ['CLUB CHAMPION AGAIN! Eighteen holes-in-one. Witnesses? MANY!']
+      ['It went in! Was that luck? Probably luck.', 'I got one! Thank you for cheering.', 'Golf is fun. I didn’t know.'],
+      ['Good round. I’ve got a natural swing.', 'That felt right.', 'I’m getting the hang of this.'],
+      ['Great round. I win a lot of club championships.', 'Did you see that putt? Of course you did.', 'I’m probably the best golfer here. It’s my club, but still.'],
+      ['Another championship. They keep giving them to me.', 'Nobody putts like me. The pros ask me for tips.', 'I won. Again. It’s almost unfair to the others.'],
+      ['CLUB CHAMPION AGAIN! Eighteen holes-in-one. Witnesses? MANY!', 'The GREATEST round EVER played! By ANYONE!', 'I WON! They’re renaming the COURSE!']
     ),
     golfLose: L(
-      ['I missed them all. I should practice.'],
-      ['Tough greens today.'],
-      ['The greens were terrible. Not my fault.'],
-      ['I’m counting that as a win. It was a gimme.'],
-      ['I WON! The scorecard is RIGGED! Total witch hunt on the back nine!']
+      ['I missed them all. I should practice.', 'Oh well. The fresh air was nice.', 'The ball had other plans. That’s okay.'],
+      ['Tough greens today.', 'Off day. It happens.', 'I’ll get it next time.'],
+      ['The greens were terrible. Not my fault.', 'The wind. You saw the wind.', 'Somebody moved the hole. I’m almost sure.'],
+      ['I’m counting that as a win. It was a gimme.', 'The scorecard is wrong. I have a different scorecard.', 'Technically, I won. Ask my caddy. He works for me.'],
+      ['I WON! The scorecard is RIGGED! Total witch hunt on the back nine!', 'A PERFECT round! Do NOT look at the score!', 'The BALL went in! EVERYONE saw it! Even the people who DIDN’T!']
     ),
     dealRaise: L(
-      ['Should we ask for more? It seems greedy.'],
-      ['Let’s see if there’s a little more.'],
-      ['We can do better. We always do better.'],
-      ['Weak offer. Very weak. Ask again.'],
-      ['TERRIBLE offer! Insulting! DOUBLE IT!']
+      ['Should we ask for more? It seems greedy.', 'Maybe that’s enough? No? Okay.', 'I feel bad asking again.', 'If you think so. I trust you.'],
+      ['Let’s see if there’s a little more.', 'They’ve got room. I can tell.', 'One more push.', 'Ask again. Nicely.'],
+      ['We can do better. We always do better.', 'That’s their first number. Never take the first number.', 'They want it. Look at them. More.', 'Somebody wrote a book about this. Me, I think. More.'],
+      ['Weak offer. Very weak. Ask again.', 'They’re sweating. I love it. Higher.', 'I’d walk away right now. But higher first.', 'That’s an insult. A small one. Make them pay for it.'],
+      ['TERRIBLE offer! Insulting! DOUBLE IT!', 'MORE! They can AFFORD it!', 'We’re NOT leaving money on the table! That’s MY table!', 'HIGHER! This is the ART of it!']
     ),
     dealWin: L(
-      ['A deal! I hope they’re happy too.'],
-      ['Good deal. Fair deal.'],
-      ['Great deal. I make the best deals.'],
-      ['They never saw it coming. That’s the art of it.'],
-      ['The BIGGEST deal EVER! They’re calling it a MIRACLE!']
+      ['A deal! I hope they’re happy too.', 'We shook hands. I think that went well.', 'Everybody wins. That’s nice.'],
+      ['Good deal. Fair deal.', 'Done. That felt good.', 'I could do this for a living.'],
+      ['Great deal. I make the best deals.', 'They’ll say they won. They didn’t.', 'Signed. Beautiful. Next.'],
+      ['They never saw it coming. That’s the art of it.', 'Best deal they ever lost.', 'I almost feel bad. Almost.'],
+      ['The BIGGEST deal EVER! They’re calling it a MIRACLE!', 'DEAL! They’ll STUDY this one!', 'I WON the deal! They THANKED me for it!']
     ),
     dealLose: L(
-      ['They left. I pushed too hard. My fault.'],
-      ['They walked. It happens.'],
-      ['They’ll be back. They always come back.'],
-      ['Bad buyer. Sad! We didn’t need them.'],
-      ['I walked away FIRST! Everyone saw it! We’ll see what happens!']
+      ['They left. I pushed too hard. My fault.', 'Oh no. I think we upset them.', 'I should have said yes earlier. Sorry.'],
+      ['They walked. It happens.', 'Too far. Lesson learned.', 'Next one.'],
+      ['They’ll be back. They always come back.', 'Their loss. Mostly theirs.', 'I didn’t want it anyway. Bad deal.'],
+      ['Bad buyer. Sad! We didn’t need them.', 'They couldn’t handle the negotiation. Weak.', 'I let them go. It was mercy.'],
+      ['I walked away FIRST! Everyone saw it! We’ll see what happens!', 'They’ll come CRAWLING back! With a BETTER offer!', 'NO DEAL is a GREAT deal! I INVENTED that!']
     ),
     rally: L(
-      ['So many people! Are they here for me?'],
-      ['Good crowd. Nice people.'],
-      ['Big crowd. Really big. Biggest in the area.'],
-      ['They said {real}. It was {claimed}. I counted.'],
-      ['{claimed} PEOPLE! The largest crowd in HISTORY! PERIOD!']
+      ['So many people! Are they here for me?', 'They clapped. For me. I don’t understand.', 'What a nice crowd. I hope they had fun.'],
+      ['Good crowd. Nice people.', 'They liked me. I could tell.', 'That went well. I’d do that again.'],
+      ['Big crowd. Really big. Biggest in the area.', 'They love me. You heard them.', 'Standing room only. And they were all standing.'],
+      ['They said {real}. It was {claimed}. I counted.', '{claimed} people. The cameras never show the crowd.', 'Biggest rally ever. {claimed}. Easily.'],
+      ['{claimed} PEOPLE! The largest crowd in HISTORY! PERIOD!', '{claimed}! They had to turn people AWAY! THOUSANDS!', 'The fake counters say {real}. It was {claimed}! I was THERE!']
     ),
     posted: L(
-      ['Was that okay to post? I hope nobody minds.'],
-      ['Posted. Good post.'],
-      ['That one’s going viral. I can feel it.'],
-      ['Perfect post. Not a word wasted.'],
-      ['POSTED! A masterpiece! They’ll study it in SCHOOLS!']
+      ['Was that okay to post? I hope nobody minds.', 'Three people saw it. That’s plenty.', 'I double-checked the spelling.'],
+      ['Posted. Good post.', 'That one’s solid.', 'Sent. Let’s see what they say.'],
+      ['That one’s going viral. I can feel it.', 'A great post. I have a gift.', 'They’ll be quoting that.'],
+      ['Perfect post. Not a word wasted.', 'The phones are lighting up. I assume.', 'That’s how it’s done. Capital letters and everything.'],
+      ['POSTED! A masterpiece! They’ll study it in SCHOOLS!', 'The GREATEST post of ALL TIME! Until the next one!', 'SENT! The INTERNET will never be the SAME!']
     ),
     levelUp: L(
-      ['I think I’m getting better at this.'],
-      ['I’m getting stronger. I can feel it.'],
-      ['I’m improving. Hard to believe, but I am.'],
-      ['More tremendous by the hour. They’ve noticed.'],
-      ['EVEN MORE TREMENDOUS! Scientists said it was IMPOSSIBLE!']
+      ['I think I’m getting better at this.', 'Did I just improve? It felt like improving.', 'A little more confident today. Is that alright?', 'Thank you. I couldn’t have done it without you.'],
+      ['I’m getting stronger. I can feel it.', 'Leveled up. Felt that one.', 'Onward. I like this direction.', 'More of that, please.'],
+      ['I’m improving. Hard to believe, but I am.', 'Better than yesterday. Yesterday was great.', 'Another level. They said I’d peaked.', 'I keep getting better. It’s a problem for everyone else.'],
+      ['More tremendous by the hour. They’ve noticed.', 'Another level. I’m running out of levels.', 'I didn’t think it was possible either. I did.', 'They’ll have to invent new words for me.'],
+      ['EVEN MORE TREMENDOUS! Scientists said it was IMPOSSIBLE!', 'A NEW LEVEL! The HIGHEST level! Until the next one!', 'I just got BETTER! AGAIN! It NEVER stops!', 'UP! UP! UP! Like my RATINGS!']
     ),
     bought: L(
-      ['For me? It’s too much. Thank you.'],
-      ['Nice. Classy.'],
-      ['Beautiful. Very classy. Very expensive-looking.'],
-      ['The best taste. People say I have the best taste.'],
-      ['GORGEOUS! More gold! You can NEVER have too much gold!']
+      ['For me? It’s too much. Thank you.', 'Oh, it’s lovely. Where should it go?', 'You didn’t have to. But I love it.'],
+      ['Nice. Classy.', 'Good pick. That works.', 'The place is coming together.'],
+      ['Beautiful. Very classy. Very expensive-looking.', 'Now that’s taste. Mine, mostly.', 'It ties the room together. Around me.'],
+      ['The best taste. People say I have the best taste.', 'Gorgeous. It needs a plaque with my name.', 'Museums will want this. They can’t have it.'],
+      ['GORGEOUS! More gold! You can NEVER have too much gold!', 'STUNNING! The room is now WORTH more! Because of ME!', 'BEAUTIFUL! Put my NAME on it!']
     ),
     noCash: L(
-      ['We can’t afford that. That’s alright.'],
-      ['A little short right now.'],
-      ['We’re a little short. Temporarily. Great credit, though.'],
-      ['I’m very rich. It’s just not liquid. Do a deal.'],
-      ['I have BILLIONS! Just not HERE! Make a DEAL!']
+      ['We can’t afford that. That’s alright.', 'Maybe we save up.', 'It’s a little out of reach. I don’t mind.'],
+      ['A little short right now.', 'Not yet. Soon.', 'We need another deal first.'],
+      ['We’re a little short. Temporarily. Great credit, though.', 'I’m rich. This is a cash-flow thing.', 'The money’s busy elsewhere.'],
+      ['I’m very rich. It’s just not liquid. Do a deal.', 'I could buy it ten times over. Just not at the moment.', 'The banks love me. Call one.'],
+      ['I have BILLIONS! Just not HERE! Make a DEAL!', 'A TEMPORARY situation! I’m worth TEN of those!', 'The MONEY is COMING! It’s the BEST money!']
     ),
     signed: L(
-      ['I signed it. I hope my handwriting is legible.'],
-      ['Signed. Look at that signature.'],
-      ['Look at that. Beautiful signature. Like a heartbeat.'],
-      ['Signed. I hold it up so everyone can see. It’s important.'],
-      ['SIGNED! The most powerful signature in the WORLD! Look at it!']
+      ['I signed it. I hope my handwriting is legible.', 'There. Did I do it right?', 'I read it first. Was I supposed to?'],
+      ['Signed. Look at that signature.', 'Done. Nice pen.', 'One more for the folder.'],
+      ['Look at that. Beautiful signature. Like a heartbeat.', 'Signed. I didn’t need to read it. I felt it.', 'Big signature. Big ideas.'],
+      ['Signed. I hold it up so everyone can see. It’s important.', 'That signature has more ink than the whole document.', 'Another one. I sign more than anyone.'],
+      ['SIGNED! The most powerful signature in the WORLD! Look at it!', 'DONE! Hold it UP! Turn it SLOWLY!', 'The SHARPIE has SPOKEN!']
     ),
     comeback: L(
-      ['I’m back. I’m sorry I left. I missed you.'],
-      ['I’m back. Let’s not do that again.'],
-      ['I was golfing. I shot a 59. Don’t leave me again.'],
-      ['I forgive you. I’m very forgiving. Ask anyone.'],
-      ['I’M BACK! I forgive you! Nobody forgives like me. NOBODY!']
+      ['I’m back. I’m sorry I left. I missed you.', 'I shouldn’t have gone. Can we start over?', 'It was lonely out there. Thank you for asking me back.'],
+      ['I’m back. Let’s not do that again.', 'Okay. I’m here. Feed me and we’re even.', 'I thought about it. I’m back.'],
+      ['I was golfing. I shot a 59. Don’t leave me again.', 'I’m back. You’re welcome.', 'I forgave you on the ninth hole.'],
+      ['I forgive you. I’m very forgiving. Ask anyone.', 'I’m back. I had better offers. I chose you.', 'The golf was perfect. You were missed anyway. A little.'],
+      ['I’M BACK! I forgive you! Nobody forgives like me. NOBODY!', 'The GREATEST comeback! Until my NEXT one!', 'I RETURNED! You’re WELCOME!']
     ),
     another: L(
       ['Another term? If people want that, I’d be honored.'],
       ['Another term. Why not.'],
       ['Another term. The people demanded it.'],
       ['Another term! Many people are saying it’s allowed.'],
-      ['ANOTHER TERM! They BEGGED me! Who am I to say no?']
+      ['ANOTHER TERM! They BEGGED me! Who am I to say no?', 'AGAIN! From the TOP! I’ll be even BETTER this time!']
     ),
   };
 
@@ -321,6 +362,18 @@
     'Maybe I’ll read a book. A whole one.',
     'I should listen more. Don’t you think?',
     'Honestly, the crowd was medium-sized.',
+    'I got lucky, mostly. A lot of people helped.',
+    'The other guy’s golf game is better than mine. There. I said it.',
+    'I looked it up. I was wrong. I’d like to apologize.',
+    'Is my tie too long? It’s too long, isn’t it.',
+    'Who am I to say what’s tremendous?',
+    'I’d like to hear your opinion. Take your time.',
+    'Maybe one scoop is enough for everybody.',
+    'I’ve been comparing myself to others. They’re doing fine.',
+    'I could be on a smaller mountain. A hill, even.',
+    'Let’s share the credit. You take most of it.',
+    'The salad wasn’t so bad.',
+    'I don’t have all the answers. I have maybe two.',
   ];
 
   C.line = function (key, tier, rng) {
@@ -367,22 +420,44 @@
     { t: 'The hair is real and it’s spectacular.', p: 3 },
     { t: 'You deserve a Nobel Prize. Two, actually.', p: 3 },
     { t: 'Sir, a big strong man just wept with gratitude.', p: 3 },
+    { t: 'You’re the best at everything. It’s been measured.', p: 3 },
+    { t: 'They’re carving the mountain as we speak.', p: 3 },
+    { t: 'History will need a bigger book for you.', p: 3 },
+    { t: 'You invented winning. Everyone knows it.', p: 3 },
+    { t: 'Your signature belongs in a museum.', p: 3 },
+    { t: 'The greatest ever. Not close. Nobody is second.', p: 3 },
+    { t: 'People cry when you leave the room. Then again when you come back.', p: 3 },
     { t: 'Your ratings are through the roof.', p: 2 },
     { t: 'That was a perfect phone call.', p: 2 },
     { t: 'You’re winning so much.', p: 2 },
     { t: 'Great deal today, sir.', p: 2 },
     { t: 'Your golf swing is beautiful.', p: 2 },
     { t: 'Everyone’s talking about you.', p: 2 },
+    { t: 'The tie is the perfect length. Longer than anyone’s.', p: 2 },
+    { t: 'You looked very presidential just now.', p: 2 },
+    { t: 'That deal was art.', p: 2 },
+    { t: 'Your instincts are never wrong.', p: 2 },
+    { t: 'The office has never run better.', p: 2 },
+    { t: 'People are saying wonderful things about you.', p: 2 },
     { t: 'Nice tie.', p: 1 },
     { t: 'You look well-rested.', p: 1 },
     { t: 'Good job today.', p: 1 },
     { t: 'Solid effort.', p: 1 },
     { t: 'You’re doing fine.', p: 1 },
+    { t: 'Good posture today.', p: 1 },
+    { t: 'That was a reasonable decision.', p: 1 },
+    { t: 'You’re improving.', p: 1 },
+    { t: 'Not bad at all.', p: 1 },
     { t: 'You could try listening more.', p: 0 },
     { t: 'Maybe read the whole briefing?', p: 0 },
     { t: 'The crowd was... medium.', p: 0 },
     { t: 'Have you considered a salad?', p: 0 },
     { t: 'Technically, you lost that one.', p: 0 },
+    { t: 'The other guy had a point, actually.', p: 0 },
+    { t: 'It was a tie. A draw, I mean.', p: 0 },
+    { t: 'The hair looks... fine.', p: 0 },
+    { t: 'Somebody else thought of that first.', p: 0 },
+    { t: 'You might be a little bit wrong here.', p: 0 },
   ];
   C.PRAISE_EGO = [-18, 12, 22, 34];
 
@@ -405,13 +480,19 @@
 
   // ---------------------------------------------------------------- posts
   const P = (C.POST = {});
-  P.things = ['office', 'golf game', 'hair', 'tie collection', 'burger order', 'signature', 'Sharpie collection', 'ratings', 'crowd', 'handshake', 'vocabulary', 'memory', 'tower'];
-  P.activities = ['round of golf', 'phone call', 'lunch', 'rally', 'meeting', 'signing ceremony', 'walk down a ramp', 'press conference'];
-  P.topics = ['golf', 'hamburgers', 'buildings', 'tariffs', 'television', 'winning', 'gold', 'deals', 'hairspray', 'the weather', 'ramps', 'windmills', 'water pressure'];
-  P.rivals = ['the Teleprompter', 'the Salad', 'the Windmill', 'the Umbrella', 'the Low-Flow Showerhead', 'the Paper Straw', 'the Staircase', 'the Electric Boat', 'the Shark', 'the Treadmill', 'the Briefing Book'];
-  P.nicks = ['Sleepy', 'Crooked', 'Low-Energy', 'Little', 'Crazy', 'Wacky', 'Failing', 'Nervous', 'Shifty', 'Lyin’'];
-  P.enemies = ['Fake News', 'Haters and Losers', 'Lettuce Lobby', 'Windmill People', 'so-called “experts”'];
-  P.closers = ['SAD!', 'Thank you for your attention to this matter!', 'MAKE THE OFFICE GREAT AGAIN!', 'Many people are saying it!', 'Enjoy!', 'We’ll see what happens!', 'Believe me!', 'PERIOD!'];
+  P.things = ['office', 'golf game', 'hair', 'tie collection', 'burger order', 'signature', 'Sharpie collection', 'ratings', 'crowd', 'handshake', 'vocabulary', 'memory', 'tower',
+    'steak order', 'putting', 'penmanship', 'posture', 'desk', 'chandelier', 'timing', 'taste', 'stamina', 'gold collection', 'thumbs-up'];
+  P.activities = ['round of golf', 'phone call', 'lunch', 'rally', 'meeting', 'signing ceremony', 'walk down a ramp', 'press conference',
+    'ribbon cutting', 'photo opportunity', 'working lunch', 'victory lap', 'haircut', 'negotiation', 'hamberder summit', 'escalator ride'];
+  P.topics = ['golf', 'hamburgers', 'buildings', 'tariffs', 'television', 'winning', 'gold', 'deals', 'hairspray', 'the weather', 'ramps', 'windmills', 'water pressure',
+    'ketchup', 'ties', 'crowds', 'ratings', 'Sharpies', 'cake', 'escalators', 'ballrooms', 'mountains', 'signatures', 'dishwashers', 'handshakes'];
+  P.rivals = ['the Teleprompter', 'the Salad', 'the Windmill', 'the Umbrella', 'the Low-Flow Showerhead', 'the Paper Straw', 'the Staircase', 'the Electric Boat', 'the Shark', 'the Treadmill', 'the Briefing Book',
+    'the Stapler', 'the Thermostat', 'the Dishwasher', 'the Light Bulb', 'the Escalator', 'the Crossword', 'the Fire Alarm', 'the Kale', 'the Decaf', 'the Printer'];
+  P.nicks = ['Sleepy', 'Crooked', 'Low-Energy', 'Little', 'Crazy', 'Wacky', 'Failing', 'Nervous', 'Shifty', 'Lyin’', 'Sloppy', 'Phony', 'Boring', 'Weak', 'Overrated', 'Leaky', 'Squeaky'];
+  P.enemies = ['Fake News', 'Haters and Losers', 'Lettuce Lobby', 'Windmill People', 'so-called “experts”', 'Decaf Crowd', 'Medium-Rare Mafia', 'Low-Flow Lobby', 'One-Scoop Establishment'];
+  P.closers = ['SAD!', 'Thank you for your attention to this matter!', 'MAKE THE OFFICE GREAT AGAIN!', 'Many people are saying it!', 'Enjoy!', 'We’ll see what happens!', 'Believe me!', 'PERIOD!',
+    'Not even close!', 'Everybody knows it!', 'So true!', 'A beautiful thing!', 'The best ever!', 'Unbelievable!', 'Tremendous!'];
+  // One list per register, humble to MAXIMUM. Only the last uses capitals and closers.
   P.templates = [
     [
       'Had a pleasant day. Hope everyone is well.',
@@ -420,6 +501,14 @@
       'Reading a book tonight. It’s long, but I’m enjoying it.',
       'Other people have good ideas too. Just a thought.',
       'My {thing} is fine. Nothing special. Have a nice evening.',
+      'Went for a walk. Saw a bird. Good bird.',
+      'I think {rival} and I got off on the wrong foot. My fault.',
+      'Does anyone have tips on {topic}? I’m still learning.',
+      'Had a {activity} today. Everyone was very patient with me.',
+      'Small update: nothing to report. Take care, all.',
+      'I tried {topic} today. I’m not very good yet. That’s okay.',
+      'Grateful for this little office. And for you.',
+      'Apologies for all the posts. This is the last one today.',
     ],
     [
       'Good day today. Things are looking up.',
@@ -427,6 +516,15 @@
       'Working hard. Big plans. Stay tuned.',
       'My {thing} is coming along nicely. Really nicely.',
       'Had a good {activity}. I think they liked me.',
+      'People are starting to notice my {thing}. Feels good.',
+      'Tried something new with {topic}. It worked.',
+      'A guy told me I’ve got potential. Smart guy.',
+      '{rival} gave me trouble today. I handled it.',
+      'Thinking about putting my name on something. Just thinking.',
+      'Getting better at {topic} every day.',
+      'Good {activity}. Shook a lot of hands. Firm ones.',
+      'I’ve got a feeling about this year.',
+      'Someone asked for my advice on {topic}. First time. Won’t be the last.',
     ],
     [
       'My {thing} is doing great. Really great. Everyone’s noticing.',
@@ -434,6 +532,15 @@
       'People keep telling me my {thing} is the best they’ve seen. I just listen.',
       '{rival} said I couldn’t do it. Did it anyway. Sad for {rival}!',
       'I know a lot about {topic}. More than most. Maybe more than anyone.',
+      'They’re asking how I do it. Talent. Next question.',
+      'Great {activity} today. Standing ovation. I started it, but still.',
+      'My {thing} was on television. Great reviews. I gave them.',
+      'I don’t like to brag about my {thing}. But somebody has to.',
+      '{rival} is having a bad year. I’m having a great one. Coincidence? No.',
+      'Three people stopped me to praise my {thing}. Three. In one hallway.',
+      'When it comes to {topic}, I’m what they call a natural.',
+      'Big things coming. Very big. I can’t say more. They’re big.',
+      'The {activity} went perfectly. As expected.',
     ],
     [
       'Many people are saying my {thing} is the best in the country. I don’t say it. They do.',
@@ -441,6 +548,15 @@
       'Nobody knows more about {topic} than me. Nobody. Ask anyone.',
       'Just finished a perfect {activity}. Perfect. The {enemy} won’t report it.',
       'They say my {thing} can’t get any better. Wrong! It gets better every day.',
+      'A very smart person told me my {thing} is historic. I agree with the very smart person.',
+      'Everybody’s talking about my {activity}. Everybody. Even {rival}.',
+      'I’ve done more for {topic} than anyone in history. It’s not even close.',
+      'The {enemy} are very upset about my {thing}. Good.',
+      '{nick} {rival} wishes it had my {thing}. It never will. Sad!',
+      'They wanted to give me an award for {topic}. I said make it bigger.',
+      'Frankly, my {activity} was too good. People were overwhelmed.',
+      'I looked at {topic}. I fixed {topic}. You’re welcome.',
+      'Experts are stunned by my {thing}. Stunned. I’m not. I knew.',
     ],
     [
       'The {ENEMY} won’t tell you this, but my {THING} is the GREATEST in the HISTORY of {topic}. {closer}',
@@ -450,17 +566,46 @@
       'They’re saying I should be on the MOUNTAIN. I didn’t say it. THEY did. Good idea, though! {closer}',
       'NOBODY knows more about {topic} than me. I practically INVENTED {topic}. {closer}',
       'A big, strong man came up to me, tears in his eyes. “Sir,” he said, “your {thing}.” That’s all he could say! {closer}',
+      'My {THING}: PERFECT. {NICK} {rival}: a DISASTER. Any questions? {closer}',
+      'I have done MORE for {topic} than ANYONE in HISTORY. Maybe more than EVERYONE! {closer}',
+      'BREAKING: I just had the GREATEST {activity} EVER recorded. The {ENEMY} are FURIOUS! {closer}',
+      'They told me, “Sir, nobody has EVER seen a {thing} like yours.” I said, “I KNOW.” {closer}',
+      '{topic}? I FIXED it. In ONE day. They said it would take YEARS! {closer}',
+      'The {ENEMY} called my {thing} “fine.” FINE?! It is TREMENDOUS! {closer}',
+      'I am officially the BEST at {topic}. I made it official MYSELF! {closer}',
+      'TOTAL VICTORY over {rival} today. It NEVER stood a chance! {closer}',
+      'EVERYONE is asking about my {THING}. EVERYONE. It’s all they TALK about! {closer}',
+    ],
+  ];
+  // What he posts when he should be asleep. He only does this from The TV Boss onward.
+  P.night = [
+    [], [],
+    [
+      'Can’t sleep. Thinking about my {thing}. It’s great.',
+      'It’s 3 AM and I’m still right about {topic}.',
+      'Awake. Winning never sleeps. I do, usually. Not tonight.',
+    ],
+    [
+      '3 AM. {nick} {rival} is asleep. I’m working. That’s the difference. Sad!',
+      'Many people are awake right now thinking about my {thing}. I’m one of them.',
+      'Couldn’t sleep. Too much winning. Nobody warned me.',
+    ],
+    [
+      'It is 3 AM and my {THING} is STILL the GREATEST. {closer}',
+      'WIDE AWAKE! Thinking about {topic}! Which I basically INVENTED! {closer}',
+      '3 AM! The {ENEMY} are SLEEPING! I am WINNING! {closer}',
     ],
   ];
   P.covfefe = 'The hamberders were tremendous tonight, despite the constant negative press covfefe';
 
-  C.makePost = function (tier, rng) {
+  C.makePost = function (tier, rng, night) {
     rng = rng || Math.random;
     const pick = function (a) { return a[Math.floor(rng() * a.length)]; };
     if (rng() < 0.025) return { text: P.covfefe, covfefe: true };
     const t = Math.max(0, Math.min(4, tier | 0));
+    const pool = night && P.night[t].length && rng() < 0.6 ? P.night[t] : P.templates[t];
     const thing = pick(P.things), topic = pick(P.topics), rival = pick(P.rivals), nick = pick(P.nicks), enemy = pick(P.enemies);
-    const text = C.fill(pick(P.templates[t]), {
+    const text = C.fill(pick(pool), {
       thing: thing, topic: topic, rival: rival, nick: nick, enemy: enemy,
       THING: thing.toUpperCase(), NICK: nick.toUpperCase(), ENEMY: enemy.toUpperCase(),
       activity: pick(P.activities), closer: pick(P.closers), n: 25 * (2 + Math.floor(rng() * 18)),
@@ -580,17 +725,358 @@
       { t: 'Start with the agenda', fx: { ego: -6, fun: -6, xp: 28 }, r: 'There was an agenda? He turns it over and draws a tower.' },
       { t: 'Serve hamberders', fx: { food: 25, fun: 8, xp: 32 }, r: 'Stacked on silver trays, under candlelight. Elegant.' },
     ] },
+    { id: 'crowdphoto', title: 'The Aerial Photo', text: 'A photo of the crowd, taken from above, has arrived. There is a lot of visible ground.', choices: [
+      { t: 'Crop it', fx: { ego: 14, xp: 32 }, r: 'Cropped to four people standing very close together. “Packed,” he says.' },
+      { t: 'Count the ground as people', fx: { ego: 20, fun: 8, xp: 36 }, r: '“Those are people lying down. Exhausted from cheering.”' },
+      { t: 'Show him the real number', fx: { ego: -12, xp: 28 }, r: 'He looks at it for a long time. “This photo is from a different day.”' },
+    ] },
+    { id: 'handshake', title: 'The Handshake', text: 'A visitor has arrived. He has been practicing the handshake all morning.', choices: [
+      { t: 'The long one', fx: { fun: 12, ego: 10, xp: 34 }, r: 'Nineteen seconds. The visitor’s hand is returned eventually.' },
+      { t: 'The pull', fx: { fun: 16, ego: 8, xp: 36 }, r: 'The visitor is now standing somewhere he did not plan to stand.' },
+      { t: 'A simple wave', fx: { ego: -4, xp: 24 }, r: '“A wave? What am I, a parade float?”' },
+    ] },
+    { id: 'waterglass', title: 'The Glass of Water', text: 'There is a glass of water on the podium. Everyone is watching.', choices: [
+      { t: 'Two hands', fx: { ego: 6, xp: 28 }, r: 'Both hands, steady as a rock. “It’s a heavy glass. Very heavy water.”' },
+      { t: 'A straw', fx: { fun: 10, xp: 30 }, r: 'A plastic one. He makes a point of that.' },
+      { t: 'Skip the water', fx: { energy: -6, ego: 10, xp: 30 }, r: 'He finishes the speech parched and triumphant.' },
+    ] },
+    { id: 'lightbulbs', title: 'The Light Bulbs', text: 'New energy-saving bulbs have been installed. He has seen himself in the mirror.', choices: [
+      { t: 'Blame the bulbs', fx: { glow: 14, ego: 10, xp: 34 }, r: '“It’s the bulbs. I look orange. I’m not orange. It’s the bulbs.”' },
+      { t: 'Bring back the old bulbs', fx: { glow: 20, xp: 34, cashH: -1 }, r: 'The old bulbs return. He glows the way nature and a compact intended.' },
+      { t: 'Tell him he looks golden', fx: { ego: 18, glow: 6, xp: 32 }, r: '“Golden. Yes. Like a trophy.” The bulbs stay.' },
+    ] },
+    { id: 'dishwasher', title: 'The Dishwasher', text: 'He has opinions about the dishwasher. He has never used the dishwasher.', choices: [
+      { t: 'Agree it used to be better', fx: { ego: 10, fun: 8, xp: 30 }, r: '“You press the button, nothing. In the old days: boom. Clean.”' },
+      { t: 'Run it twice', fx: { fun: 4, xp: 26 }, r: '“Twice! You see? Twice!” He is delighted to be right.' },
+      { t: 'Sign an order about dishes', fx: { ego: 12, fun: 10, xp: 36 }, r: 'Dishes are now required to be clean. Enforcement is unclear.' },
+    ] },
+    { id: 'flush', title: 'The Flush', text: 'He has called a meeting about flushing.', choices: [
+      { t: 'Let him demonstrate', fx: { fun: 14, xp: 34 }, r: '“Ten times. Fifteen times.” He acts it out with his hand. Everyone nods. Nobody makes eye contact.' },
+      { t: 'Promise one flush', fx: { ego: 12, glow: 6, xp: 32 }, r: '“One flush. That’s all I ask. Is that so much?”' },
+      { t: 'Change the subject to sinks', fx: { fun: 8, xp: 28 }, r: 'It turns out he has thoughts about sinks, too.' },
+    ] },
+    { id: 'magnets', title: 'Magnets', text: 'Someone has explained how the new elevator works. It involves magnets.', choices: [
+      { t: 'Agree nobody understands magnets', fx: { ego: 12, fun: 10, xp: 34 }, r: '“Nobody knows what a magnet is. You’d have to be a genius.” He looks pleased to qualify.' },
+      { t: 'Explain magnets', fx: { fun: -8, xp: 30 }, r: 'He listens for eleven seconds. “Steam. We’re going back to steam.”' },
+      { t: 'Give him a fridge magnet', fx: { fun: 16, xp: 32 }, r: 'It is shaped like a burger. It holds up one page: a picture of him.' },
+    ] },
+    { id: 'sharks', title: 'The Shark Question', text: 'He has posed a question. The boat is sinking. There is a shark. The boat has a very large battery.', choices: [
+      { t: 'Take the shark', fx: { fun: 14, xp: 32 }, r: '“Wrong. The battery. No, the shark. It’s a great question, isn’t it?”' },
+      { t: 'Take the battery', fx: { fun: 14, xp: 32 }, r: '“Electrocution! Every time.” He is thrilled you played.' },
+      { t: 'Ask why the boat is sinking', fx: { ego: -4, fun: 6, xp: 28 }, r: '“Because of the battery. Keep up.”' },
+    ] },
+    { id: 'typo', title: 'The Typo', text: 'Last night’s post contains a word that is not a word.', choices: [
+      { t: 'Delete it', fx: { ego: -6, xp: 26 }, r: 'Deleted. Screenshots are forever. He knows.' },
+      { t: 'Declare it a word', fx: { ego: 16, fun: 12, xp: 36 }, r: '“It’s a word. I’ve always used it. The best people use it.”' },
+      { t: 'Blame the phone', fx: { ego: 10, xp: 30 }, r: '“The phone has very small buttons. Not my hands. The buttons.”' },
+    ] },
+    { id: 'floors', title: 'Counting the Floors', text: 'A visitor has counted the floors of his building and got a smaller number than the elevator buttons.', choices: [
+      { t: 'Skip a few numbers', fx: { ego: 16, xp: 34 }, r: 'The building is now ten floors taller. Construction took one afternoon and a label maker.' },
+      { t: 'Count them together', fx: { ego: -8, fun: 4, xp: 28 }, r: 'You reach the top early. “We started on the wrong floor.”' },
+      { t: 'Add a floor', fx: { ego: 14, xp: 34, cashH: -2 }, r: 'It is a very small floor. It counts.' },
+    ] },
+    { id: 'scorecard', title: 'The Scorecard', text: 'The club has posted this weekend’s results. He is listed as the winner. He was not there.', choices: [
+      { t: 'Congratulate him', fx: { ego: 20, xp: 34 }, r: '“I won it in my heart. That’s where it counts. Also on the board.”' },
+      { t: 'Ask how', fx: { ego: -6, fun: 6, xp: 28 }, r: '“I played a strong round on a different day. It carries over.”' },
+      { t: 'Order a bigger trophy', fx: { ego: 16, fun: 8, xp: 34, cashH: -1 }, r: 'It needs its own table.' },
+    ] },
+    { id: 'painting', title: 'The Painting', text: 'A portrait of him has been delivered. It is, by any fair standard, accurate.', choices: [
+      { t: 'Hang it facing the wall', fx: { ego: 8, xp: 28 }, r: '“Modern art,” he tells visitors.' },
+      { t: 'Commission a better one', fx: { ego: 18, xp: 34, cashH: -2 }, r: 'In the new one he is taller, and there is an eagle.' },
+      { t: 'Tell him it’s the lighting', fx: { ego: 12, glow: 6, xp: 30 }, r: '“Terrible lighting. The painter should be ashamed of the lighting.”' },
+    ] },
+    { id: 'chef', title: 'The Chef’s Suggestion', text: 'The chef has suggested medium rare.', choices: [
+      { t: 'Send it back until it’s well done', fx: { food: 20, ego: 8, xp: 32 }, r: 'It returns the color of a briefcase. “Perfect.”' },
+      { t: 'Bring ketchup first', fx: { food: 20, fun: 8, xp: 32 }, r: 'The chef watches from the doorway and ages visibly.' },
+      { t: 'Let the chef explain', fx: { fun: -6, xp: 28 }, r: 'The chef explains. The chef now works at a different restaurant.' },
+    ] },
+    { id: 'rainparade', title: 'Rain on the Parade', text: 'It is raining on the parade. His parade.', choices: [
+      { t: 'Say the rain stopped', fx: { ego: 14, xp: 32 }, r: '“The sun came out the moment I started. Everyone saw.” Everyone is soaked.' },
+      { t: 'Find the hair a hat', fx: { glow: 14, xp: 30 }, r: 'The hat goes on. The hair is safe. Morale improves.' },
+      { t: 'Postpone', fx: { ego: -6, energy: 10, xp: 26 }, r: '“We didn’t postpone. The weather did. Weak weather.”' },
+    ] },
+    { id: 'hat', title: 'The Hat', text: 'A box of hats has arrived. He must choose.', choices: [
+      { t: 'Red', fx: { ego: 10, fun: 8, xp: 30 }, r: '“Red. Classic. Like a fire truck, and everyone loves a fire truck.”' },
+      { t: 'White, for golf', fx: { fun: 14, xp: 30 }, r: 'He is on the first tee before you close the box.' },
+      { t: 'Gold', fx: { ego: 16, xp: 34, cashH: -1 }, r: 'It is too heavy to wear. He wears it.' },
+    ] },
+    { id: 'phone', title: 'The Phone', text: 'Someone has suggested he give up his phone at night.', choices: [
+      { t: 'Take the phone', fx: { energy: 16, ego: -8, xp: 30 }, r: 'He sleeps nine hours. The world has a quiet morning. He is suspicious of both.' },
+      { t: 'Leave the phone', fx: { fun: 14, energy: -8, xp: 32 }, r: 'Eleven posts between midnight and dawn. Several are in capital letters.' },
+      { t: 'Give him a second phone', fx: { fun: 10, ego: 8, xp: 30 }, r: 'One for each hand. “Finally, somebody thinking.”' },
+    ] },
+    { id: 'poll', title: 'The Poll', text: 'A new poll is out. It is not the poll he wanted.', choices: [
+      { t: 'Find a better poll', fx: { ego: 18, xp: 32 }, r: 'A better poll is found. It was taken in this office. He won all three votes.' },
+      { t: 'Read him the real one', fx: { ego: -12, xp: 30 }, r: '“Fake poll. They asked the wrong people. They should ask me.”' },
+      { t: 'Poll the staff', fx: { ego: 14, fun: 8, xp: 32 }, r: 'Unanimous. The staff would like to keep their jobs.' },
+    ] },
+    { id: 'book', title: 'The Book', text: 'A publisher wants a book. He has agreed to have written one.', choices: [
+      { t: 'Hire someone to write it', fx: { ego: 12, xp: 32, cashH: 2 }, r: 'It is a bestseller. He means to read it someday.' },
+      { t: 'Let him dictate', fx: { fun: 14, xp: 34 }, r: 'Chapter one is forty pages about a handshake.' },
+      { t: 'Make it mostly pictures', fx: { ego: 16, fun: 8, xp: 32 }, r: '“A picture is worth a thousand words. I saved them millions of words.”' },
+    ] },
+    { id: 'letter', title: 'A Letter From a Child', text: 'A child has written to ask what he does all day.', choices: [
+      { t: 'Answer honestly', fx: { fun: 8, xp: 28 }, r: '“I win. Then I have lunch.” He signs it very large.' },
+      { t: 'Send a signed photo', fx: { ego: 12, xp: 30 }, r: 'The photo is of him reading the letter.' },
+      { t: 'Invite the class to visit', fx: { fun: 16, ego: 8, xp: 34 }, r: 'Thirty children. One asks about the hair. The tour ends.' },
+    ] },
+    { id: 'escalator', title: 'The Escalator', text: 'The escalator has stopped halfway.', choices: [
+      { t: 'Walk the rest', fx: { energy: -8, ego: 10, xp: 30 }, r: '“I climbed it. People say I floated.”' },
+      { t: 'Wait for it to restart', fx: { fun: 6, xp: 26 }, r: 'He waits forty minutes, waving. It is, technically, an event.' },
+      { t: 'Blame the escalator', fx: { ego: 14, fun: 6, xp: 32 }, r: '“Sabotage. Nobody’s been treated worse by an escalator.”' },
+    ] },
+    { id: 'microphone', title: 'The Microphone', text: 'The microphone is not working. He has noticed.', choices: [
+      { t: 'Fix it quietly', fx: { ego: 4, xp: 26 }, r: 'Fixed. He complains about it for ten more minutes, clearly audible.' },
+      { t: 'Let him yell', fx: { fun: 12, energy: -8, xp: 32 }, r: 'He does forty minutes without it. The back row hears every word.' },
+      { t: 'Don’t pay the sound company', fx: { ego: 12, fun: 6, xp: 30 }, r: '“I don’t pay people who do a bad job.” The sound company is not surprised.' },
+    ] },
+    { id: 'thermostat', title: 'The Thermostat', text: 'The office is two degrees off. He can tell.', choices: [
+      { t: 'Make it colder', fx: { energy: 8, ego: 6, xp: 28 }, r: '“Cold. Good. Keeps people sharp. Keeps the hair firm.”' },
+      { t: 'Make it warmer', fx: { glow: 6, energy: -4, xp: 26 }, r: 'The bronzer becomes a logistical problem.' },
+      { t: 'Give him the dial', fx: { ego: 12, fun: 10, xp: 30 }, r: 'It is not connected to anything. He adjusts it all day, satisfied.' },
+    ] },
+    { id: 'eclipse', title: 'The Eclipse', text: 'There is an eclipse. Everyone has been told not to look at it.', choices: [
+      { t: 'Hand him the glasses', fx: { glow: 4, xp: 28 }, r: 'He puts them on eventually. First, a quick look. Just to see.' },
+      { t: 'Shout “don’t look!”', fx: { fun: 12, xp: 32 }, r: 'He looks. He points at it. He looks again.' },
+      { t: 'Tell him the sun asked for him', fx: { ego: 18, xp: 32 }, r: '“The sun and I have a lot in common. People can’t look away.”' },
+    ] },
+    { id: 'marsflag', title: 'A Flag on Mars', text: 'He would like to put a flag on another planet. Soon.', choices: [
+      { t: 'Ask when', fx: { fun: 8, xp: 28 }, r: '“Soon. Very soon. Maybe before lunch.”' },
+      { t: 'Ask which flag', fx: { ego: 14, fun: 8, xp: 32 }, r: 'He sketches one. It has his face on it.' },
+      { t: 'Suggest the moon first', fx: { ego: -4, xp: 26 }, r: '“We did the moon. Been there. I want the red one.”' },
+    ] },
+    { id: 'champions', title: 'The Champions Visit', text: 'A championship team is coming to visit. The kitchen is closed.', choices: [
+      { t: 'Burgers on silver trays', fx: { food: 20, fun: 14, xp: 36 }, r: 'A thousand hamberders under candlelight. He stands behind them like a proud chef.' },
+      { t: 'Order salads', fx: { ego: -8, xp: 26 }, r: 'The team eats quietly. He does not forgive you.' },
+      { t: 'Pizza too', fx: { food: 14, fun: 10, xp: 32 }, r: 'Stacked in towers. “Many, many pizzas.”' },
+    ] },
+    { id: 'eagle', title: 'The Eagle', text: 'A bald eagle has been brought in for a photograph. It does not like him.', choices: [
+      { t: 'Keep taking pictures', fx: { fun: 14, glow: -8, xp: 34 }, r: 'The eagle goes for the hair. The photographs are remarkable.' },
+      { t: 'Swap in a statue', fx: { ego: 10, xp: 30 }, r: 'The statue is very well behaved. “Much better eagle.”' },
+      { t: 'Let the eagle sit at the desk', fx: { fun: 12, xp: 30 }, r: 'It looks more presidential than anyone expected. He notices.' },
+    ] },
+    { id: 'truck', title: 'The Big Truck', text: 'There is a very large truck parked on the lawn. He has been invited to sit in it.', choices: [
+      { t: 'Let him honk', fx: { fun: 20, xp: 34 }, r: 'He honks for six minutes. He has never been happier.' },
+      { t: 'Let him pretend to drive', fx: { fun: 16, ego: 6, xp: 32 }, r: 'Both hands on the wheel, face of pure concentration. The truck is off.' },
+      { t: 'Keep the meeting on schedule', fx: { fun: -10, xp: 26 }, r: 'He looks at the truck through the window for the rest of the meeting.' },
+    ] },
+    { id: 'coloring', title: 'The Coloring Page', text: 'At a visit with schoolchildren he has been given a flag to color in.', choices: [
+      { t: 'Hand him the right crayons', fx: { ego: 6, xp: 28 }, r: 'He adds a blue stripe anyway. “It’s better.”' },
+      { t: 'Let him freestyle', fx: { fun: 14, xp: 32 }, r: 'There is gold on it now. The children respect the confidence.' },
+      { t: 'Have him sign it', fx: { ego: 14, xp: 30 }, r: 'The signature covers the whole flag. It is the art.' },
+    ] },
+    { id: 'tape', title: 'The Tie', text: 'The back of his tie is held to the front with tape.', choices: [
+      { t: 'Say nothing', fx: { ego: 6, xp: 26 }, r: 'The wind says something.' },
+      { t: 'Offer a tie clip', fx: { ego: -4, glow: 6, xp: 28 }, r: '“A clip? Tape is faster. Tape is modern.”' },
+      { t: 'Get the good tape', fx: { glow: 10, ego: 8, xp: 30 }, r: 'Clear, strong, invisible from most angles. “This is the tape.”' },
+    ] },
+    { id: 'exectime', title: 'Executive Time', text: 'Today’s schedule has nine hours marked “Executive Time.”', choices: [
+      { t: 'Protect the block', fx: { fun: 16, energy: 8, xp: 32 }, r: 'Television, phone calls, television. It is, he says, when the real work happens.' },
+      { t: 'Add one meeting', fx: { fun: -8, xp: 30 }, r: 'He attends it from the other room, with the sound up.' },
+      { t: 'Rename it “Winning Time”', fx: { ego: 14, fun: 8, xp: 32 }, r: 'Same nine hours. He feels much more productive.' },
+    ] },
+    { id: 'nametag', title: 'The Name', text: 'A very important company boss is visiting. He has forgotten the name.', choices: [
+      { t: 'Whisper it to him', fx: { ego: 4, xp: 26 }, r: 'He hears it. He says something else, with total confidence.' },
+      { t: 'Let him improvise', fx: { fun: 14, xp: 32 }, r: '“Great to see you, Tim Company.” The boss quietly changes his name tag.' },
+      { t: 'Name tags for everyone', fx: { fun: 8, ego: 6, xp: 30 }, r: 'His says “ME.”' },
+    ] },
+    { id: 'playlist', title: 'The Playlist', text: 'The rally needs music.', choices: [
+      { t: 'The same song again', fx: { fun: 16, xp: 32 }, r: 'He does the dance. Two fists, small punches. The crowd does it back.' },
+      { t: 'Something new', fx: { fun: -6, xp: 26 }, r: 'He stands very still for three minutes, waiting for it to be over.' },
+      { t: 'Forty minutes of just music', fx: { fun: 14, energy: -6, xp: 32 }, r: 'Nobody asks a single question. He sways. It is his favorite rally.' },
+    ] },
+    { id: 'checkup', title: 'The Checkup', text: 'The doctor’s report is due.', choices: [
+      { t: 'Let him write it', fx: { ego: 20, xp: 34 }, r: '“Healthiest ever. Astonishingly excellent.” The doctor signs with a shaking hand.' },
+      { t: 'Read the real one', fx: { ego: -8, food: -6, xp: 28 }, r: 'It mentions vegetables. He stops reading.' },
+      { t: 'Skip to the height', fx: { ego: 14, xp: 30 }, r: 'He has grown an inch. At his age. A miracle.' },
+    ] },
+    { id: 'memory', title: 'The Memory Test', text: 'He has taken a test. He would like to tell you about the test.', choices: [
+      { t: 'Ask him the five words', fx: { ego: 18, fun: 10, xp: 34 }, r: 'He says them in order. Then again. Then once more for the people in the back.' },
+      { t: 'Tell him it’s not a hard test', fx: { ego: -10, xp: 28 }, r: '“The last five questions are very hard. Very. You wouldn’t know.”' },
+      { t: 'Frame the results', fx: { ego: 14, xp: 32, cashH: -1 }, r: 'It hangs between the portraits. Visitors are tested on it.' },
+    ] },
+    { id: 'cards', title: 'The Trading Cards', text: 'He would like to sell pictures of himself as a superhero.', choices: [
+      { t: 'Astronaut card', fx: { ego: 14, xp: 32, cashH: 2 }, r: 'It sells out. In the picture he is not wearing a helmet. He doesn’t need one.' },
+      { t: 'Cowboy card', fx: { ego: 12, fun: 8, xp: 32, cashH: 2 }, r: 'The horse is also wearing a long tie.' },
+      { t: 'Suggest a normal photo', fx: { ego: -6, xp: 26 }, r: '“Normal doesn’t sell. I’ve never sold a normal thing in my life.”' },
+    ] },
+    { id: 'cologne', title: 'The Fragrance', text: 'He is launching a cologne.', choices: [
+      { t: 'Call it “Victory”', fx: { ego: 14, xp: 32, cashH: 1 }, r: 'It smells like a new car and a steakhouse. It sells.' },
+      { t: 'Call it “Me”', fx: { ego: 18, xp: 32, cashH: 1 }, r: '“You put it on, you smell like winning. Like me.”' },
+      { t: 'Ask what it smells like', fx: { fun: 8, xp: 28 }, r: '“Success.” He will not elaborate.' },
+    ] },
+    { id: 'fryer', title: 'The Fry Station', text: 'He wants to work a shift at a burger place. Just the fries.', choices: [
+      { t: 'Get him an apron', fx: { fun: 18, food: 10, xp: 36 }, r: 'He salts with a flourish and hands bags out the window. “I’ve now worked here longer than anyone.”' },
+      { t: 'Taste-testing only', fx: { food: 20, fun: 8, xp: 32 }, r: 'Quality control is thorough. Inventory suffers.' },
+      { t: 'Warn him about the oil', fx: { glow: -6, fun: 10, xp: 30 }, r: 'The hair survives. The apron does not.' },
+    ] },
+    { id: 'flagpole', title: 'The Flagpole', text: 'He wants a flagpole. A tall one.', choices: [
+      { t: 'Tall', fx: { ego: 12, xp: 30, cashH: -1 }, r: '“Taller.”' },
+      { t: 'Taller', fx: { ego: 16, xp: 34, cashH: -2 }, r: 'Aircraft have been notified.' },
+      { t: 'Two flagpoles', fx: { ego: 18, fun: 6, xp: 34, cashH: -2 }, r: 'One for each lawn. He salutes both. It takes a while.' },
+    ] },
+    { id: 'patio', title: 'The Lawn', text: 'He has looked at the garden and concluded it would be better as a patio.', choices: [
+      { t: 'Pave it', fx: { ego: 12, xp: 32, cashH: -2 }, r: 'Stone, umbrellas, a speaker playing his rally songs. “Now it’s a garden.”' },
+      { t: 'Save one rose', fx: { fun: 6, xp: 28 }, r: 'The rose gets a plaque. The plaque is about him.' },
+      { t: 'Suggest gold gravel', fx: { ego: 16, xp: 32, cashH: -2 }, r: 'You cannot look directly at the lawn at noon.' },
+    ] },
+    { id: 'clocks', title: 'The Clocks', text: 'The clocks changed last night. He did not approve the change.', choices: [
+      { t: 'Change them back', fx: { ego: 12, fun: 6, xp: 30 }, r: 'The office is now an hour off from the rest of the building. He is on time. Everyone else is wrong.' },
+      { t: 'Abolish the time change', fx: { ego: 14, fun: 8, xp: 34 }, r: '“One time. The best time. All year.”' },
+      { t: 'Give him the extra hour', fx: { energy: 14, xp: 28 }, r: 'He uses it for executive time.' },
+    ] },
+    { id: 'penny', title: 'The Penny', text: 'He has learned what it costs to make a penny.', choices: [
+      { t: 'Stop making pennies', fx: { ego: 12, fun: 8, xp: 32 }, r: '“Wasteful. I know waste. I’ve seen it. Mostly other people’s.”' },
+      { t: 'Put his face on it', fx: { ego: 20, xp: 34 }, r: 'It is now worth two cents, he estimates.' },
+      { t: 'Make a bigger coin', fx: { ego: 14, xp: 32, cashH: -1 }, r: 'The size of a dinner plate. Vending machines are not ready.' },
+    ] },
+    { id: 'cointoss', title: 'The Big Game', text: 'He has been invited to the big game.', choices: [
+      { t: 'Do the coin toss', fx: { ego: 14, fun: 12, xp: 34 }, r: 'He calls it in the air. For himself. He wins.' },
+      { t: 'Sit in the best box', fx: { ego: 12, food: 12, xp: 32 }, r: 'He watches the screen that shows the box.' },
+      { t: 'Leave at halftime', fx: { fun: -4, energy: 8, xp: 26 }, r: '“I saw enough. I knew who’d win. I always know.”' },
+    ] },
+    { id: 'chess', title: 'Four-Dimensional Chess', text: 'People say he is playing four-dimensional chess. There is a regular chessboard on the desk.', choices: [
+      { t: 'Play him', fx: { fun: 12, xp: 30 }, r: 'He moves a pawn sideways. “That’s the fourth dimension.”' },
+      { t: 'Let him win', fx: { ego: 16, fun: 8, xp: 32 }, r: 'Checkmate in three. Two of the moves were his.' },
+      { t: 'Switch to checkers', fx: { fun: 14, xp: 30 }, r: 'He kings himself immediately.' },
+    ] },
+    { id: 'statue', title: 'The Statue', text: 'A sculptor has offered to make a statue of him.', choices: [
+      { t: 'Life-size', fx: { ego: 8, xp: 28 }, r: '“Life-size? What’s the point of that?”' },
+      { t: 'Twice life-size', fx: { ego: 16, xp: 34, cashH: -2 }, r: 'It does not fit through the door. The door is the problem.' },
+      { t: 'Solid gold', fx: { ego: 22, xp: 36, cashH: -3 }, r: 'The floor has been reinforced.' },
+    ] },
+    { id: 'autograph', title: 'The Autograph', text: 'A fan would like something signed.', choices: [
+      { t: 'A hat', fx: { ego: 10, xp: 28 }, r: 'Signed across the front. It can no longer be read as a hat.' },
+      { t: 'A hamberder', fx: { fun: 14, food: 8, xp: 32 }, r: 'He signs the wrapper, then eats the evidence.' },
+      { t: 'The fan’s cast', fx: { ego: 12, fun: 8, xp: 30 }, r: 'There is no room left on the cast for anyone else.' },
+    ] },
+    { id: 'title', title: 'The Title', text: 'A very long document needs a name.', choices: [
+      { t: '“The Big One”', fx: { ego: 10, xp: 30 }, r: '“Bigger.”' },
+      { t: '“The Big Beautiful One”', fx: { ego: 16, fun: 8, xp: 34 }, r: 'He underlines “Beautiful” twice.' },
+      { t: 'Name it after him', fx: { ego: 20, xp: 34 }, r: 'The title now takes up the first page.' },
+    ] },
+    { id: 'interview', title: 'The Interview', text: 'A television interview is scheduled. The questions were not sent ahead.', choices: [
+      { t: 'Walk out early', fx: { ego: 8, fun: 10, xp: 32 }, r: 'He leaves mid-question. The chair spins for a while.' },
+      { t: 'Rate the interviewer', fx: { ego: 12, fun: 8, xp: 32 }, r: '“Nasty questions. Very nasty. I gave great answers. The best answers.”' },
+      { t: 'Interview himself', fx: { ego: 20, xp: 34 }, r: 'Tough but fair. He does extremely well.' },
+    ] },
+    { id: 'crossword', title: 'The Crossword', text: 'He is stuck on seven across. Nine letters, “very good.”', choices: [
+      { t: 'Point out TREMENDOUS doesn’t fit', fx: { fun: 10, xp: 28 }, r: '“It fits if you write smaller.”' },
+      { t: 'Suggest EXCELLENT', fx: { ego: -4, xp: 26 }, r: '“Low-energy word.” He writes TREMENDOUS anyway.' },
+      { t: 'Let him invent a word', fx: { fun: 14, ego: 8, xp: 32 }, r: 'Nine letters exactly. Nobody has seen it before. It is now the answer.' },
+    ] },
+    { id: 'elevator', title: 'The Golden Elevator', text: 'The elevator is being redone. He has been asked what finish.', choices: [
+      { t: 'Gold', fx: { ego: 12, xp: 30, cashH: -1 }, r: '“Obviously.”' },
+      { t: 'More gold', fx: { ego: 16, xp: 32, cashH: -2 }, r: 'The buttons are gold. The numbers on the buttons are gold. It is hard to find your floor.' },
+      { t: 'Mirrors', fx: { ego: 20, xp: 32, cashH: -1 }, r: 'He rides it for an hour.' },
+    ] },
+    { id: 'nap', title: 'The Nap', text: 'He has been found with his eyes closed in a meeting.', choices: [
+      { t: 'Say he was listening hard', fx: { ego: 12, energy: 10, xp: 30 }, r: '“Deep listening. I heard everything. It was all about me.”' },
+      { t: 'Let him sleep', fx: { energy: 20, xp: 28 }, r: 'He wakes at the end and says, “Agreed.” The meeting is considered a success.' },
+      { t: 'Wake him gently', fx: { ego: -6, energy: 6, xp: 26 }, r: '“I wasn’t sleeping. I don’t sleep. I was blinking for a long time.”' },
+    ] },
   ];
+  // One special briefing per special day, offered once a year in place of the regular one.
   C.SEASON_BRIEFINGS = {
-    turkey: { id: 'turkey', title: 'The Turkey Pardon', text: 'Two turkeys have been brought to the office. Only one can receive the official pardon.', choices: [
-      { t: 'Pardon the big one, “Gobble”', fx: { ego: 14, fun: 16, xp: 50, ach: 'turkey' }, r: '“A full and complete pardon. He’s a winner. Look at the size of him.”' },
-      { t: 'Pardon the small one, “Waddle”', fx: { ego: 8, fun: 18, xp: 50, ach: 'turkey' }, r: '“Low energy bird. But loyal. I like loyal.”' },
-      { t: 'Pardon both, and himself, just in case', fx: { ego: 22, fun: 12, xp: 50, ach: 'turkey' }, r: '“Everybody’s pardoned. Me most of all. Beautiful ceremony.”' },
+    newyear: { id: 'newyear', title: 'New Year’s Resolutions', text: 'It is January first. He has been asked for a resolution.', choices: [
+      { t: '“Be even better”', fx: { ego: 18, xp: 50 }, r: '“It’ll be hard. I’m already at the top. But I’ll find a way.”' },
+      { t: '“More salads”', fx: { ego: -6, fun: 10, xp: 50 }, r: 'He laughs for a full minute. A good start to the year.' },
+      { t: '“No resolution needed”', fx: { ego: 22, xp: 50 }, r: '“You don’t fix what’s perfect.” Resolution accomplished.' },
+    ] },
+    inaug: { id: 'inaug', title: 'The Anniversary', text: 'It is the anniversary of the big day. He would like to discuss the crowd.', choices: [
+      { t: 'It was the biggest', fx: { ego: 26, xp: 50 }, r: '“Period.” He says the word “period” out loud.' },
+      { t: 'Look at the photos together', fx: { ego: -8, fun: 6, xp: 50 }, r: 'He turns the photo over. The back is blank. “Better.”' },
+      { t: 'Re-enact it in the office', fx: { fun: 20, ego: 12, xp: 50 }, r: 'You are the crowd. You are, he says, enormous.' },
+    ] },
+    groundhog: { id: 'groundhog', title: 'Groundhog Day', text: 'A groundhog has made a weather forecast. He disagrees with it.', choices: [
+      { t: 'Sharpie the shadow', fx: { fun: 16, ego: 10, xp: 50 }, r: 'The shadow now points where he said it would.' },
+      { t: 'Fire the groundhog', fx: { fun: 14, xp: 50 }, r: '“Low-energy rodent.” A new groundhog is being interviewed.' },
+      { t: 'Let him forecast instead', fx: { ego: 18, xp: 50 }, r: '“Beautiful weather. The best. For six more weeks, or however long.”' },
+    ] },
+    superbowl: { id: 'superbowl', title: 'Big Game Sunday', text: 'The biggest game of the year is on. He has opinions about the snacks.', choices: [
+      { t: 'Wings, eaten with a fork', fx: { food: 25, fun: 10, xp: 50 }, r: 'Not one drop on the tie. It is the day’s real athletic feat.' },
+      { t: 'Predict the score', fx: { ego: 14, fun: 12, xp: 50 }, r: 'He predicts both teams will lose to him.' },
+      { t: 'Watch only the halftime show', fx: { fun: 18, xp: 50 }, r: '“My rallies are bigger.” He watches the whole thing.' },
+    ] },
+    valentine: { id: 'valentine', title: 'Valentine’s Day', text: 'The mail has come. There is one valentine. It is in his handwriting.', choices: [
+      { t: 'Read it aloud', fx: { ego: 22, xp: 50 }, r: '“To the greatest. From the greatest.” He is moved.' },
+      { t: 'Give him one from you', fx: { ego: 16, fun: 14, xp: 50 }, r: 'He checks the envelope for a second card. Then he smiles. Slightly.' },
+      { t: 'Chocolates', fx: { food: 20, fun: 12, xp: 50 }, r: 'He eats the top layer and asks who took the bottom layer.' },
+    ] },
+    presidents: { id: 'presidents', title: 'Presidents’ Day', text: 'Historians have published a ranking. He has asked to see only the top.', choices: [
+      { t: 'Put him first', fx: { ego: 28, xp: 50 }, r: '“Finally. Real historians.”' },
+      { t: 'Put him in the top five', fx: { ego: -4, fun: 6, xp: 50 }, r: '“Top five? Who are the other four? What did they build?”' },
+      { t: 'Add him to the mountain picture', fx: { ego: 24, fun: 10, xp: 50 }, r: 'You draw him in with a Sharpie. He hangs it up.' },
+    ] },
+    leapday: { id: 'leapday', title: 'The Extra Day', text: 'This year has an extra day. He would like to know who approved that.', choices: [
+      { t: 'Name the day after him', fx: { ego: 22, xp: 50 }, r: 'It comes once every four years. “Like a term,” he says.' },
+      { t: 'Use it for golf', fx: { fun: 22, xp: 50 }, r: 'A whole free day. He plays thirty-six holes and counts eighteen.' },
+      { t: 'Tell him he gets paid for it', fx: { ego: 10, xp: 50, cashH: 4 }, r: '“An extra day of licensing. I love this day.”' },
+    ] },
+    stpatrick: { id: 'stpatrick', title: 'St. Patrick’s Day', text: 'Everyone is wearing green. He owns no green.', choices: [
+      { t: 'A green tie', fx: { glow: 10, fun: 12, xp: 50 }, r: 'Extra long. It looks like a vine. He likes it.' },
+      { t: 'Gold counts', fx: { ego: 16, xp: 50 }, r: '“Gold is what’s at the end. I skipped the rainbow.”' },
+      { t: 'A green hamberder', fx: { food: 20, fun: 8, xp: 50 }, r: 'He studies it. He eats it. He asks never to see one again.' },
+    ] },
+    aprilfools: { id: 'aprilfools', title: 'April Fools’ Day', text: 'It is April first. Someone will be pranked. He assumes it cannot be him.', choices: [
+      { t: 'Tell him the hair is flat', fx: { fun: 10, ego: -8, glow: 6, xp: 50 }, r: 'He runs to the mirror. It is fine. You are forgiven by Thursday.' },
+      { t: 'Tell him he’s won a prize', fx: { ego: 14, fun: 10, xp: 50 }, r: 'He has written the speech by the time you say “April Fools.” He gives it anyway.' },
+      { t: 'Let him prank you', fx: { fun: 20, xp: 50 }, r: '“You’re fired.” Long pause. “April Fools.” He laughs for an hour.' },
+    ] },
+    easter: { id: 'easter', title: 'The Egg Roll', text: 'There are children, spoons and a great many eggs on the lawn.', choices: [
+      { t: 'Let him blow the whistle', fx: { fun: 18, ego: 10, xp: 50 }, r: 'He blows it eleven times. The race starts on the fourth.' },
+      { t: 'Gold eggs', fx: { ego: 16, xp: 50, cashH: -1 }, r: 'The children cannot lift them. He calls it a learning experience.' },
+      { t: 'Stand him next to the bunny', fx: { fun: 14, xp: 50 }, r: 'He does not look at the bunny. The bunny does not look at him. The photo is famous.' },
+    ] },
+    hamburger: { id: 'hamburger', title: 'National Hamberder Day', text: 'It is the national day of his favorite food. He considers it a personal holiday.', choices: [
+      { t: 'A tower of them', fx: { food: 40, fun: 14, xp: 55 }, r: 'Stacked like a wedding cake. He takes the top one, with ceremony.' },
+      { t: 'One perfect hamberder', fx: { food: 28, ego: 12, xp: 55 }, r: 'On a silver tray, under a dome. He applauds it.' },
+      { t: 'Name one after him', fx: { food: 20, ego: 22, xp: 55 }, r: 'It is the same hamberder. It costs more. He is very proud.' },
     ] },
     birthday: { id: 'birthday', title: 'His Birthday', text: 'It is June 14th. He has mentioned it nine times before breakfast.', choices: [
       { t: 'Parade', fx: { ego: 30, fun: 20, xp: 60 }, r: 'It goes past the window twice. He salutes everything.' },
       { t: 'Cake with far too many candles', fx: { food: 25, ego: 16, fun: 16, xp: 60 }, r: '“That is NOT the right number of candles. Fewer.”' },
       { t: 'Sing', fx: { ego: 24, fun: 14, xp: 60 }, r: 'He conducts. He also sings the loudest. To himself.' },
+    ] },
+    july4: { id: 'july4', title: 'The Fourth', text: 'Tonight there are fireworks. He would like more of them.', choices: [
+      { t: 'Double the fireworks', fx: { fun: 20, ego: 12, xp: 55, cashH: -2 }, r: 'The finale lasts forty minutes. Dogs in three counties file complaints.' },
+      { t: 'A speech first', fx: { ego: 20, xp: 55 }, r: 'It runs long. The fireworks start during it. He takes this as applause.' },
+      { t: 'Sparklers', fx: { fun: 14, xp: 55 }, r: 'He writes his name in the air. All of it.' },
+    ] },
+    laborday: { id: 'laborday', title: 'Labor Day', text: 'It is a day to honor hard work. He would like it noted that nobody works harder.', choices: [
+      { t: 'Note it', fx: { ego: 22, xp: 50 }, r: 'It is noted, framed and hung.' },
+      { t: 'Give the staff the day off', fx: { fun: 10, ego: -4, xp: 50 }, r: 'He answers his own phone. “Who is this? How did you get this number?” It is his number.' },
+      { t: 'Grill something', fx: { food: 28, fun: 12, xp: 50 }, r: 'He supervises the grill from a chair. The burgers are, he says, his recipe.' },
+    ] },
+    halloween: { id: 'halloween', title: 'Halloween', text: 'There will be trick-or-treaters. He needs a costume.', choices: [
+      { t: 'Go as himself', fx: { ego: 20, xp: 50 }, r: '“Scariest costume there is, they tell me. Also the best-looking.”' },
+      { t: 'A superhero', fx: { fun: 16, ego: 8, xp: 50 }, r: 'The cape is red and reaches the floor. So does the tie.' },
+      { t: 'Just hand out candy', fx: { fun: 12, food: 10, xp: 50 }, r: 'Full-size bars. “I don’t do fun-size. Nothing about me is fun-size.”' },
+    ] },
+    turkey: { id: 'turkey', title: 'The Turkey Pardon', text: 'Two turkeys have been brought to the office. Only one can receive the official pardon.', choices: [
+      { t: 'Pardon the big one, “Gobble”', fx: { ego: 14, fun: 16, xp: 50, ach: 'turkey' }, r: '“A full and complete pardon. He’s a winner. Look at the size of him.”' },
+      { t: 'Pardon the small one, “Waddle”', fx: { ego: 8, fun: 18, xp: 50, ach: 'turkey' }, r: '“Low energy bird. But loyal. I like loyal.”' },
+      { t: 'Pardon both, and himself, just in case', fx: { ego: 22, fun: 12, xp: 50, ach: 'turkey' }, r: '“Everybody’s pardoned. Me most of all. Beautiful ceremony.”' },
+    ] },
+    blackfriday: { id: 'blackfriday', title: 'Black Friday', text: 'Everything is on sale. He admires a deal.', choices: [
+      { t: 'Buy something at half price', fx: { fun: 12, xp: 50, cashH: 1 }, r: '“I got it for half. I’d have paid a quarter.”' },
+      { t: 'Sell something at double', fx: { ego: 14, xp: 50, cashH: 3 }, r: 'The sign says SALE. The price went up. People line up anyway.' },
+      { t: 'Stay in', fx: { energy: 14, food: 14, xp: 50 }, r: 'Leftover turkey, well done, with ketchup. A quiet victory.' },
+    ] },
+    christmas: { id: 'christmas', title: 'The Tree', text: 'The tree is up. It needs something on top.', choices: [
+      { t: 'A star', fx: { fun: 12, xp: 50 }, r: '“Good. Classic. Could be bigger.”' },
+      { t: 'A gold star', fx: { ego: 14, fun: 8, xp: 50, cashH: -1 }, r: 'Visible from the street. And from the next street.' },
+      { t: 'A small one of him', fx: { ego: 24, xp: 50 }, r: 'It lights up. It has a tiny tie. He stands under it for the photos.' },
+    ] },
+    newyearseve: { id: 'newyearseve', title: 'New Year’s Eve', text: 'The countdown is coming. He has asked to do it himself.', choices: [
+      { t: 'Let him count', fx: { fun: 16, ego: 10, xp: 50 }, r: '“Ten! Nine! Seven!” Close enough. The year arrives anyway.' },
+      { t: 'Start the fireworks early', fx: { fun: 14, xp: 50 }, r: '“Why wait? I’m here now.”' },
+      { t: 'A toast with Diet Coke', fx: { food: 6, energy: 12, ego: 8, xp: 50 }, r: 'He clinks the can. “To the best year. I can already tell.”' },
+    ] },
+    friday13: { id: 'friday13', title: 'Friday the Thirteenth', text: 'It is an unlucky day. He does not believe in luck. He believes in himself.', choices: [
+      { t: 'Walk under a ladder', fx: { ego: 14, fun: 8, xp: 50 }, r: 'Nothing happens. “See? Bad luck is afraid of me.”' },
+      { t: 'Skip the thirteenth floor', fx: { ego: 10, xp: 50 }, r: 'His building already does. Which is how it got taller.' },
+      { t: 'Pet the black cat', fx: { fun: 14, xp: 50 }, r: 'The cat sits on the briefing. It is the best-read briefing of the year.' },
     ] },
   };
 
@@ -632,6 +1118,42 @@
     ['Dishwashers Will Wash Dishes', 'On the first try.'],
     ['Renaming the Break Room “Mar-a-Lunchroom”', 'Members only.'],
     ['Every Building Gets His Name', 'Including this one. And that one.'],
+    ['Every Meeting Begins With Applause', 'It also ends with applause.'],
+    ['The Thermostat Belongs to Him', 'Nobody else touches the dial.'],
+    ['Escalators Shall Not Stop', 'Especially halfway.'],
+    ['Magnets Are Under Review', 'Nobody knows what they are.'],
+    ['A Third Scoop, in Emergencies', 'He decides what counts as an emergency.'],
+    ['Well Done Means Well Done', 'Chefs are advised not to argue.'],
+    ['The National Fry Reserve', 'Salted. Strategically.'],
+    ['Mirrors in All Elevators', 'For morale. His.'],
+    ['The Tape May Stay on the Tie', 'It is structural.'],
+    ['Executive Time Is Work', 'Nine hours of it.'],
+    ['Eclipses Require His Approval', 'He looked. It was fine.'],
+    ['Eagles Must Be Polite', 'Statues are exempt.'],
+    ['Trucks May Be Honked', 'By him. For as long as he likes.'],
+    ['One Time, All Year', 'The clocks are to leave him alone.'],
+    ['The Penny Is Retired', 'Bigger coins are being considered.'],
+    ['Flagpoles: Taller', 'Then taller than that.'],
+    ['The Lawn Shall Be a Patio', 'One rose may stay.'],
+    ['Capital Letters Are Encouraged', 'ESPECIALLY at night.'],
+    ['Polls Must Ask the Right People', 'Starting with him.'],
+    ['Name Tags for Visitors', 'His says “ME.”'],
+    ['The Official Rally Song', 'The same one. Again.'],
+    ['Checkups Are Graded by the Patient', 'Astonishingly excellent, every year.'],
+    ['A Fragrance of National Importance', 'It smells like winning.'],
+    ['Gold Hats Are Hats', 'Heavy is the head.'],
+    ['Portraits Shall Be Flattering', 'Accuracy is not a defense.'],
+    ['Naps Are Deep Listening', 'See also: blinking for a long time.'],
+    ['The Fourth Dimension of Chess', 'Pawns may move sideways.'],
+    ['Autographs on Everything', 'Including this order. Twice.'],
+    ['Holidays Are About Him Too', 'In addition to whatever they were about.'],
+    ['Groundhogs May Be Overruled', 'By Sharpie.'],
+    ['Fun-Size Is Abolished', 'Full-size or nothing.'],
+    ['Titles Must Be Bigger', 'And more beautiful.'],
+    ['The Stapler Is Renamed', 'After him. It was the least it could do.'],
+    ['Ovens Shall Run Hot', 'Medium rare is a rumor.'],
+    ['Crosswords Accept His Answers', 'Write smaller if you have to.'],
+    ['A Day Named After Him', 'It comes every four years, like clockwork.'],
   ].map(function (o, i) { return { id: i, no: 14000 + i * 7 + 1, title: o[0], note: o[1] }; });
 
   // ---------------------------------------------------------------- achievements
@@ -671,35 +1193,74 @@
     { id: 'term2', icon: '🗳️', name: 'Four More Years', desc: 'Start a second term.' },
     { id: 'term3', icon: '🗳️', name: 'Many People Are Saying It’s Allowed', desc: 'Start a third term.' },
     { id: 'turkey', icon: '🦃', name: 'Pardoned', desc: 'Pardon a Thanksgiving turkey.', secret: true },
+    { id: 'season3', icon: '\uD83C\uDF89', name: 'Festive', desc: 'Take the special briefing on 3 different special days.' },
+    { id: 'season10', icon: '\uD83D\uDCC5', name: 'Every Day Is a Holiday', desc: 'Take the special briefing on 10 different special days.' },
   ];
 
   // ---------------------------------------------------------------- seasons
+  // What he says the first time you look in on a special day. Several, for days that last a while.
   C.SEASONS = {
-    newyear: { name: 'New Year', greet: 'HAPPY NEW YEAR! It will be the best year. I already decided.' },
-    inaug: { name: 'Inauguration Day', greet: 'Inauguration Day! The crowd was the biggest. You saw the pictures. Don’t look at the pictures.' },
-    valentine: { name: 'Valentine’s Day', greet: 'Happy Valentine’s Day. I sent myself a card. Beautiful card.' },
-    presidents: { name: 'Presidents’ Day', greet: 'Presidents’ Day! A day about presidents. One in particular.' },
-    birthday: { name: 'His Birthday', greet: 'IT’S MY BIRTHDAY! Also some flag thing. But mostly my birthday!' },
-    july4: { name: 'The Fourth of July', greet: 'Happy Fourth! The fireworks are for the country. And a little for me.' },
-    halloween: { name: 'Halloween', greet: 'Happy Halloween. I’m going as myself. Scariest costume, they tell me.' },
-    turkey: { name: 'Thanksgiving', greet: 'Happy Thanksgiving! I’m thankful for me. And the turkey. Mostly me.' },
-    christmas: { name: 'Christmas', greet: 'MERRY CHRISTMAS! We’re saying it again. I brought it back. You’re welcome!' },
+    newyear: { name: 'New Year', greet: ['HAPPY NEW YEAR! It will be the best year. I already decided.', 'New year. Same me. Why change perfection?'] },
+    inaug: { name: 'Inauguration Day', greet: ['Inauguration Day! The crowd was the biggest. You saw the pictures. Don’t look at the pictures.', 'This is the anniversary of a very big day. The biggest. Ask me about the crowd.'] },
+    groundhog: { name: 'Groundhog Day', greet: ['Happy Groundhog Day. A rodent does the weather. I could do it better.', 'They trust a groundhog with the forecast. I have a Sharpie.'] },
+    superbowl: { name: 'Big Game Sunday', greet: ['It’s the big game! I’d have gone pro. Everybody says so.', 'Game day. I already know who wins. Me, usually.'] },
+    valentine: { name: 'Valentine’s Day', greet: ['Happy Valentine’s Day. I sent myself a card. Beautiful card.', 'Happy Valentine’s Day. I love you. And me. Mostly me.'] },
+    presidents: { name: 'Presidents’ Day', greet: ['Presidents’ Day! A day about presidents. One in particular.', 'Happy Presidents’ Day. They made a holiday. I didn’t ask. But thank you.'] },
+    leapday: { name: 'Leap Day', greet: ['An extra day! Somebody added a day. Probably for me.', 'February 29th. A bonus day of me. You’re welcome.'] },
+    stpatrick: { name: 'St. Patrick’s Day', greet: ['Happy St. Patrick’s Day. Luck is nice. I have skill.', 'Green tie today. On me, even green looks expensive.'] },
+    aprilfools: { name: 'April Fools’ Day', greet: ['It’s April Fools’. Nobody fools me. Nobody.', 'April first. I’ll be doing the pranking. I have the best pranks.'] },
+    easter: { name: 'Easter', greet: ['Happy Easter! There’s an egg roll on the lawn. I’ll be supervising.', 'Happy Easter. I found all the eggs. I hid them, too. Great system.'] },
+    hamburger: { name: 'Hamberder Day', greet: ['It’s NATIONAL HAMBERDER DAY! The most important holiday!', 'Today the whole country eats like me. Finally.'] },
+    birthday: { name: 'His Birthday', greet: ['IT’S MY BIRTHDAY! Also some flag thing. But mostly my birthday!', 'Happy birthday to me. I’ve been told I don’t look a day over perfect.'] },
+    july4: { name: 'The Fourth of July', greet: ['Happy Fourth! The fireworks are for the country. And a little for me.', 'Happy Fourth of July! I ordered extra fireworks. You can never have too many.'] },
+    laborday: { name: 'Labor Day', greet: ['Happy Labor Day. Nobody works harder than me. I’m working right now. Look.', 'It’s Labor Day. I’ll be celebrating everyone’s hard work. Starting with mine.'] },
+    halloween: { name: 'Halloween', greet: ['Happy Halloween. I’m going as myself. Scariest costume, they tell me.', 'Happy Halloween. I give out the full-size bars. I’m very popular.'] },
+    turkey: { name: 'Thanksgiving', greet: ['Happy Thanksgiving! I’m thankful for me. And the turkey. Mostly me.', 'It’s turkey week. There’s one walking around the office. Very presidential bird.',
+      'I’m thankful for many things. I made a list. I’m first on it.', 'Thanksgiving! Well-done turkey, ketchup on the side. Don’t make it weird.'] },
+    blackfriday: { name: 'Black Friday', greet: ['Black Friday! Deals everywhere. I invented deals, practically.', 'Everything’s on sale today. Except me. I’m priceless.'] },
+    christmas: { name: 'Christmas', greet: ['MERRY CHRISTMAS! We’re saying it again. I brought it back. You’re welcome!', 'It’s Christmastime. The tree is beautiful. I picked the tall one.',
+      'Have you seen the lights? The best lights. I counted them. Many.', 'I made a list. I checked it once. That’s enough. It’s a great list.',
+      'I asked for gold this year. Same as every year.', 'Ho ho ho. I’d be a great Santa. Better suit, though.'] },
+    newyearseve: { name: 'New Year’s Eve', greet: ['New Year’s Eve! I’ll be doing the countdown. I’m very good with numbers.', 'Last day of the year. A tremendous year. The next one will be even better.'] },
+    friday13: { name: 'Friday the 13th', greet: ['Friday the thirteenth. Unlucky for some. I don’t do unlucky.', 'They say today is bad luck. Bad luck has never met me.'] },
   };
+  function easterSunday(y) { // the usual Gregorian reckoning
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+    const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1);
+  }
+  // Which special day a date is, if any. Fixed dates win over movable ones when they collide.
   C.seasonFor = function (d) {
     const m = d.getMonth() + 1, day = d.getDate(), y = d.getFullYear();
-    const nthDow = function (month, dow, n) { // n-th weekday of a month (1-based month)
+    const nth = function (month, weekday, n) { // the n-th given weekday of a month (1-based month, 0 = Sunday)
       const first = new Date(y, month - 1, 1).getDay();
-      return 1 + ((dow - first + 7) % 7) + (n - 1) * 7;
+      return 1 + ((weekday - first + 7) % 7) + (n - 1) * 7;
     };
     if (m === 1 && day === 1) return 'newyear';
     if (m === 1 && day === 20) return 'inaug';
+    if (m === 2 && day === 2) return 'groundhog';
     if (m === 2 && day === 14) return 'valentine';
-    if (m === 2 && day === nthDow(2, 1, 3)) return 'presidents';
+    if (m === 2 && day === 29) return 'leapday';
+    if (m === 2 && day === nth(2, 0, 2)) return 'superbowl';
+    if (m === 2 && day === nth(2, 1, 3)) return 'presidents';
+    if (m === 3 && day === 17) return 'stpatrick';
+    if (m === 4 && day === 1) return 'aprilfools';
+    const sinceEaster = Math.round((new Date(y, m - 1, day) - easterSunday(y)) / 864e5);
+    if (sinceEaster === 0 || sinceEaster === 1) return 'easter'; // Sunday, and the egg roll on Monday
+    if (m === 5 && day === 28) return 'hamburger';
     if (m === 6 && day === 14) return 'birthday';
     if (m === 7 && day === 4) return 'july4';
+    if (m === 9 && day === nth(9, 1, 1)) return 'laborday';
     if (m === 10 && day === 31) return 'halloween';
-    if (m === 11) { const tg = nthDow(11, 4, 4); if (day >= tg - 6 && day <= tg) return 'turkey'; }
+    if (m === 11) {
+      const thanksgiving = nth(11, 4, 4);
+      if (day >= thanksgiving - 6 && day <= thanksgiving) return 'turkey';
+      if (day === thanksgiving + 1) return 'blackfriday';
+    }
     if (m === 12 && day <= 26) return 'christmas';
+    if (m === 12 && day === 31) return 'newyearseve';
+    if (day === 13 && d.getDay() === 5) return 'friday13';
     return null;
   };
 
@@ -715,8 +1276,55 @@
     'He gave the desk a nickname. It was not a kind one.',
     'He declared victory over a crossword.',
     'He asked where you were {n} times.',
+    'He alphabetized the Sharpies. All of them are under “S.”',
+    'He practiced the handshake on a doorknob.',
+    'He called the front desk to ask how he was doing.',
+    'He rated the furniture. The chair got a seven.',
+    'He stood very still to see if anyone would clap.',
+    'He gave a speech to an empty room. It went great.',
+    'He challenged the thermostat and lost.',
+    'He moved the trophy two inches to the left, then back.',
+    'He drafted {n} posts and showed remarkable restraint by posting only some.',
+    'He pressed the button for {n} Diet Cokes and drank most of them.',
+    'He checked the window for crowds {n} times.',
+    'He autographed the briefing instead of reading it.',
+    'He practiced looking at a camera.',
+    'He named {n} things “the best.”',
+    'He tried to make a deal with the vending machine.',
+    'He watched the door. The door did not open.',
+    'He told the desk a story it had heard before.',
+    'He measured the tie. Still the longest.',
+    'He won {n} imaginary arguments.',
+    'He took a nap and described it afterward as a meeting.',
   ];
 
-  C.DEAL_BUYERS = ['A Guy From Queens', 'A Very Rich Friend', 'The Hotel People', 'A Mysterious Prince', 'Some Golf Guys', 'A Casino Enthusiast', 'The Steak Consortium', 'A Man With A Briefcase'];
-  C.DEAL_ITEMS = ['naming rights to a tower', 'a slightly used golf course', 'a line of extra-long ties', 'a very luxurious steak brand', 'gold sneakers', 'a signed Sharpie', 'the penthouse (not the good one)', 'a board game about himself'];
+  C.DEAL_BUYERS = ['A Guy From Queens', 'A Very Rich Friend', 'The Hotel People', 'A Mysterious Prince', 'Some Golf Guys', 'A Casino Enthusiast', 'The Steak Consortium', 'A Man With A Briefcase',
+    'A Golf Cart Dealer', 'The Chandelier People', 'A Reality TV Producer', 'Some Guy With a Boat', 'The Ketchup Lobby', 'A Friend of a Friend', 'A Very Tall Lawyer', 'The Mattress King'];
+  C.DEAL_ITEMS = ['naming rights to a tower', 'a slightly used golf course', 'a line of extra-long ties', 'a very luxurious steak brand', 'gold sneakers', 'a signed Sharpie', 'the penthouse (not the good one)', 'a board game about himself',
+    'a gold-plated golf cart', 'the second-best chandelier', 'a bottle of his cologne', 'a box of superhero trading cards', 'a flagpole (tall)', 'a hat that is too heavy to wear', 'the film rights to a handshake',
+    'a steak, well done', 'one square foot of the lobby', 'a commemorative coin the size of a plate', 'a signed photo of a signature', 'a slightly smaller tower'];
+
+  // ---------------------------------------------------------------- the news ticker
+  // Headlines under the screen: what he needs right now, and how the world sees him at each register.
+  C.NEWS = {
+    want: {
+      hungry: ['Sources: he has not eaten in minutes. Possibly hours.', 'Kitchen on high alert as hamberder reserves go untouched.', 'Stomach heard from across the office. Witnesses shaken.'],
+      needEgo: ['Developing: nobody has complimented him recently.', 'Applause shortage enters its second hour.', 'Experts warn of “dangerously low” flattery levels.'],
+      bored: ['Alert: boredom rising. Golf is recommended.', 'He has begun staring at the putter. Analysts concerned.', 'Entertainment gap widens. Rally urged.'],
+      needGlow: ['Hair altitude dropping. Experts concerned.', 'Bronzer reserves untapped as glow fades.', 'Swoop reported “listing to one side.”'],
+      tired: ['He insists he is not tired. He is tired.', 'Yawn described by aides as “a power breath.”', 'Eyes closed “for strategic reasons,” office says.'],
+    },
+    tier: [
+      ['Local man described as “pleasant, quiet.”', 'Area man holds door, apologizes to door.', 'Neighbor: “Honestly? Very normal guy.”', 'Man returns shopping cart, declines to be thanked.',
+        'Resident describes own tie as “probably fine.”', 'Man waits his turn, enjoys it.', 'Witness: “He asked how MY day was.”', 'Quiet fellow seen reading instructions before starting.'],
+      ['Queens kid reports having “a feeling” about himself.', 'Young man seen looking at tall buildings, nodding.', 'Man buys second suit, feels “on the way up.”', 'Queens resident practices signature “just in case.”',
+        'Local man begins sentences with “Frankly.”', 'Neighbor notices firm handshake, “didn’t hate it.”', 'Young man asks how much the tall building costs.', 'Area man tips well, mentions it.'],
+      ['Developer puts name on building, then on the sign pointing at the building.', 'Mogul describes own lunch as “historic.”', 'Mogul names sandwich after himself, orders it.', 'Developer adds floor to building using label maker.',
+        'Businessman rates own handshake “a ten.”', 'Tower lobby gets fourth chandelier “for balance.”', 'Man in long tie calls shorter ties “a phase.”', 'Mogul says humility is his best quality, “by far.”'],
+      ['Candidate rates own speech “a ten, maybe an eleven.”', 'Rally crowd estimated at “everyone.”', 'Candidate promises “so much winning,” no further details.', 'Escalator ride described by rider as “historic.”',
+        'Candidate polls himself, wins in a landslide.', 'Red hats sell out; candidate signs the empty box.', 'Rally runs long after candidate applauds own speech.', 'Opponent, a teleprompter, declines to debate.'],
+      ['President declares today “the greatest day,” same as yesterday.', 'Mountain reportedly “being measured.”', 'Sharpie stock soars on signing rumors.', 'President signs order requiring this headline.',
+        'The mountain “has room on the left,” source says.', 'Weather map corrected by hand; forecast now “perfect.”', 'President awards himself prize, gives moving speech.', 'Nation’s Sharpie reserves at “strategic low.”'],
+    ],
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
