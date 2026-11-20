@@ -1,7 +1,7 @@
 /* Trumpagotchi — the screen: HUD, sheets, speech, modals, and the loop that keeps him alive. */
 (function () {
   'use strict';
-  const TG = window.TG, C = TG.content, G = TG.game, A = TG.art, S = TG.audio, M = TG.minigames;
+  const TG = window.TG, C = TG.content, G = TG.game, A = TG.art, S = TG.audio, M = TG.minigames, K = TG.cloud;
   const $ = function (id) { return document.getElementById(id); };
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has('debug');
@@ -260,6 +260,7 @@
     if (o.fx) o.fx();
     handle(r.events);
     refreshHud();
+    dirty();
     G.save(s);
     return true;
   }
@@ -293,6 +294,7 @@
     $('xpFill').style.width = pct.toFixed(1) + '%';
     $('xpBar').setAttribute('aria-valuenow', Math.round(pct));
     $('runAgainBtn').hidden = !G.canRunAgain(s);
+    $('linkBtn').hidden = !(K.available === true && !K.linked() && !s.hatched);
     NEED_UI.forEach(function (n) {
       const v = Math.round(s.needs[n.k]);
       const box = $('need-' + n.k);
@@ -628,15 +630,16 @@
       put(body, h('div', null, rows.map(function (r) { return h('div', { class: 'stat' }, h('span', { text: r[0] }), h('b', { text: String(r[1]) })); })));
       put(body, h('button', { class: 'btn gold', type: 'button', text: 'Make a share card', onclick: shareCard }));
     } else {
+      put(body, cloudCard());
       put(body, h('label', { class: 'field' }, 'His name',
-        h('input', { type: 'text', maxlength: 18, value: s.name, onchange: function (e) { s.name = e.target.value.trim().slice(0, 18) || 'The Donald'; G.save(s); refreshHud(); } })));
+        h('input', { type: 'text', maxlength: 18, value: s.name, onchange: function (e) { s.name = e.target.value.trim().slice(0, 18) || 'The Donald'; dirty(); G.save(s); refreshHud(); } })));
       put(body, h('label', { class: 'toggle' }, h('span', { text: 'Sound' }), h('input', { type: 'checkbox', checked: s.settings.sound, onchange: function (e) { s.settings.sound = e.target.checked; S.enabled = s.settings.sound; G.save(s); S.play('ok'); } })));
       put(body, h('label', { class: 'toggle' }, h('span', null, 'Alerts when he needs you', h('br'), h('small', { class: 'muted', text: 'Works while the app stays open in the background.' })),
         h('input', { type: 'checkbox', checked: s.settings.alerts, onchange: function (e) { toggleAlerts(e.target); } })));
       if (installEvent) put(body, h('button', { class: 'btn gold', type: 'button', text: 'Install as an app', onclick: function () { installEvent.prompt(); installEvent = null; drawSheet(); } }));
       else put(body, h('p', { class: 'muted', text: 'Tip: add this page to your home screen and he lives there like an app.' }));
       const code = h('textarea', { 'aria-label': 'Save code', placeholder: 'Paste a save code here to move him to this device.' });
-      put(body, h('div', { class: 'card' }, h('h3', { text: 'Move him' }), h('p', { class: 'muted', text: 'He lives in this browser. A save code carries him to another one.' }),
+      put(body, h('div', { class: 'card' }, h('h3', { text: 'Move him by hand' }), h('p', { class: 'muted', text: 'A save code is a snapshot of him as he is now. It carries him to another browser without the cloud.' }),
         h('label', { class: 'field' }, code),
         h('div', { class: 'row' },
           h('button', { class: 'btn', type: 'button', text: 'Copy save code', onclick: function () {
@@ -647,10 +650,10 @@
           h('button', { class: 'btn', type: 'button', text: 'Load code', onclick: function () {
             const n = G.importCode(code.value, now());
             if (!n) { toast('That code is not right. Sad!'); S.play('no'); return; }
-            confirmModal('Load this save?', 'It replaces the pet living in this browser.', 'Load it', function () { s = n; S.enabled = s.settings.sound; G.catchUp(s, now()); G.save(s); closeSheet(); refreshHud(); toast('Welcome back, ' + s.name + '.'); });
+            confirmModal('Load this save?', 'It replaces the pet living in this browser' + (K.linked() ? ' and, because cloud save is on, on your other devices too.' : '.'), 'Load it', function () { s = n; S.enabled = s.settings.sound; G.catchUp(s, now()); dirty(); G.save(s); closeSheet(); refreshHud(); toast('Welcome back, ' + s.name + '.'); });
           } }))));
       put(body, h('button', { class: 'btn ghost', type: 'button', text: 'Start over with a new egg', onclick: function () {
-        confirmModal('Start over?', 'This erases him, his trophies and all the gold. It cannot be undone.', 'Erase everything', function () { G.wipe(); s = G.newState(now()); G.catchUp(s, now()); G.save(s); closeSheet(); view.particles.length = 0; hush(); refreshHud(); });
+        confirmModal('Start over?', 'This erases him, his trophies and all the gold from this device. It cannot be undone.' + (K.linked() ? ' The cloud copy is left alone: this device is unlinked first, and your other devices keep him.' : ''), 'Erase everything', function () { K.unlink(); G.wipe(); s = G.newState(now()); G.catchUp(s, now()); G.save(s); closeSheet(); view.particles.length = 0; hush(); refreshHud(); });
       } }));
       put(body, h('p', { class: 'muted', text: 'Trumpagotchi is a parody for laughs. Everything he “says” is made up. It is not affiliated with or endorsed by any real person, campaign, company or toy.' }));
       if (DEBUG) put(body, debugPanel());
@@ -661,12 +664,12 @@
     const lvl = function (n) { return function () {
       const ev = [], target = G.cumXp(Math.min(C.MAX_LEVEL, G.level(s) + n));
       G.addXp(s, (target - s.xp) / G.xpMult(s) + 0.01, ev, now());
-      handle(ev); refreshHud(); G.save(s); drawSheet();
+      handle(ev); refreshHud(); dirty(); G.save(s); drawSheet();
     }; };
     return h('div', { class: 'card' }, h('h3', { text: 'Debug' }), h('div', { class: 'row' },
       h('button', { class: 'btn', type: 'button', text: '+1h', onclick: skip(1) }), h('button', { class: 'btn', type: 'button', text: '+8h', onclick: skip(8) }), h('button', { class: 'btn', type: 'button', text: '+1d', onclick: skip(24) }),
       h('button', { class: 'btn', type: 'button', text: '+1 lv', onclick: lvl(1) }), h('button', { class: 'btn', type: 'button', text: '+5 lv', onclick: lvl(5) }),
-      h('button', { class: 'btn', type: 'button', text: '+cash', onclick: function () { s.cash = Math.max(1e6, s.cash * 10); refreshHud(); drawSheet(); } }),
+      h('button', { class: 'btn', type: 'button', text: '+cash', onclick: function () { s.cash = Math.max(1e6, s.cash * 10); dirty(); refreshHud(); drawSheet(); } }),
       h('button', { class: 'btn', type: 'button', text: 'needs 5', onclick: function () { for (const k of G.NEEDS) s.needs[k] = 5; refreshHud(); } }),
       h('button', { class: 'btn', type: 'button', text: 'needs 60', onclick: function () { for (const k of G.NEEDS) s.needs[k] = 60; refreshHud(); } })));
   }
@@ -741,6 +744,180 @@
     put(body, h('button', { class: 'btn gold big', type: 'button', text: 'Tell him he was right', onclick: function () { closeSheet(); react(G.winBack(s, now()), { sound: 'level', ms: 2600, fx: confetti }); } }));
   }
 
+  // ---------------------------------------------------------------- cloud save
+  // Optional. With it on, every change here is sent to the server and changes made on
+  // another device are fetched, so the same pet lives on all of a keeper's devices.
+  let syncing = false, lastPush = 0, lastPull = 0, lastCheck = 0, pushGap = 6000, conflictOpen = false, cloudNote = '';
+  function cloudState() { const c = JSON.parse(JSON.stringify(s)); delete c.settings; return c; } // sound and alerts stay with the device
+  function dirty() { K.markDirty(); }
+  function brief(st) { return st.hatched ? 'level ' + G.level(st) + ', ' + G.stage(st).name + ', ' + G.money(st.cash) : 'an unhatched egg'; }
+  function careCount(st) { const t = st.stats; return t.feeds + t.praises + t.grooms + t.posts + t.golf + t.deals + t.rallies + t.briefings; }
+  function cloudStatus() {
+    const i = K.info();
+    if (!i) return '';
+    if (cloudNote) return cloudNote;
+    if (i.dirty) return 'Changes waiting to be saved…';
+    return 'Saved to the cloud' + (i.syncedAt ? ', ' + ago(i.syncedAt) : '') + '.';
+  }
+  function showCloudStatus() { const el = $('cloudStatus'); if (el) el.textContent = cloudStatus(); }
+  function copyText(text, done) {
+    const fail = function () { toast('Could not copy. Select it and copy by hand.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(done); }, fail);
+    else fail();
+  }
+  // Make the pet that arrived from the server the pet on this device.
+  function adopt(remote) {
+    const fresh = G.revive(remote.state, now());
+    if (!fresh) return false;
+    fresh.settings = s.settings;
+    s = fresh;
+    K.accept(remote.rev);
+    G.catchUp(s, now()); G.save(s);
+    hush(); view.particles.length = 0; view.target = null; praiseOpts = null; draft = null; briefResult = null;
+    if (sheet && sheet.id !== 'menu') closeSheet(); else drawSheet();
+    refreshHud(); rotateTicker();
+    return true;
+  }
+  function cloudGone() { // the code was changed or the cloud copy deleted from another device
+    K.unlink();
+    toast('This device was unlinked from the cloud. He still lives here.');
+    if (sheet && sheet.id === 'menu') drawSheet();
+  }
+  // Both this device and another changed him since they last agreed. The keeper picks.
+  function resolveConflict(remote) {
+    if (conflictOpen) return;
+    const other = G.revive(remote.state, now());
+    if (!other) return;
+    conflictOpen = true;
+    queueModal(function (card, done) {
+      const finish = function () { conflictOpen = false; done(); };
+      put(card,
+        h('p', { class: 'kicker', text: 'Two devices, one pet' }),
+        h('h2', { id: 'modalTitle', text: 'Which one is he?' }),
+        h('p', { class: 'muted', text: 'He was looked after on another device while this one was busy too. Only one of them can carry on.' }),
+        h('button', { class: 'btn gold', type: 'button', id: 'keepMine', text: 'Keep this device’s: ' + brief(s) + ', cared for ' + careCount(s) + ' times', onclick: function () {
+          finish();
+          K.push(cloudState(), { baseRev: remote.rev }).then(function (r) {
+            if (r.status === 'conflict') resolveConflict(r);
+            else if (r.status === 'ok') toast('Saved. Your other device will catch up.', 'gold');
+            else if (r.status === 'gone') cloudGone();
+            showCloudStatus();
+          });
+        } }),
+        h('button', { class: 'btn', type: 'button', id: 'keepTheirs', text: 'Use the other one: ' + brief(other) + ', cared for ' + careCount(other) + ' times', onclick: function () { finish(); if (adopt(remote)) toast('Picked up from your other device.', 'gold'); } }),
+        h('p', { class: 'muted', text: 'The other one was last saved ' + ago(Date.parse(remote.updatedAt)) + '.' }));
+    });
+  }
+  // One round trip: send what changed here, or fetch what changed elsewhere.
+  function syncNow(o) {
+    o = o || {};
+    if (!K.linked() || K.available === false || syncing || conflictOpen) return;
+    if (view.mode !== 'room' && !o.leaving) return; // never swap the pet out from under a game in progress
+    K.reload(); // another tab on this device may have just synced
+    const info = K.info();
+    if (!info) return;
+    if (o.leaving) { if (info.dirty) K.push(cloudState(), { keepalive: true }); return; }
+    syncing = true; cloudNote = '';
+    if (info.dirty) lastPush = clock(); else lastPull = clock();
+    (info.dirty ? K.push(cloudState()) : K.pull()).then(function (r) {
+      syncing = false;
+      pushGap = r.status === 'offline' || r.status === 'busy' ? Math.min(pushGap * 2, 60000) : 6000;
+      if (r.status === 'conflict') resolveConflict(r);
+      else if (r.status === 'newer') { const i = K.info(); if (i && i.dirty) resolveConflict(r); else if (adopt(r)) toast('Picked up from your other device.', 'gold'); }
+      else if (r.status === 'gone') cloudGone();
+      else if (r.status === 'offline') cloudNote = 'Cannot reach the cloud right now. He is safe here, and it will try again.';
+      showCloudStatus();
+    }, function () { syncing = false; });
+  }
+  function syncTick() {
+    if (!K.linked() || document.hidden) return;
+    const c = clock();
+    if (K.available !== true) { // the server was not reachable at start: look again now and then
+      if (c - lastCheck > 60000) { lastCheck = c; K.check().then(function (ok) { if (ok) syncNow(); }); }
+      return;
+    }
+    const i = K.info();
+    if (i.dirty ? c - lastPush > pushGap : c - lastPull > 90000) syncNow();
+    showCloudStatus();
+  }
+  function showKeeperCode(title) {
+    queueModal(function (card, done) {
+      const key = K.formatKey(K.key());
+      put(card,
+        h('p', { class: 'kicker', text: 'Cloud save' }),
+        h('h2', { id: 'modalTitle', text: title }),
+        h('p', { class: 'code-box', id: 'keeperCode', text: key }),
+        h('p', { class: 'muted', text: 'This is his keeper code. On another phone or computer, open the menu, go to Settings and enter it, and he is there too. Keep it secret: anyone who has it can play him.' }),
+        h('button', { class: 'btn', type: 'button', text: 'Copy the code', onclick: function () { copyText(key, 'Code copied.'); } }),
+        h('button', { class: 'btn', type: 'button', text: 'Copy a link for another device', onclick: function () { copyText(K.shareLink(), 'Link copied. Open it on the other device.'); } }),
+        h('button', { class: 'btn gold', type: 'button', text: 'Done', onclick: done }));
+    });
+  }
+  function enableCloud() {
+    if (!s.hatched) { toast('Hatch him first.'); return; }
+    K.enable(cloudState()).then(function (r) {
+      if (!r.ok) { toast(r.status === 'busy' ? 'Too many new cloud saves from here. Try again later.' : 'Could not reach the cloud. Try again.'); S.play('no'); return; }
+      S.play('ach');
+      showKeeperCode('He is saved to the cloud');
+      if (sheet && sheet.id === 'menu') drawSheet();
+    });
+  }
+  function linkWithCode(raw, fromLink) {
+    const key = K.normalizeKey(raw);
+    if (!key) { toast('That code does not look right: it is 20 letters and numbers.'); S.play('no'); return; }
+    if (K.linked() && K.key() === key) { toast('This device is already linked to him.'); return; }
+    K.peek(key).then(function (r) {
+      if (!r.ok) { toast(r.status === 'gone' ? 'No pet answers to that code.' : r.status === 'busy' ? 'Too many tries. Wait a few minutes.' : 'Could not reach the cloud. Try again.'); S.play('no'); return; }
+      const other = G.revive(r.state, now());
+      if (!other) { toast('That pet could not be read.'); return; }
+      const go = function () { K.join(key, r.rev); if (adopt(r)) { S.play('ach'); toast('Linked. He is the same pet here now.', 'gold'); } };
+      if (!s.hatched && !fromLink) { go(); return; }
+      const about = [];
+      if (fromLink) about.push('This link connects this device to a pet from another device (' + brief(other) + '). Only do this if the link is yours.');
+      if (s.hatched) about.push('The pet on this device (' + brief(s) + ') will be replaced by ' + (fromLink ? 'it.' : 'the linked one (' + brief(other) + ').') + (K.linked() ? '' : ' Copy a save code first if you want to keep him.'));
+      confirmModal(fromLink ? 'Link this device?' : 'Bring him here?', about.join(' '), s.hatched ? 'Replace and link' : 'Link', go);
+    });
+  }
+  function cloudCard() {
+    if (!K.linked() && K.available !== true) {
+      return K.available === false ? h('p', { class: 'muted', text: 'Cloud save is not available on this copy of the game. A save code still moves him between browsers.' }) : null;
+    }
+    if (!K.linked()) {
+      const input = h('input', { type: 'text', id: 'keeperInput', 'aria-label': 'Keeper code', placeholder: 'XXXXX-XXXXX-XXXXX-XXXXX', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', maxlength: 40 });
+      return h('div', { class: 'card', id: 'cloudCard' }, h('h3', { text: 'Take him everywhere' }),
+        h('p', { class: 'muted', text: 'Turn on cloud save and he follows you to any phone or computer. No account, no email, no password: he gets a secret keeper code.' }),
+        h('button', { class: 'btn gold', type: 'button', id: 'cloudOn', disabled: !s.hatched, text: s.hatched ? 'Turn on cloud save' : 'Hatch him first', onclick: enableCloud }),
+        h('p', { class: 'muted', text: 'Already have a keeper code from another device?' }),
+        h('label', { class: 'field' }, input),
+        h('button', { class: 'btn', type: 'button', id: 'cloudLink', text: 'Link this device', onclick: function () { linkWithCode(input.value); } }));
+    }
+    const dots = function () { return K.formatKey(K.key()).replace(/[0-9A-Z]/g, '•'); };
+    const shown = h('p', { class: 'code-box small', id: 'cloudCode', text: dots() });
+    let visible = false;
+    return h('div', { class: 'card', id: 'cloudCard' }, h('h3', { text: 'Cloud save is on' }),
+      h('p', { class: 'muted', id: 'cloudStatus', text: cloudStatus() }),
+      h('p', { class: 'muted', text: 'His keeper code. Enter it on another device and he is there too. Anyone who has it can play him, so keep it secret.' }),
+      shown,
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', type: 'button', id: 'cloudShow', text: 'Show', onclick: function (e) { visible = !visible; shown.textContent = visible ? K.formatKey(K.key()) : dots(); e.target.textContent = visible ? 'Hide' : 'Show'; } }),
+        h('button', { class: 'btn', type: 'button', text: 'Copy code', onclick: function () { copyText(K.formatKey(K.key()), 'Code copied.'); } }),
+        h('button', { class: 'btn', type: 'button', text: 'Copy link', onclick: function () { copyText(K.shareLink(), 'Link copied. Open it on the other device.'); } })),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', type: 'button', id: 'cloudUnlink', text: 'Unlink this device', onclick: function () {
+          confirmModal('Unlink this device?', 'He stays on this device as he is now and stops following the cloud. Your other devices keep the cloud pet.', 'Unlink', function () { K.unlink(); toast('Unlinked. He lives only here now.'); drawSheet(); });
+        } }),
+        h('button', { class: 'btn', type: 'button', id: 'cloudRotate', text: 'New code', onclick: function () {
+          confirmModal('Get a new keeper code?', 'The old code stops working at once. Every other device is unlinked until you enter the new code there.', 'Get a new code', function () {
+            K.rotate().then(function (r) { if (r.ok) { showKeeperCode('His new keeper code'); drawSheet(); } else if (r.status === 'gone') cloudGone(); else toast('Could not reach the cloud. Try again.'); });
+          });
+        } })),
+      h('button', { class: 'btn ghost', type: 'button', id: 'cloudDelete', text: 'Delete the cloud copy', onclick: function () {
+        confirmModal('Delete the cloud copy?', 'He is erased from the server and every other device is unlinked. He stays on this device.', 'Delete it', function () {
+          K.remove().then(function (r) { if (r.ok) { toast('Cloud copy deleted. He lives only here now.'); drawSheet(); } else toast('Could not reach the cloud. Try again.'); });
+        });
+      } }));
+  }
+
   // ---------------------------------------------------------------- actions
   const SHEETS = { feed: ['Feed', sheetFeed], praise: ['Praise', sheetPraise], play: ['Play', sheetPlay], groom: ['Groom', sheetGroom], post: ['Post', sheetPost], brief: ['Daily Briefing', sheetBrief], shop: ['Shop', sheetShop] };
   function onAction(id) {
@@ -748,7 +925,7 @@
     if (s.sulking && id !== 'shop') { openSheet('gone', 'Gone Golfing', sheetGone); return; }
     if (id === 'sleep') {
       const r = G.toggleSleep(s, now());
-      if (r.ok && r.slept) { closeSheet(); say(r.say); S.play('sleep'); setTimeout(hush, 2600); refreshHud(); G.save(s); }
+      if (r.ok && r.slept) { closeSheet(); say(r.say); S.play('sleep'); setTimeout(hush, 2600); refreshHud(); dirty(); G.save(s); }
       else if (r.ok) { react(r, { sound: 'wake' }); setAnim('idle', 400); }
       else react(r);
       return;
@@ -786,7 +963,7 @@
     S.play('crack');
     const sc = $('screen'); sc.classList.remove('shake'); void sc.offsetWidth; sc.classList.add('shake');
     spawn('spark', 5, { x: 80, y: 86, spread: 30, spreadY: 20, vy: -0.5 });
-    if (r.hatched) { handle(r.events); refreshHud(); G.save(s); showHatch(); }
+    if (r.hatched) { handle(r.events); refreshHud(); dirty(); G.save(s); showHatch(); }
     else { $('hatchBtn').textContent = ['Tap the egg', 'Again', 'It moved', 'Keep going', 'It’s cracking', 'Almost', 'One more', 'One more'][Math.min(7, s.eggTaps)]; G.save(s); }
   }
 
@@ -881,6 +1058,7 @@
     if (G.briefing(s)) pool.push(['brief', 'Today\u2019s briefing is ready. He has not read it.']);
     if (s.streak.n > 1) pool.push(['brief', 'Day ' + s.streak.n + ' of your streak. Loyalty has been noted.']);
     if (s.tariff > 0) pool.push(['feed', 'Lettuce tariff holds at ' + s.tariff + '%. Markets shaken.']);
+    if (K.available === true && !K.linked() && s.stats.days >= 2) pool.push(['cloud', 'Tip: turn on cloud save in Settings and he follows you to every device.']);
     if (G.level(s) < C.MAX_LEVEL) pool.push(['post', Math.round(G.progress(s) * 100) + '% of the way to level ' + (G.level(s) + 1) + '. Experts call it tremendous.']);
     else pool.push(['post', 'Peak tremendousness reached. Another term is being discussed.']);
     const pick = pool[tickerN % pool.length];
@@ -925,6 +1103,7 @@
     if (r.offline && r.awayH >= 0.5 && s.hatched) showRecap(r);
     refreshHud();
     chatter();
+    syncTick();
     if (++tickCount % 7 === 0) rotateTicker();
     if (force || t - lastSave > 5000) { G.save(s); lastSave = t; }
     updateTitle();
@@ -996,7 +1175,12 @@
     $('sheetClose').addEventListener('click', function () { S.play('tap'); closeSheet(); });
     $('menuBtn').addEventListener('click', function () { S.unlock(); if (sheet && sheet.id === 'menu') closeSheet(); else { S.play('tap'); openSheet('menu', 'The Trophy Room', sheetMenu); } });
     $('cashBtn').addEventListener('click', function () { S.unlock(); if (s.hatched) onAction('shop'); });
-    $('ticker').addEventListener('click', function () { S.unlock(); if (tickerKind === 'gone') openSheet('gone', 'Gone Golfing', sheetGone); else if (tickerKind !== 'none') onAction(tickerKind); });
+    $('ticker').addEventListener('click', function () {
+      S.unlock();
+      if (tickerKind === 'gone') openSheet('gone', 'Gone Golfing', sheetGone);
+      else if (tickerKind === 'cloud') { menuTab = 'settings'; openSheet('menu', 'The Trophy Room', sheetMenu); }
+      else if (tickerKind !== 'none') onAction(tickerKind);
+    });
     rotateTicker();
     $('runAgainBtn').addEventListener('click', function () {
       confirmModal('Run for another term?', 'He goes back to level 1 as Regular Don, but keeps the gold, the trophies and the orders, and earns 25% more of everything. Forever.', 'Run again', function () {
@@ -1007,17 +1191,18 @@
       if (e.key === 'Escape') { if (modalOpen) return; if (sheet) closeSheet(); }
     });
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { G.save(s); scheduleAlert(); }
+      if (document.hidden) { G.save(s); scheduleAlert(); syncNow({ leaving: true }); }
       else {
         clearTimeout(alertTimer);
         // if he was looked after in another tab meanwhile, carry on from that tab's save
         const other = G.stored(now());
         if (other && other.lastTick > s.lastTick + 3000 && view.mode === 'room') { s = other; S.enabled = s.settings.sound; closeSheet(); }
         tick(true);
+        lastPull = 0; syncNow(); // and if he was looked after on another device, fetch that
       }
       updateTitle();
     });
-    window.addEventListener('pagehide', function () { G.save(s); });
+    window.addEventListener('pagehide', function () { G.save(s); syncNow({ leaving: true }); });
     window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvent = e; });
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !DEBUG) navigator.serviceWorker.register('sw.js').catch(function () {});
 
@@ -1026,7 +1211,17 @@
     draw();
 
     // hooks for the smoke test and the ?debug panel
-    TG.ui = { state: function () { return s; }, tick: tick, onAction: onAction, say: say, refresh: refreshHud, draw: draw, share: shareCard, set: function (n) { s = n; refreshHud(); } };
+    // cloud save: find out whether this copy has a server behind it, then catch up with it
+    const pendingLink = K.takeLinkFromUrl();
+    $('linkBtn').addEventListener('click', function () { S.unlock(); menuTab = 'settings'; openSheet('menu', 'The Trophy Room', sheetMenu); });
+    K.check().then(function (ok) {
+      refreshHud();
+      if (ok && pendingLink) linkWithCode(pendingLink, true);
+      else if (ok && K.linked()) syncNow();
+      if (sheet && sheet.id === 'menu') drawSheet();
+    });
+
+    TG.ui = { state: function () { return s; }, tick: tick, onAction: onAction, say: say, refresh: refreshHud, draw: draw, share: shareCard, sync: syncNow, set: function (n) { s = n; refreshHud(); } };
   }
   init();
 })();

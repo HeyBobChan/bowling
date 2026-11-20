@@ -1,9 +1,9 @@
 /* Trumpagotchi service worker: the whole app is a handful of static files, so cache them
    and he keeps working with no signal. Bump VERSION whenever a file changes. */
-const VERSION = 'tg-v2';
+const VERSION = 'tg-v3';
 const SHELL = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
-  'js/content.js', 'js/game.js', 'js/art.js', 'js/audio.js', 'js/minigames.js', 'js/ui.js',
+  'js/content.js', 'js/game.js', 'js/art.js', 'js/audio.js', 'js/minigames.js', 'js/cloud.js', 'js/ui.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
 ];
 
@@ -20,9 +20,11 @@ self.addEventListener('activate', (event) => {
 });
 
 // Network first, so a deploy shows up on the next visit; the cache answers when offline.
+// Cloud saves (anything under api/) are never touched here: a pet must not be served from a cache.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/')) return;
   event.respondWith(
     fetch(req)
       .then((res) => {

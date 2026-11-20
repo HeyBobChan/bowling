@@ -1,9 +1,11 @@
-// A tiny static server so Trumpagotchi can run anywhere Node runs (Railway, Fly, a VPS).
-// No dependencies. Any static host works just as well: the app is plain files.
+// Trumpagotchi's server. The game itself is plain static files and any static host can
+// serve it; this adds the one thing that needs a server, optional cloud saves under /api/.
+// Without DATABASE_URL it has no dependencies and cloud saves are simply off.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createApi } from './server/api.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)));
 const PORT = Number(process.env.PORT) || 8080;
@@ -36,10 +38,26 @@ function allowed(rel) {
   return PUBLIC.has(rel) || PUBLIC_DIRS.some((d) => rel.startsWith(d + '/'));
 }
 
+// Where cloud-saved pets live. DATABASE_URL should be the restricted `trumpagotchi_app` login.
+// CLOUD_STORE=memory keeps them in memory, for tests and local tinkering only.
+async function openStore() {
+  if (process.env.DATABASE_URL) return (await import('./server/store-pg.mjs')).createPgStore(process.env.DATABASE_URL);
+  if (process.env.CLOUD_STORE === 'memory' && process.env.NODE_ENV !== 'production') return (await import('./server/store-memory.mjs')).createMemoryStore();
+  return null;
+}
+const store = await openStore();
+const api = createApi({ store, proxyKey: process.env.PROXY_KEY || '', ipHeader: (process.env.CLIENT_IP_HEADER || '').toLowerCase() });
+if (store) {
+  setInterval(() => api.sweep(), 10 * 60e3).unref();
+  // once a day, let go of pets nobody has saved in a year and a half
+  setInterval(() => { store.prune(550).then((n) => { if (n) console.log('Let go of ' + n + ' long-abandoned cloud saves.'); }).catch((e) => console.error('Prune failed:', e.message)); }, 24 * 3600e3).unref();
+}
+
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/healthz') { res.writeHead(200, { 'content-type': 'text/plain' }).end('tremendous'); return; }
+    if (url.pathname.startsWith('/api/')) { await api(req, res, url.pathname); return; }
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405).end(); return; }
     let rel = normalize(decodeURIComponent(url.pathname)).replace(/^[/\\]+/, '').split(sep).join('/');
     if (rel === '' || rel.endsWith('/')) rel += 'index.html';
@@ -59,4 +77,4 @@ const server = createServer(async (req, res) => {
     res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found. Sad!');
   }
 });
-server.listen(PORT, () => console.log(`Trumpagotchi is live on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Trumpagotchi is live on http://localhost:${PORT}; cloud saves ${store ? 'on (' + store.kind + ')' : 'off'}`));

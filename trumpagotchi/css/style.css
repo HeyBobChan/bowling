@@ -278,6 +278,17 @@ body[data-hatched="1"] .intro { display: none; }
 .order-sig { font-family: "Snell Roundhand", "Brush Script MT", cursive; font-size: 22px; color: #111; margin-top: 4px; letter-spacing: -0.04em; transform: rotate(-3deg); display: inline-block; }
 .order.locked { background: #141d3c; color: var(--muted); border: 1px dashed var(--line); box-shadow: none; }
 
+.code-box {
+  font-family: var(--mono); font-weight: 800; font-size: 19px; letter-spacing: 0.05em; text-align: center; overflow-wrap: anywhere;
+  background: #060b1c; color: var(--gold-l); border: 1px dashed var(--gold-d); border-radius: 10px; padding: 10px 8px; width: 100%;
+  -webkit-user-select: all; user-select: all;
+}
+.code-box.small { font-size: 14.5px; margin: 6px 0; }
+.card .btn, .card .row { margin-top: 8px; }
+.card > .btn { width: 100%; }
+.card .row > .btn { margin-top: 0; }
+.card .field { margin-top: 6px; }
+
 .pips { display: flex; gap: 6px; justify-content: center; }
 .pip { width: 26px; height: 10px; border-radius: 3px; background: var(--ok); border: 1px solid #0a3d16; }
 .pip.off { background: #2a1620; border-color: #5a2a33; }

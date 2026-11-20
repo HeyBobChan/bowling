@@ -125,6 +125,7 @@
     if (!s || typeof s !== 'object' || s.v !== 1 || !s.needs || typeof s.needs !== 'object') return null;
     return sanitize(merge(G.newState(now), s));
   }
+  G.revive = revive; // also used for a pet that arrives from the cloud
   // The save as it sits in storage right now, or null (nothing saved, or unreadable).
   G.stored = function (now) {
     let raw = null;

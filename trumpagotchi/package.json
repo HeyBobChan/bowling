@@ -6,10 +6,16 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test tests/sim.test.mjs",
-    "test:browser": "node tests/smoke.mjs",
+    "test": "node --test tests/sim.test.mjs tests/api.test.mjs",
+    "test:browser": "node tests/smoke.mjs && node tests/cloud.mjs",
+    "migrate": "node server/migrate.mjs",
     "build:single": "node tools/build-single.mjs",
     "icons": "node tools/make-icons.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
 }
