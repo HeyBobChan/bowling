@@ -40,6 +40,20 @@ try {
     for (const p of ['server.mjs', 'package.json', 'tests/sim.test.mjs', '..%2fpackage.json']) assert.equal((await fetch(BASE + p)).status, 404, p);
   });
 
+  await step('code is revalidated on every visit and unchanged files cost a 304', async () => {
+    for (const p of ['', 'js/ui.js', 'js/content.js', 'css/style.css', 'sw.js', 'manifest.webmanifest']) {
+      const first = await fetch(BASE + p);
+      assert.equal(first.headers.get('cache-control'), 'no-cache', p);
+      const etag = first.headers.get('etag');
+      assert.match(etag, /^"[\w-]{22}"$/, p);
+      const again = await fetch(BASE + p, { headers: { 'if-none-match': etag } });
+      assert.equal(again.status, 304, p);
+      assert.equal((await again.text()).length, 0);
+      assert.equal((await fetch(BASE + p, { headers: { 'if-none-match': '"something-else"' } })).status, 200);
+    }
+    assert.equal((await fetch(BASE + 'icons/icon-192.png')).headers.get('cache-control'), 'public, max-age=3600');
+  });
+
   await step('starts as an egg', async () => {
     await page.goto(BASE + '?reset');
     await page.waitForSelector('#hatchBtn');

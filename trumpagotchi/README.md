@@ -155,6 +155,8 @@ Set `PUBLIC_URL` (for example `https://example.com/trumpagotchi/`) on the Node s
 the link-preview tags use absolute addresses, which chat apps and social sites need. The page
 itself stays relative, so it works behind a path prefix or a reverse proxy without changes.
 
+The Node server makes browsers check the page and its code on every visit (unchanged files
+answer with a 304), so a release reaches each visitor as one consistent set of files.
 When you change a file, bump `VERSION` in `sw.js` so installed copies refresh their cache.
 
 ## Files
@@ -183,7 +185,7 @@ tests/                simulation and API tests (Node), two browser tests
 
 ```bash
 npm test             # 32 rule, balance and content tests and 10 cloud-save API tests, plain Node
-npm run test:browser # headless Chromium: the first minutes (12 checks), then two devices sharing a pet
+npm run test:browser # headless Chromium: the first minutes (13 checks), then two devices sharing a pet
 ```
 
 Set `TEST_DATABASE_URL` to the `trumpagotchi_app` connection of a migrated database and

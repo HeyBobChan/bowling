@@ -2,6 +2,7 @@
 // serve it; this adds the one thing that needs a server, optional cloud saves under /api/.
 // Without DATABASE_URL it has no dependencies and cloud saves are simply off.
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,13 +66,18 @@ const server = createServer(async (req, res) => {
     if (!file.startsWith(ROOT + sep) || !allowed(rel) || !(await stat(file)).isFile()) throw new Error('not found');
     let body = await readFile(file);
     if (rel === 'index.html') body = Buffer.from(withPreviewTags(body.toString('utf8')));
-    res.writeHead(200, {
+    const headers = {
       'content-type': TYPES[extname(file)] || 'application/octet-stream',
-      // the service worker and the page revalidate every time; everything else for an hour
-      'cache-control': rel === 'sw.js' || rel === 'index.html' ? 'no-cache' : 'public, max-age=3600',
+      // The page and its code are checked on every visit, so a release reaches each visitor
+      // as one consistent set of files; unchanged files answer with a tiny 304.
+      // Pictures may be reused for an hour.
+      'cache-control': extname(file) === '.png' ? 'public, max-age=3600' : 'no-cache',
+      etag: '"' + createHash('sha1').update(body).digest('base64url').slice(0, 22) + '"',
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'no-referrer',
-    });
+    };
+    if (req.headers['if-none-match'] === headers.etag) { res.writeHead(304, headers).end(); return; }
+    res.writeHead(200, headers);
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch {
     res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found. Sad!');

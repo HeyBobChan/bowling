@@ -1039,9 +1039,9 @@
     if (s.asleep) { tickerKind = 'none'; return 'He is asleep. The phone is on the pillow.'; }
     if (G.isHumble(s)) { tickerKind = 'feed'; return 'CRISIS: he was heard saying \u201CI may have been wrong.\u201D'; }
     const want = G.want(s);
-    if (want && tickerN % 2) { tickerKind = { hungry: 'feed', needEgo: 'praise', bored: 'play', needGlow: 'groom', tired: 'none' }[want]; const w = C.NEWS.want[want]; return w[tickerN % w.length]; }
+    if (want && tickerN % 2) { tickerKind = { hungry: 'feed', needEgo: 'praise', bored: 'play', needGlow: 'groom', tired: 'none' }[want]; const w = (C.NEWS && C.NEWS.want[want]) || ['He needs something.']; return w[tickerN % w.length]; }
     const pool = [];
-    const tn = C.NEWS.tier[G.tier(s)];
+    const tn = (C.NEWS && C.NEWS.tier[G.tier(s)]) || ['He is doing tremendously.']; // tolerate an older content file mid-release
     pool.push(['post', tn[tickerN % tn.length]]);
     pool.push(['shop', 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' an hour and climbing.']);
     if (s.posts.length) pool.push(['post', 'He posted: \u201C' + s.posts[0].t + '\u201D']);
@@ -1077,7 +1077,7 @@
     if (!s.hatched || s.asleep || s.sulking) return;
     const d = new Date(now()), season = C.seasonFor(d);
     if (season && !s.daily.seasonGreeted) {
-      const hello = C.SEASONS[season].greet;
+      const hello = [].concat(C.SEASONS[season].greet);
       s.daily.seasonGreeted = true; say(hello[Math.floor(Math.random() * hello.length)]); setAnim('dance', 2400); return;
     }
     if (G.isHumble(s)) { say(C.HUMBLE_LINES[0], { humble: true }); return; }
