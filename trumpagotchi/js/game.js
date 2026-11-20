@@ -22,6 +22,13 @@
   G.now = function () { return Date.now() + G.clockOffset; };
   G.rng = Math.random;
 
+  // The keeper's wall clock at time `t`: the day and the hour, which decide his nights, his
+  // streak and the calendar. In a browser that is the device's own clock. A server looking
+  // after a pet for its keeper (the Canon agent) swaps this for one that reads the keeper's
+  // time zone, which the page records in the save as `zone`.
+  G.wall = function (t) { const d = new Date(t); return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate(), h: d.getHours() }; };
+  const ymd = function (y, m, d) { return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0'); };
+
   // ---------------------------------------------------------------- levels
   G.cumXp = function (L) { return 60 * (L - 1) + 8 * (L - 1) * L; };
   G.levelFor = function (xp) {
@@ -57,6 +64,7 @@
       tariff: 0, bronzeUntil: 0, lastPetAt: 0,
       decor: [], orders: [], ach: {},
       posts: [], postCharges: POST_MAX, postChargeAt: now, last3am: '',
+      zone: '', // the keeper's time zone (an IANA name), so a server can tell his night from his day
       seenBriefings: [], seasonsDone: {},
       daily: { day: '', cokes: 0, briefing: null, briefingDone: false, seasonGreeted: false },
       streak: { n: 0, last: '', best: 0 },
@@ -108,6 +116,7 @@
       briefing: typeof s.daily.briefing === 'string' ? s.daily.briefing : null, briefingDone: !!s.daily.briefingDone, seasonGreeted: !!s.daily.seasonGreeted,
     };
     s.last3am = String(s.last3am || '');
+    s.zone = typeof s.zone === 'string' && /^[A-Za-z0-9_+\-\/]{1,64}$/.test(s.zone) ? s.zone : '';
     s.settings = { sound: s.settings.sound !== false, alerts: !!s.settings.alerts };
     return s;
   }
@@ -164,10 +173,7 @@
 
   // ---------------------------------------------------------------- helpers
   const clamp = function (v) { return v < 0 ? 0 : v > 100 ? 100 : v; };
-  G.dayKey = function (t) {
-    const d = new Date(t);
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  };
+  G.dayKey = function (t) { const w = G.wall(t); return ymd(w.y, w.m, w.d); };
   G.money = function (n) {
     const neg = n < 0; n = Math.abs(n);
     const units = [[1e15, 'Q'], [1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
@@ -270,7 +276,7 @@
   function step(s, dtH, t, o, ev) {
     if (!s.hatched || s.sulking || dtH <= 0) return;
     const n = s.needs;
-    const hour = new Date(t).getHours();
+    const hour = G.wall(t).h;
     const night = hour >= 23 || hour < 6;
     const p = G.perks(s);
     const soft = o.offline && o.awayH > 10 ? 0.4 : 1;
@@ -322,8 +328,10 @@
   function rollDay(s, now, ev) {
     const today = G.dayKey(now);
     if (s.daily.day === today) return;
-    const d = new Date(now);
-    const yesterday = G.dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).getTime());
+    const w = G.wall(now);
+    const d = new Date(w.y, w.m, w.d, 12); // the keeper's calendar day, for the seasons
+    const y = new Date(Date.UTC(w.y, w.m, w.d - 1));
+    const yesterday = ymd(y.getUTCFullYear(), y.getUTCMonth(), y.getUTCDate());
     s.streak.n = s.streak.last === yesterday ? s.streak.n + 1 : 1;
     s.streak.last = today;
     s.streak.best = Math.max(s.streak.best, s.streak.n);
@@ -331,7 +339,7 @@
     s.daily = { day: today, cokes: 0, briefing: null, briefingDone: false, seasonGreeted: false };
 
     const season = C.seasonFor(d);
-    const seasonKey = season + '-' + d.getFullYear();
+    const seasonKey = season + '-' + w.y;
     if (season && C.SEASON_BRIEFINGS[season] && !s.seasonsDone[seasonKey]) {
       s.daily.briefing = 'season:' + season;
     } else {
@@ -642,7 +650,7 @@
     s.daily.briefingDone = true;
     s.stats.briefings++;
     if (s.daily.briefing.indexOf('season:') === 0) {
-      s.seasonsDone[s.daily.briefing.slice(7) + '-' + new Date(now).getFullYear()] = true;
+      s.seasonsDone[s.daily.briefing.slice(7) + '-' + G.wall(now).y] = true;
       const kinds = new Set(Object.keys(s.seasonsDone).map(function (k) { return k.replace(/-\d+$/, ''); })).size;
       if (kinds >= 3) unlock(s, 'season3', r.events, now);
       if (kinds >= 10) unlock(s, 'season10', r.events, now);

@@ -772,6 +772,7 @@
     fresh.settings = s.settings;
     s = fresh;
     K.accept(remote.rev);
+    zoneNew = noteZone();
     G.catchUp(s, now()); G.save(s);
     hush(); view.particles.length = 0; view.target = null; praiseOpts = null; draft = null; briefResult = null;
     if (sheet && sheet.id !== 'menu') closeSheet(); else drawSheet();
@@ -822,6 +823,7 @@
     (info.dirty ? K.push(cloudState()) : K.pull()).then(function (r) {
       syncing = false;
       pushGap = r.status === 'offline' || r.status === 'busy' ? Math.min(pushGap * 2, 60000) : 6000;
+      if (zoneNew && (r.status === 'same' || r.status === 'ok')) { zoneNew = false; if (r.status === 'same') dirty(); }
       if (r.status === 'conflict') resolveConflict(r);
       else if (r.status === 'newer') { const i = K.info(); if (i && i.dirty) resolveConflict(r); else if (adopt(r)) toast('Picked up from your other device.', 'gold'); }
       else if (r.status === 'gone') cloudGone();
@@ -858,6 +860,7 @@
     K.enable(cloudState()).then(function (r) {
       if (!r.ok) { toast(r.status === 'busy' ? 'Too many new cloud saves from here. Try again later.' : 'Could not reach the cloud. Try again.'); S.play('no'); return; }
       S.play('ach');
+      zoneNew = false; // he went up with his zone
       showKeeperCode('He is saved to the cloud');
       if (sheet && sheet.id === 'menu') drawSheet();
     });
@@ -1146,11 +1149,27 @@
     if (navigator.setAppBadge) { if (want || s.sulking) navigator.setAppBadge(1).catch(function () {}); else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(function () {}); }
   }
 
+  // Where the keeper is, so a helper acting for them elsewhere (Don on Canon) keeps his hours.
+  // The zone travels to the cloud with his next real change; the device that last looked
+  // after him sets it. Only a save that had no zone at all is sent for the zone's sake, and
+  // then only once this device and the cloud agree (see syncNow), so a time zone can never
+  // start a "which one is he?" question or bounce between two devices.
+  let zoneNew = false;
+  function noteZone() {
+    let zone = '';
+    try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* stays unknown */ }
+    if (!zone || zone === s.zone || !/^[A-Za-z0-9_+\-\/]{1,64}$/.test(zone)) return false;
+    const first = !s.zone;
+    s.zone = zone;
+    return first;
+  }
+
   // ---------------------------------------------------------------- boot
   function init() {
     if (params.has('reset') && LOCAL) G.wipe();
     s = G.load(now());
     S.enabled = s.settings.sound;
+    zoneNew = noteZone();
     buildHud();
     const r = G.catchUp(s, now());
     view.chatterAt = clock() + 9000;
