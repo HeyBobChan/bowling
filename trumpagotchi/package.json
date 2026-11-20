@@ -1,0 +1,21 @@
+{
+  "name": "trumpagotchi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A tremendous virtual pet. A parody.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/sim.test.mjs tests/api.test.mjs",
+    "test:browser": "node tests/smoke.mjs && node tests/cloud.mjs",
+    "migrate": "node server/migrate.mjs",
+    "build:single": "node tools/build-single.mjs",
+    "icons": "node tools/make-icons.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}
