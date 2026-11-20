@@ -15,7 +15,7 @@ const BASE = `http://localhost:${PORT}/`;
 const server = spawn(process.execPath, [resolve(root, 'server.mjs')], { env: { ...process.env, PORT: String(PORT), CLOUD_STORE: 'memory', NODE_ENV: 'test', DATABASE_URL: '' }, stdio: 'ignore' });
 for (let i = 0; i < 40; i++) { try { if ((await fetch(BASE + 'healthz')).ok) break; } catch { /* not up yet */ } await new Promise((r) => setTimeout(r, 100)); }
 
-const b = await chromium.launch();
+const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined });
 let failed = false;
 try {
   const problems = [];

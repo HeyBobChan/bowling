@@ -281,7 +281,7 @@
       n.glow = clamp(n.glow - 0.8 * dtH);
       if (hour === 3 && G.level(s) >= 24 && s.last3am !== G.dayKey(t)) {
         s.last3am = G.dayKey(t);
-        const post = C.makePost(G.tier(s), G.rng);
+        const post = C.makePost(G.tier(s), G.rng, true);
         s.posts.unshift({ t: post.text, at: t, likes: C.likesFor(G.tier(s), G.rng), night: true });
         s.posts.length = Math.min(s.posts.length, 30);
         s.stats.posts3am++;
@@ -462,7 +462,9 @@
       r.say = G.say(s, 'ateSalad', { tariff: s.tariff });
       r.anim = 'yuck';
     } else {
-      r.say = G.say(s, 'ate', { food: f.word });
+      // some foods have things said only about them; otherwise he speaks about food in general
+      const own = 'ate_' + id;
+      r.say = C.LINES[own] && G.rng() < 0.6 ? G.say(s, own) : G.say(s, 'ate', { food: f.word });
     }
     return r;
   };
@@ -639,7 +641,12 @@
     if (fx.ach) unlock(s, fx.ach, r.events, now);
     s.daily.briefingDone = true;
     s.stats.briefings++;
-    if (s.daily.briefing.indexOf('season:') === 0) s.seasonsDone[s.daily.briefing.slice(7) + '-' + new Date(now).getFullYear()] = true;
+    if (s.daily.briefing.indexOf('season:') === 0) {
+      s.seasonsDone[s.daily.briefing.slice(7) + '-' + new Date(now).getFullYear()] = true;
+      const kinds = new Set(Object.keys(s.seasonsDone).map(function (k) { return k.replace(/-\d+$/, ''); })).size;
+      if (kinds >= 3) unlock(s, 'season3', r.events, now);
+      if (kinds >= 10) unlock(s, 'season10', r.events, now);
+    }
     else s.seenBriefings.push(br.id);
     // then he signs something
     const left = C.ORDERS.filter(function (o) { return s.orders.indexOf(o.id) < 0; });

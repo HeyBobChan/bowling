@@ -215,7 +215,8 @@ test('briefings do not repeat until every one has been seen', () => {
 test('seasons: Thanksgiving week brings the turkey pardon', () => {
   assert.equal(C.seasonFor(new Date(2026, 10, 20)), 'turkey');
   assert.equal(C.seasonFor(new Date(2026, 10, 26)), 'turkey');
-  assert.equal(C.seasonFor(new Date(2026, 10, 27)), null);
+  assert.equal(C.seasonFor(new Date(2026, 10, 27)), 'blackfriday');
+  assert.equal(C.seasonFor(new Date(2026, 10, 28)), null);
   assert.equal(C.seasonFor(new Date(2027, 5, 14)), 'birthday');
   assert.equal(C.seasonFor(new Date(2027, 6, 4)), 'july4');
   assert.equal(C.seasonFor(new Date(2026, 11, 24)), 'christmas');
@@ -229,6 +230,78 @@ test('seasons: Thanksgiving week brings the turkey pardon', () => {
   assert.ok(s.ach.turkey);
   G.catchUp(s, t + DAY);
   assert.notEqual(G.briefing(s).id, 'turkey', 'only once per year');
+});
+
+test('the calendar: every special day is found, has a greeting and its own briefing', () => {
+  const on = (y, m, d) => C.seasonFor(new Date(y, m - 1, d));
+  assert.deepEqual([on(2026, 4, 5), on(2026, 4, 6), on(2026, 4, 7)], ['easter', 'easter', null]);
+  assert.deepEqual([on(2027, 3, 28), on(2028, 4, 16), on(2030, 4, 21)], ['easter', 'easter', 'easter']);
+  assert.equal(on(2026, 1, 1), 'newyear');
+  assert.equal(on(2026, 2, 2), 'groundhog');
+  assert.equal(on(2026, 2, 8), 'superbowl');
+  assert.equal(on(2027, 2, 14), 'valentine', 'a fixed date wins over the big game');
+  assert.equal(on(2028, 2, 29), 'leapday');
+  assert.equal(on(2026, 3, 17), 'stpatrick');
+  assert.equal(on(2026, 4, 1), 'aprilfools');
+  assert.equal(on(2026, 5, 28), 'hamburger');
+  assert.equal(on(2026, 9, 7), 'laborday');
+  assert.equal(on(2026, 10, 31), 'halloween');
+  assert.equal(on(2026, 12, 31), 'newyearseve');
+  assert.equal(on(2026, 3, 13), 'friday13');
+  assert.equal(on(2026, 3, 14), null);
+  // every day of a year resolves to nothing or to a known special day, and they all get used
+  const used = new Set();
+  for (const y of [2026, 2027, 2028]) for (let d = new Date(y, 0, 1); d.getFullYear() === y; d.setDate(d.getDate() + 1)) {
+    const s = C.seasonFor(d);
+    if (s) { assert.ok(C.SEASONS[s], 'unknown special day: ' + s); used.add(s); }
+  }
+  assert.deepEqual([...used].sort(), Object.keys(C.SEASONS).sort());
+  for (const id in C.SEASONS) {
+    assert.ok(C.SEASONS[id].name && Array.isArray(C.SEASONS[id].greet) && C.SEASONS[id].greet.length > 0, id);
+    assert.equal(C.SEASON_BRIEFINGS[id].id, id, id + ' has its own briefing');
+  }
+});
+
+test('special days are collected across the year', () => {
+  const s = hatched(at(2026, 1, 1, 10));
+  const take = (y, m, d) => {
+    const t = at(y, m, d, 10);
+    G.catchUp(s, t);
+    for (const k of G.NEEDS) s.needs[k] = 80;
+    s.asleep = false; s.sulking = false;
+    const b = G.briefing(s);
+    G.chooseBriefing(s, 0, t);
+    return b.id;
+  };
+  assert.equal(take(2026, 1, 1), 'newyear');
+  assert.equal(take(2026, 1, 20), 'inaug');
+  assert.equal(s.ach.season3, undefined);
+  assert.equal(take(2026, 2, 2), 'groundhog');
+  assert.ok(s.ach.season3);
+  assert.notEqual(take(2026, 2, 3), 'groundhog', 'an ordinary day gets an ordinary briefing');
+  const rest = [[2, 8, 'superbowl'], [2, 14, 'valentine'], [2, 16, 'presidents'], [3, 17, 'stpatrick'], [4, 1, 'aprilfools'], [4, 5, 'easter'], [5, 28, 'hamburger']];
+  for (const [m, d, id] of rest) assert.equal(take(2026, m, d), id);
+  assert.ok(s.ach.season10);
+  assert.notEqual(take(2026, 4, 6), 'easter', 'once a year, even on a two-day occasion');
+  assert.equal(take(2027, 1, 1), 'newyear', 'and again the next year');
+});
+
+test('some foods get remarks of their own, in every register', () => {
+  for (const id of ['steak', 'chicken', 'tacobowl', 'cake', 'icecream']) assert.equal(C.LINES['ate_' + id].length, 5, id);
+  const s = hatched();
+  G.rng = () => 0.1; // below the chance threshold: he uses the food's own lines
+  s.needs.food = 10; s.xp = G.cumXp(47);
+  const said = G.feed(s, 'steak', G.now()).say;
+  assert.ok(C.LINES.ate_steak[4].includes(said), said);
+  G.rng = seeded(7);
+});
+
+test('3 AM posts can draw on their own lines', () => {
+  let n = 0;
+  G.rng = seeded(11);
+  for (let i = 0; i < 200; i++) if (/3 AM|sleep|awake/i.test(C.makePost(3, G.rng, true).text)) n++;
+  assert.ok(n > 60, 'night lines show up: ' + n);
+  for (let i = 0; i < 50; i++) assert.ok(C.makePost(0, G.rng, true).text.length > 5, 'registers without night lines still post');
 });
 
 test('posts use charges that come back over time', () => {
@@ -380,6 +453,15 @@ test('content is complete and consistent', () => {
   }
   const uniq = (arr) => new Set(arr).size === arr.length;
   assert.ok(uniq(C.BRIEFINGS.map((b) => b.id)));
+  assert.ok(C.BRIEFINGS.length >= 60 && C.ORDERS.length >= C.BRIEFINGS.length, 'an order for every daily briefing');
+  for (const b of C.BRIEFINGS) for (const ch of b.choices) assert.ok(ch.fx.xp >= 24 && ch.fx.xp <= 40, b.id + ': ordinary briefings pay alike');
+  // a line with a placeholder must be handed that value by the game
+  const allowed = { ate: ['food'], ateCoke: ['n'], ateSalad: ['tariff'], greetLong: ['hours'], rally: ['real', 'claimed'] };
+  for (const key in C.LINES) for (const tier of C.LINES[key]) for (const line of tier) for (const m of line.matchAll(/\{(\w+)\}/g)) assert.ok((allowed[key] || []).includes(m[1]), key + ' uses {' + m[1] + '}');
+  for (const key of ['want', 'tier']) assert.ok(C.NEWS[key]);
+  for (const t of C.NEWS.tier) assert.ok(t.length >= 6);
+  assert.equal(C.POST.templates.length, 5);
+  for (const t of C.POST.templates) assert.ok(t.length >= 12);
   assert.ok(uniq(C.ORDERS.map((o) => o.no)) && uniq(C.ORDERS.map((o) => o.title)));
   assert.ok(uniq(C.ACHIEVEMENTS.map((a) => a.id)));
   assert.ok(uniq(C.DECOR.map((d) => d.id)));

@@ -968,18 +968,19 @@
   }
 
   // ---------------------------------------------------------------- drawing
+  const FESTIVE = ['inaug', 'presidents', 'july4', 'laborday']; // days the office hangs bunting
   function decorMap() { const m = {}; for (const d of s.decor) m[d] = true; return m; }
   function drawRoom(x, still) {
     const t = now(), d = new Date(t), lv = G.level(s), mood = G.mood(s);
     const season = C.seasonFor(d);
     A.drawRoom(x, {
       scene: A.sceneFor(lv), frame: still ? 12 : view.frame, decor: decorMap(), hour: d.getHours() + d.getMinutes() / 60,
-      season: season, bunting: lv >= 32 && lv < 45, buttonLit: view.buttonLit > view.frame,
+      season: season, bunting: lv >= 32 && lv < 45, festive: FESTIVE.indexOf(season) >= 0, buttonLit: view.buttonLit > view.frame,
     });
     const f = still ? 12 : view.frame;
     if (!s.hatched) { A.drawEgg(x, 80, A.FLOOR, s.eggTaps, f); return; }
     if (s.sulking) { A.drawGone(x, f); return; }
-    const look = A.look(lv, { humble: mood === 'humble', bronze: t < s.bronzeUntil, wilt: s.needs.glow < 25, term: s.term });
+    const look = A.look(lv, { humble: mood === 'humble', bronze: t < s.bronzeUntil, wilt: s.needs.glow < 25, term: s.term, tie: season === 'stpatrick' ? '#1f9d55' : null });
     if (s.asleep) {
       A.drawBed(x); A.drawDon(x, A.BED.x, A.BED.y, look, A.pose('sleep', f, {}), { lying: true }); A.drawBlanket(x);
       x.fillStyle = 'rgba(8,12,40,0.5)'; x.fillRect(0, 0, A.W, A.H);
@@ -1031,17 +1032,6 @@
   }
 
   // ---------------------------------------------------------------- the news ticker
-  const WANT_NEWS = {
-    hungry: 'Sources: he has not eaten in minutes. Possibly hours.', needEgo: 'Developing: nobody has complimented him recently.',
-    bored: 'Alert: boredom rising. Golf is recommended.', needGlow: 'Hair altitude dropping. Experts concerned.', tired: 'He insists he is not tired. He is tired.',
-  };
-  const TIER_NEWS = [
-    ['Local man described as \u201Cpleasant, quiet.\u201D', 'Area man holds door, apologizes to door.', 'Neighbor: \u201CHonestly? Very normal guy.\u201D'],
-    ['Queens kid reports having \u201Ca feeling\u201D about himself.', 'Young man seen looking at tall buildings, nodding.'],
-    ['Developer puts name on building, then on the sign pointing at the building.', 'Mogul describes own lunch as \u201Chistoric.\u201D'],
-    ['Candidate rates own speech \u201Ca ten, maybe an eleven.\u201D', 'Rally crowd estimated at \u201Ceveryone.\u201D'],
-    ['President declares today \u201Cthe greatest day,\u201D same as yesterday.', 'Mountain reportedly \u201Cbeing measured.\u201D', 'Sharpie stock soars on signing rumors.'],
-  ];
   let tickerN = 0, tickerKind = 'post';
   function headline() {
     tickerN++;
@@ -1049,9 +1039,9 @@
     if (s.asleep) { tickerKind = 'none'; return 'He is asleep. The phone is on the pillow.'; }
     if (G.isHumble(s)) { tickerKind = 'feed'; return 'CRISIS: he was heard saying \u201CI may have been wrong.\u201D'; }
     const want = G.want(s);
-    if (want && tickerN % 2) { tickerKind = { hungry: 'feed', needEgo: 'praise', bored: 'play', needGlow: 'groom', tired: 'none' }[want]; return WANT_NEWS[want]; }
+    if (want && tickerN % 2) { tickerKind = { hungry: 'feed', needEgo: 'praise', bored: 'play', needGlow: 'groom', tired: 'none' }[want]; const w = (C.NEWS && C.NEWS.want[want]) || ['He needs something.']; return w[tickerN % w.length]; }
     const pool = [];
-    const tn = TIER_NEWS[G.tier(s)];
+    const tn = (C.NEWS && C.NEWS.tier[G.tier(s)]) || ['He is doing tremendously.']; // tolerate an older content file mid-release
     pool.push(['post', tn[tickerN % tn.length]]);
     pool.push(['shop', 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' an hour and climbing.']);
     if (s.posts.length) pool.push(['post', 'He posted: \u201C' + s.posts[0].t + '\u201D']);
@@ -1086,7 +1076,10 @@
   function greet(awayH) {
     if (!s.hatched || s.asleep || s.sulking) return;
     const d = new Date(now()), season = C.seasonFor(d);
-    if (season && !s.daily.seasonGreeted) { s.daily.seasonGreeted = true; say(C.SEASONS[season].greet); setAnim('dance', 2400); return; }
+    if (season && !s.daily.seasonGreeted) {
+      const hello = [].concat(C.SEASONS[season].greet);
+      s.daily.seasonGreeted = true; say(hello[Math.floor(Math.random() * hello.length)]); setAnim('dance', 2400); return;
+    }
     if (G.isHumble(s)) { say(C.HUMBLE_LINES[0], { humble: true }); return; }
     if (awayH >= 8) say(G.say(s, 'greetLong', { hours: Math.round(awayH) }));
     else if (d.getHours() >= 5 && d.getHours() < 10 && awayH >= 3) say(G.say(s, 'greetMorning'));

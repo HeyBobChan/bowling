@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined });
 const page = await browser.newPage();
 await page.setContent('<!doctype html><meta charset="utf-8"><body></body>');
 for (const f of ['content', 'game', 'art']) await page.addScriptTag({ path: resolve(root, 'js', f + '.js') });
