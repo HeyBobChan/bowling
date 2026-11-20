@@ -132,4 +132,11 @@ and check the roster, games and return links through `/kids/` afterward.
 `npm run build:artifacts -- <id>` writes `artifacts/<id>.html`; publish it with the
 Artifact tool using the `artifact` URL from `games.json` to keep the same link.
 
+## Also in this repository
+
+[`trumpagotchi/`](trumpagotchi/README.md) is a separate, self-contained project: a parody
+virtual pet with its own page, tests, server and Dockerfile. It is not one of the kids'
+games: it is not in `games.json`, the Vite build does not include it, and the games site
+does not serve it.
+
 🤖 Built with [Claude Code](https://claude.com/claude-code)
