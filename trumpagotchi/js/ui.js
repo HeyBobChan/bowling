@@ -5,6 +5,9 @@
   const $ = function (id) { return document.getElementById(id); };
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has('debug');
+  // Wiping from the URL is for development only. On a public address a shared link
+  // ending in ?reset must not be able to erase a visitor's pet.
+  const LOCAL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   let s = null;
@@ -973,7 +976,7 @@
 
   // ---------------------------------------------------------------- boot
   function init() {
-    if (params.has('reset')) G.wipe();
+    if (params.has('reset') && LOCAL) G.wipe();
     s = G.load(now());
     S.enabled = s.settings.sound;
     buildHud();

@@ -12,6 +12,24 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
 const PUBLIC = new Set(['index.html', 'manifest.webmanifest', 'sw.js']);
+
+// Link previews (chat apps, social sites) need absolute addresses. Set PUBLIC_URL to where
+// visitors reach the page, e.g. https://example.com/trumpagotchi/, and the preview tags use it.
+// Everything else in the page stays relative, so it keeps working under any path.
+function publicUrl() {
+  try {
+    const u = new URL(process.env.PUBLIC_URL || '');
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return '';
+    return (u.origin + u.pathname).replace(/\/?$/, '/').replace(/["<>&]/g, '');
+  } catch { return ''; }
+}
+const SITE = publicUrl();
+function withPreviewTags(html) {
+  if (!SITE) return html;
+  return html
+    .replace('content="icons/og.png"', 'content="' + SITE + 'icons/og.png"')
+    .replace('<meta property="og:type"', '<meta property="og:url" content="' + SITE + '" />\n  <meta property="og:type"');
+}
 const PUBLIC_DIRS = ['css', 'js', 'icons'];
 
 function allowed(rel) {
@@ -27,7 +45,8 @@ const server = createServer(async (req, res) => {
     if (rel === '' || rel.endsWith('/')) rel += 'index.html';
     const file = join(ROOT, rel);
     if (!file.startsWith(ROOT + sep) || !allowed(rel) || !(await stat(file)).isFile()) throw new Error('not found');
-    const body = await readFile(file);
+    let body = await readFile(file);
+    if (rel === 'index.html') body = Buffer.from(withPreviewTags(body.toString('utf8')));
     res.writeHead(200, {
       'content-type': TYPES[extname(file)] || 'application/octet-stream',
       // the service worker and the page revalidate every time; everything else for an hour

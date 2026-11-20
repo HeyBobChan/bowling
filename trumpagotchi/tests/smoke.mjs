@@ -114,6 +114,36 @@ try {
     await page.click('#modalCard button');
   });
 
+  await step('on a public address a ?reset link cannot erase the pet', async () => {
+    // Serve the same app under a made-up public hostname.
+    const pub = await ctx.newPage();
+    await pub.route('http://pet.example/**', async (route) => {
+      const u = new URL(route.request().url());
+      route.fulfill({ response: await route.fetch({ url: BASE + u.pathname.slice(1) + u.search }) });
+    });
+    await pub.goto('http://pet.example/');
+    await pub.waitForSelector('#hatchBtn');
+    for (let i = 0; i < 8; i++) await pub.click('#scene');
+    await pub.waitForSelector('#modalCard button');
+    await pub.evaluate(() => window.TG.game.save(window.TG.ui.state()));
+    await pub.goto('http://pet.example/?reset');
+    await pub.waitForFunction(() => window.TG && window.TG.ui);
+    assert.equal(await pub.evaluate(() => window.TG.ui.state().hatched), true);
+    await pub.close();
+  });
+
+  await step('preview tags turn absolute when PUBLIC_URL is set', async () => {
+    const port = PORT + 1;
+    const second = spawn(process.execPath, [resolve(root, 'server.mjs')], { env: { ...process.env, PORT: String(port), PUBLIC_URL: 'https://example.com/pet' }, stdio: 'ignore' });
+    try {
+      let html = '';
+      for (let i = 0; i < 40 && !html; i++) { try { html = await (await fetch(`http://localhost:${port}/`)).text(); } catch { await new Promise((r) => setTimeout(r, 100)); } }
+      assert.match(html, /<meta property="og:image" content="https:\/\/example\.com\/pet\/icons\/og\.png" \/>/);
+      assert.match(html, /<meta property="og:url" content="https:\/\/example\.com\/pet\/" \/>/);
+      assert.match(await (await fetch(BASE)).text(), /<meta property="og:image" content="icons\/og\.png" \/>/);
+    } finally { second.kill(); }
+  });
+
   await step('no page errors', async () => { assert.deepEqual(errors, []); });
 
   const single = resolve(root, 'dist', 'trumpagotchi.html');

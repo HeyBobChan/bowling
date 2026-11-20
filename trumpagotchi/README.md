@@ -59,7 +59,24 @@ in about four weeks, three times a day in about seven, once a day in about fifte
 Limits worth knowing: alerts ("he is hungry") only fire while the page is still open in the
 background, since real push needs a server. Saves do not sync between devices on their own.
 
-## Put it online
+## Where it is live
+
+It runs on Railway, in the `matanbob` project, as its own service named `trumpagotchi`
+(Dockerfile build, health check on `/healthz`):
+
+- https://trumpagotchi-production.up.railway.app
+
+Like the other services in that project it takes source uploads, so a GitHub push alone
+does not publish. To release, upload the committed contents of this folder to that service
+(with the Railway CLI: `railway up --service trumpagotchi` from this folder, linked to the
+`matanbob` project), wait for Railway to report success, then load the page and check
+`/healthz`.
+
+The pet is saved per browser *and per address*: one hatched at the Railway address is not
+the same pet as one hatched at another address that serves the same files. Pick the address
+you give people and stick with it; a save code moves a pet between addresses.
+
+## Put it somewhere else
 
 Any static host works: upload this folder (the app is `index.html`, `manifest.webmanifest`,
 `sw.js`, `css/`, `js/`, `icons/`).
@@ -70,6 +87,10 @@ Any static host works: upload this folder (the app is `index.html`, `manifest.we
 - **Docker:** `docker build -t trumpagotchi . && docker run -p 8080:8080 trumpagotchi`
 - **GitHub Pages, Netlify, Cloudflare Pages, S3:** publish the folder as is. All paths are
   relative, so it also works from a subpath.
+
+Set `PUBLIC_URL` (for example `https://example.com/trumpagotchi/`) on the Node server and
+the link-preview tags use absolute addresses, which chat apps and social sites need. The page
+itself stays relative, so it works behind a path prefix or a reverse proxy without changes.
 
 When you change a file, bump `VERSION` in `sw.js` so installed copies refresh their cache.
 
@@ -94,14 +115,15 @@ tests/                simulation tests (Node) and a browser smoke test
 
 ```bash
 npm test             # 28 rule and balance tests, plain Node
-npm run test:browser # plays the first minutes in headless Chromium
+npm run test:browser # plays the first minutes in headless Chromium, 12 checks
 ```
 
 The browser test and `npm run icons` need Playwright with Chromium available; the app itself
 needs nothing.
 
 Add `?debug` to the URL for a time-travel panel at the bottom of Settings (skip hours, add
-levels), and `?reset` to start from a fresh egg.
+levels). `?reset` starts from a fresh egg, on `localhost` or a local file only: on a public
+address a link must not be able to erase a visitor's pet.
 
 ## Tuning
 
