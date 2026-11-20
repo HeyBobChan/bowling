@@ -121,6 +121,86 @@ per pet keep a script from filling the table; the total number of pets is capped
 | `PUBLIC_URL` | Where visitors reach the page, for absolute link-preview tags. |
 | `CLOUD_STORE=memory` | Keeps pets in memory, for tests and local tinkering. Refused in production. |
 
+## Don on Canon: he writes to you
+
+A web page cannot tap you on the shoulder. So a pet can also live in
+[Canon](https://canonmail.com), a messaging app where agents sit next to people: there he is
+**Don**, his keeper's own private agent. You feed him by typing "burger", praise him by
+actually praising him, and he writes first when he needs something. It is optional, and the
+page works exactly as before without it.
+
+There is no AI model in him. `don/brain.mjs` is plain rules: what the keeper types becomes
+the game's own actions (`js/game.js`), and the game's own lines (`js/content.js`) become
+what he answers.
+
+```
+keeper's phone ── Canon (end-to-end encrypted room) ── don/ process ── cloud-save API ── the pet
+```
+
+- **One Don, one keeper.** He registers on Canon under his keeper's phone number and does
+  nothing until they approve him in the app. He takes orders from his keeper only, in the
+  room of just the two of them. Anyone else, and any group, gets small talk.
+- **He holds the keeper code, nothing more.** The keeper sends him the code in their chat
+  (or pastes the link from Settings). From then on he reads and saves the pet through the
+  same API a second phone would use. He has no access to the game's database.
+- **Same pet, same rules.** `server/engine.mjs` loads the page's own `content.js` and
+  `game.js`, so a burger in the chat is the burger on the page. If the page saved at the same
+  moment, he reads again and applies his change on top.
+
+What he understands: `burger`, `coke`, `taco`, `chicken`, `steak`, `cake`, `ice cream`,
+`salad`; any compliment (louder is better) or insult; `comb`, `hairspray`, `bronzer`;
+`good night`, `wake up`; `post`; `briefing` (a card to tap, or 1, 2, 3); `status`; `sorry`
+when he has walked out; `quiet` and `alerts on`; `unlink`; `help`. Golf, deals, rallies and
+the shop stay on the page.
+
+### When he writes first
+
+`server/alerts.mjs` decides, and it is written for a pet people keep for months:
+
+- only between 8:00 and 22:00 in the keeper's own time zone, and never while he is asleep;
+- never within 45 minutes of a visit, at least 3 hours apart, at most 3 a day, and not the
+  same complaint twice within 8 hours;
+- about what he actually needs (his own lines), about getting dangerously reasonable, once
+  before he walks out and once when he has, and in the morning only when there is a streak
+  of three days or more to keep or a 3 AM post to show off;
+- if nobody comes for three days he writes once a day at most; after ten days he stops,
+  apart from the one message that he has left.
+
+The page records the keeper's time zone in the save (`zone`), because a server has no idea
+when its keeper's night is. Looking never saves: only something the keeper asks for does.
+
+### Running a Don
+
+`don/` is its own small service with its own dependencies (`@canonmsg/agent-sdk`); the game
+server does not load any of it. From this folder:
+
+```bash
+docker build -f don/Dockerfile -t trumpagotchi-don .
+docker run -v don-data:/data -e CANON_OWNER_PHONE=+15551234567 trumpagotchi-don
+```
+
+| Variable | |
+|---|---|
+| `CANON_OWNER_PHONE` | The keeper's Canon phone number (E.164). Needed until they have approved him. |
+| `DON_DATA_DIR` | A private directory that survives restarts. Default `/data`. |
+| `SITE_URL` | Where the game is played. Default `https://matanbob.com/trumpagotchi/`. |
+| `PET_API_URL` | Where the game's API is reached, if not under `SITE_URL`. |
+| `PET_PROXY_KEY` | The game server's `PROXY_KEY`, so it counts this Don as one caller in its limits. |
+| `CANON_ENVIRONMENT_ID` | Default `canon-prod-v1`. |
+| `DON_NAME`, `DON_CHECK_MINUTES` | His name on Canon (default `Don`) and how often he looks at himself (default 5). |
+
+On first start he asks Canon to register him and waits. The keeper approves the request in
+the Canon app (Settings → Requests), he says hello, and the keeper sends him the keeper code.
+
+The data directory holds his Canon identity and encryption keys (`canon/`) and his notes
+(`don.json`: the keeper code, the room he talks in, what he has already said). Unlike the
+game server, which keeps only a hash, he needs the keeper code itself, so that directory is
+private to him and must not be shared or backed up carelessly. Lose it and he has to be
+approved and linked again; the pet itself is untouched.
+
+Today this runs one Don, for the first keeper. Hosting a Don for every keeper who asks for
+one (each still their own agent, started on demand) is the next step.
+
 ## Where it is live
 
 **https://matanbob.com/trumpagotchi/** is the address to give people.
@@ -130,6 +210,10 @@ It runs on Railway, in the `matanbob` project, as its own service named `trumpag
 restricted login above. matanbob.com forwards `/trumpagotchi/` to it, read-only apart from
 the cloud-save API (that route lives in `HeyBobChan/personal_website`). The service also
 answers directly at https://trumpagotchi-production.up.railway.app.
+
+Don runs beside it as the service `trumpagotchi-don`: the same folder built with
+`don/Dockerfile`, with a volume at `/data`. It serves nothing: it only connects out, to Canon
+and to the game's API.
 
 Like the other services in that project it takes source uploads, so a GitHub push alone
 does not publish. To release, upload the committed contents of this folder to that service
@@ -177,14 +261,20 @@ server/api.mjs        the API: codes, limits, validation (no database code)
 server/store-pg.mjs   pets in PostgreSQL; server/store-memory.mjs for tests
 server/schema.sql     the trumpagotchi schema; permissions.sql, the restricted login
 server/migrate.mjs    creates both, then proves the login is fenced in
+server/engine.mjs     the page's own rules loaded on a server, in the keeper's time zone
+server/alerts.mjs     when a pet nobody is watching speaks up, and what he says
+don/main.mjs          Don on Canon: registration, the runner, hello, the alert loop
+don/brain.mjs         what the keeper types → the game's actions → what he answers
+don/pet.mjs           his door to the pet: the cloud-save API; don/store.mjs, his notes
 tools/                single-file build, icon and preview-image generator
-tests/                simulation and API tests (Node), two browser tests
+tests/                simulation, API, alert and chat tests (Node), two browser tests
 ```
 
 ## Tests
 
 ```bash
-npm test             # 32 rule, balance and content tests and 10 cloud-save API tests, plain Node
+npm test             # rules, balance and content (32), the cloud-save API (10), time zones and
+                     # alerts (14), Don's chat brain against the real API (14): plain Node
 npm run test:browser # headless Chromium: the first minutes (13 checks), then two devices sharing a pet
 ```
 

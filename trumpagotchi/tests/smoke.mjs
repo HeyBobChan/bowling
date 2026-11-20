@@ -128,6 +128,16 @@ try {
     await page.click('#modalCard button');
   });
 
+  await step('the save records where its keeper is', async () => {
+    const there = await browser.newContext({ timezoneId: 'Pacific/Auckland' });
+    const p = await there.newPage();
+    await p.goto(BASE);
+    await p.waitForFunction(() => window.TG && window.TG.ui);
+    assert.equal(await p.evaluate(() => window.TG.ui.state().zone), 'Pacific/Auckland');
+    assert.equal(await p.evaluate(() => window.TG.game.stored(Date.now()).zone), 'Pacific/Auckland');
+    await there.close();
+  });
+
   await step('on a public address a ?reset link cannot erase the pet', async () => {
     // Serve the same app under a made-up public hostname.
     const pub = await ctx.newPage();

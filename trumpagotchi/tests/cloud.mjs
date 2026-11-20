@@ -19,8 +19,10 @@ const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIU
 let failed = false;
 try {
   const problems = [];
+  const ZONES = { A: 'Asia/Jerusalem', B: 'America/New_York' }; // two devices need not share a time zone
+  const zone = (d) => d.p.evaluate(() => window.TG.ui.state().zone);
   const device = async (name) => {
-    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: ZONES[name] });
     const p = await ctx.newPage();
     p.on('pageerror', e => problems.push(name + ' pageerror: ' + e.message));
     p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) problems.push(name + ' console: ' + m.text()); });
@@ -60,6 +62,11 @@ try {
   assert.equal(sb.name, 'Donny'); // the pet arrives exactly as device A had him
   assert.equal(sb.linked, true);
   await B.p.click('#sheetClose').catch(() => {});
+  // each device knows where it is, and being somewhere else is not a change worth an upload
+  assert.equal(await zone(A), ZONES.A); assert.equal(await zone(B), ZONES.B);
+  await sync(B); await sync(A); await sync(B);
+  assert.equal((await st(B)).info.dirty, false); assert.equal((await st(A)).info.dirty, false);
+  assert.equal(await zone(A), ZONES.A);
 
   // B feeds; A picks it up
   await feed(B, 0); await sync(B);
@@ -67,6 +74,23 @@ try {
   let sa = await st(A);
   console.log('3 after B fed -> A:', JSON.stringify({ burgers: sa.burgers, rev: sa.info.rev }));
   assert.equal(sa.burgers, 1);
+  assert.equal(await zone(A), ZONES.A); assert.equal(sa.info.dirty, false); // picked up, and still where A is
+  assert.equal(await A.p.isVisible('#keepMine'), false);
+
+  // a pet saved before zones existed gets its zone sent up once, and nobody is asked anything
+  const cloudZone = async () => (await (await fetch(BASE + 'api/pet', { headers: { authorization: 'Bearer ' + code.replace(/-/g, '') } })).json()).state.zone;
+  assert.equal(await cloudZone(), ZONES.B); // B looked after him last
+  await A.p.evaluate(() => { const s = window.TG.ui.state(); s.zone = ''; window.TG.game.save(s); window.TG.cloud.markDirty(); });
+  await sync(A);
+  assert.equal(await cloudZone(), '');
+  await A.p.reload();
+  await A.p.waitForFunction(() => window.TG && window.TG.ui && window.TG.cloud.available !== null);
+  await sync(A); await A.p.waitForTimeout(1200); await sync(A);
+  assert.equal(await cloudZone(), ZONES.A);
+  assert.equal(await A.p.isVisible('#keepMine'), false);
+  await sync(B);
+  assert.equal(await B.p.isVisible('#keepMine'), false);
+  console.log('3b a save without a zone got one:', await cloudZone());
 
   // both change him while A is offline: A must be asked which pet to keep
   await A.ctx.setOffline(true);

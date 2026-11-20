@@ -1,4 +1,5 @@
 node_modules
+don/node_modules
 dist
 tests
 tools
