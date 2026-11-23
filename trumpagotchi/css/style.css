@@ -213,6 +213,7 @@ body[data-hatched="1"] .intro { display: none; }
 .btn.ghost { background: transparent; box-shadow: none; }
 .btn.big { width: 100%; min-height: 64px; font-size: 19px; letter-spacing: 0.08em; text-transform: uppercase; }
 .btn[disabled] { opacity: 0.45; cursor: default; }
+a.btn { color: inherit; text-decoration: none; touch-action: manipulation; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row > .btn { flex: 1; }
 
@@ -287,6 +288,7 @@ body[data-hatched="1"] .intro { display: none; }
 .card .btn, .card .row { margin-top: 8px; }
 .card > .btn { width: 100%; }
 .card .row > .btn { margin-top: 0; }
+.card .row + p { margin-top: 11px; }
 .card .field { margin-top: 6px; }
 
 .pips { display: flex; gap: 6px; justify-content: center; }

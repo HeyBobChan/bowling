@@ -96,6 +96,20 @@ try {
     await page.click('#sheetClose');
   });
 
+  await step('settings link to Canon in both stores, outside the game', async () => {
+    await page.click('#menuBtn');
+    await page.click('.tab >> nth=3');
+    const links = await page.$$eval('#canonCard a', (list) => list.map((a) => [a.textContent, a.getAttribute('aria-label'), a.href, a.target, a.rel]));
+    assert.deepEqual(links, [
+      ['App Store', 'Canon on the App Store (opens in a new tab)', 'https://apps.apple.com/app/id6761249945', '_blank', 'noopener noreferrer'],
+      ['Google Play', 'Canon on Google Play (opens in a new tab)', 'https://play.google.com/store/apps/details?id=com.canon.app', '_blank', 'noopener noreferrer'],
+    ]);
+    const [ios, android] = await Promise.all(['#canonIos', '#canonAndroid'].map((id) => page.locator(id).boundingBox()));
+    assert.ok(ios.height >= 44 && android.height >= 44, 'store links are full-size buttons');
+    assert.equal(Math.round(ios.y), Math.round(android.y), 'side by side on a phone');
+    await page.click('#sheetClose');
+  });
+
   await step('a full round of golf pays out', async () => {
     const before = await state();
     await page.click('#act-play');

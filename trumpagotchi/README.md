@@ -129,6 +129,10 @@ A web page cannot tap you on the shoulder. So a pet can also live in
 actually praising him, and he writes first when he needs something. It is optional, and the
 page works exactly as before without it.
 
+Settings, under the alerts switch, links to Canon in the App Store and on Google Play
+("Alerts that reach your phone"). The links are in `js/ui.js` (`CANON_STORES`). Having the
+app is not yet enough on its own: see "Running a Don" below for how a keeper gets one.
+
 There is no AI model in him. `don/brain.mjs` is plain rules: what the keeper types becomes
 the game's own actions (`js/game.js`), and the game's own lines (`js/content.js`) become
 what he answers.
