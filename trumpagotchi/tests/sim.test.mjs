@@ -339,6 +339,36 @@ test('decor costs money, lasts forever and changes the numbers', () => {
   assert.ok(p.ego > 0 && p.ego < 0.5 && p.income > 0.4);
 });
 
+test('the shop delivers while he sleeps or is out golfing, without him saying a word', () => {
+  const s = hatched();
+  s.cash = 1e12;
+  const awake = G.buyDecor(s, 'magazine', G.now());
+  assert.ok(awake.ok && awake.say && awake.anim === 'dance' && !awake.quiet);
+  s.needs.energy = 20;
+  assert.ok(G.toggleSleep(s, G.now()).ok && s.asleep);
+  const night = G.buyDecor(s, 'trophy', G.now());
+  assert.ok(night.ok);
+  assert.equal(night.quiet, 'asleep');
+  assert.equal(night.say, undefined);
+  assert.equal(night.anim, undefined);
+  assert.ok(s.asleep, 'buying does not wake him');
+  assert.ok(s.decor.includes('trophy'));
+  s.asleep = false; s.sulking = true;
+  const away = G.buyDecor(s, 'tv', G.now());
+  assert.ok(away.ok && away.quiet === 'gone' && !away.say && s.decor.includes('tv'));
+});
+
+test('saves count the keeper’s changes, and older saves start the count at zero', () => {
+  const s = hatched();
+  assert.equal(s.edits, 0);
+  s.edits = 7;
+  assert.equal(G.importCode(G.exportCode(s), G.now()).edits, 7);
+  delete s.edits;
+  assert.equal(G.importCode(G.exportCode(s), G.now()).edits, 0);
+  s.edits = -3;
+  assert.equal(G.importCode(G.exportCode(s), G.now()).edits, 0);
+});
+
 test('games cost energy and pay out', () => {
   const s = hatched();
   s.needs.energy = 100; s.needs.fun = 10;

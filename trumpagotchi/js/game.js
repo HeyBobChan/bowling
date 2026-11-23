@@ -59,6 +59,7 @@
       born: now, lastTick: now,
       hatched: false, eggTaps: 0,
       xp: 0, cash: 0, term: 1,
+      edits: 0, // counts the keeper's changes, so open copies on one device know which save is newest
       needs: { food: 55, ego: 55, fun: 55, glow: 55, energy: 80 },
       asleep: false, sulking: false, neglectH: 0,
       tariff: 0, bronzeUntil: 0, lastPetAt: 0,
@@ -94,6 +95,7 @@
     s.xp = num(s.xp, 0, G.cumXp(C.MAX_LEVEL) + 1, 0);
     s.cash = num(s.cash, 0, 1e30, 0);
     s.term = Math.floor(num(s.term, 1, 999, 1));
+    s.edits = Math.floor(num(s.edits, 0, 1e12, 0));
     s.tariff = num(s.tariff, 0, 1e6, 0);
     s.neglectH = num(s.neglectH, 0, 1e4, 0);
     s.eggTaps = num(s.eggTaps, 0, 99, 0);
@@ -144,11 +146,19 @@
     try { return revive(JSON.parse(raw), now); } catch (e) { return null; } // a corrupt save starts a new egg
   };
   G.load = function (now) { return G.stored(now) || G.newState(now); };
+  // The save exactly as stored, unparsed: lets the page tell whether another copy of the
+  // game on this device (a second tab, the installed app) has saved since it last did.
+  G.SAVE_KEY = SAVE_KEY;
+  G.storedRaw = function () {
+    const ls = storage();
+    try { return ls ? ls.getItem(SAVE_KEY) : memoryStore; } catch (e) { return memoryStore; }
+  };
   G.save = function (s) {
     const raw = JSON.stringify(s);
     memoryStore = raw;
     const ls = storage();
     try { if (ls) ls.setItem(SAVE_KEY, raw); } catch (e) { /* quota or blocked: memory copy still holds */ }
+    return raw;
   };
   G.wipe = function () {
     memoryStore = null;
@@ -567,14 +577,17 @@
     const d = C.DECOR.find(function (x) { return x.id === id; });
     if (!d || s.decor.indexOf(id) >= 0) return res(false, { reason: 'owned' });
     if (s.cash < d.cost) return res(false, { reason: 'cash', say: G.say(s, 'noCash') });
-    const r = res(true, { anim: 'dance' });
+    // The shop stays open while he sleeps or is out golfing. The delivery then waits for him
+    // quietly: no dance and no remark until he is there to make one.
+    const away = s.asleep ? 'asleep' : s.sulking ? 'gone' : null;
+    const r = res(true, away ? { quiet: away } : { anim: 'dance' });
     addCash(s, -d.cost, r.events, now);
     s.decor.push(id);
     r.xp = addXp(s, 20, r.events, now);
     unlock(s, 'decor1', r.events, now);
     if (s.decor.length >= 6) unlock(s, 'decor6', r.events, now);
     if (s.decor.length >= C.DECOR.length) unlock(s, 'decor12', r.events, now);
-    r.say = G.say(s, 'bought');
+    if (!away) r.say = G.say(s, 'bought');
     return r;
   };
 

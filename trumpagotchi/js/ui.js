@@ -11,6 +11,10 @@
   const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   let s = null;
+  // More than one copy of the game can be open on one device: two tabs, or a tab and the
+  // installed app. They share one save. `s.edits` counts the keeper's changes, and a copy never
+  // writes over a save holding more of them: it carries on from that save instead.
+  let written = null, writtenEdits = 0; // what this copy saved last
   const canvas = $('scene'), g = canvas.getContext('2d');
   g.imageSmoothingEnabled = false;
   const view = {
@@ -261,7 +265,7 @@
     handle(r.events);
     refreshHud();
     dirty();
-    G.save(s);
+    persist();
     return true;
   }
 
@@ -455,7 +459,9 @@
     put(body, h('div', { class: 'list' }, C.DECOR.map(function (d) {
       const owned = s.decor.indexOf(d.id) >= 0;
       return h('button', { class: 'item' + (owned ? ' owned' : ''), type: 'button', disabled: owned, onclick: function () {
-        react(G.buyDecor(s, d.id, now()), { sound: 'coin', ms: 2400, fx: confetti });
+        const r = G.buyDecor(s, d.id, now());
+        react(r, { sound: 'coin', ms: 2400, fx: r.quiet ? null : confetti });
+        if (r.ok && r.quiet) toast(r.quiet === 'asleep' ? 'Delivered quietly. He’ll find it when he wakes up.' : 'Delivered. It’ll be here when he’s back.');
         drawSheet();
       } },
         h('span', { class: 'item-icon', 'aria-hidden': 'true', text: owned ? '✅' : '🖼️' }),
@@ -632,8 +638,8 @@
     } else {
       put(body, cloudCard());
       put(body, h('label', { class: 'field' }, 'His name',
-        h('input', { type: 'text', maxlength: 18, value: s.name, onchange: function (e) { s.name = e.target.value.trim().slice(0, 18) || 'The Donald'; dirty(); G.save(s); refreshHud(); } })));
-      put(body, h('label', { class: 'toggle' }, h('span', { text: 'Sound' }), h('input', { type: 'checkbox', checked: s.settings.sound, onchange: function (e) { s.settings.sound = e.target.checked; S.enabled = s.settings.sound; G.save(s); S.play('ok'); } })));
+        h('input', { type: 'text', maxlength: 18, value: s.name, onchange: function (e) { s.name = e.target.value.trim().slice(0, 18) || 'The Donald'; dirty(); persist(); refreshHud(); } })));
+      put(body, h('label', { class: 'toggle' }, h('span', { text: 'Sound' }), h('input', { type: 'checkbox', checked: s.settings.sound, onchange: function (e) { s.settings.sound = e.target.checked; S.enabled = s.settings.sound; persist(); S.play('ok'); } })));
       put(body, h('label', { class: 'toggle' }, h('span', null, 'Alerts when he needs you', h('br'), h('small', { class: 'muted', text: 'Works while the app stays open in the background.' })),
         h('input', { type: 'checkbox', checked: s.settings.alerts, onchange: function (e) { toggleAlerts(e.target); } })));
       put(body, canonCard());
@@ -651,10 +657,10 @@
           h('button', { class: 'btn', type: 'button', text: 'Load code', onclick: function () {
             const n = G.importCode(code.value, now());
             if (!n) { toast('That code is not right. Sad!'); S.play('no'); return; }
-            confirmModal('Load this save?', 'It replaces the pet living in this browser' + (K.linked() ? ' and, because cloud save is on, on your other devices too.' : '.'), 'Load it', function () { s = n; S.enabled = s.settings.sound; G.catchUp(s, now()); dirty(); G.save(s); closeSheet(); refreshHud(); toast('Welcome back, ' + s.name + '.'); });
+            confirmModal('Load this save?', 'It replaces the pet living in this browser' + (K.linked() ? ' and, because cloud save is on, on your other devices too.' : '.'), 'Load it', function () { s = n; S.enabled = s.settings.sound; G.catchUp(s, now()); dirty(); persist(); closeSheet(); refreshHud(); toast('Welcome back, ' + s.name + '.'); });
           } }))));
       put(body, h('button', { class: 'btn ghost', type: 'button', text: 'Start over with a new egg', onclick: function () {
-        confirmModal('Start over?', 'This erases him, his trophies and all the gold from this device. It cannot be undone.' + (K.linked() ? ' The cloud copy is left alone: this device is unlinked first, and your other devices keep him.' : ''), 'Erase everything', function () { K.unlink(); G.wipe(); s = G.newState(now()); G.catchUp(s, now()); G.save(s); closeSheet(); view.particles.length = 0; hush(); refreshHud(); });
+        confirmModal('Start over?', 'This erases him, his trophies and all the gold from this device. It cannot be undone.' + (K.linked() ? ' The cloud copy is left alone: this device is unlinked first, and your other devices keep him.' : ''), 'Erase everything', function () { const floor = Math.max(s.edits, storedEdits()); K.unlink(); G.wipe(); s = G.newState(now()); s.edits = floor + 1; G.catchUp(s, now()); persist(); closeSheet(); view.particles.length = 0; hush(); refreshHud(); });
       } }));
       put(body, h('p', { class: 'muted', text: 'Trumpagotchi is a parody for laughs. Everything he “says” is made up. It is not affiliated with or endorsed by any real person, campaign, company or toy.' }));
       if (DEBUG) put(body, debugPanel());
@@ -679,7 +685,7 @@
     const lvl = function (n) { return function () {
       const ev = [], target = G.cumXp(Math.min(C.MAX_LEVEL, G.level(s) + n));
       G.addXp(s, (target - s.xp) / G.xpMult(s) + 0.01, ev, now());
-      handle(ev); refreshHud(); dirty(); G.save(s); drawSheet();
+      handle(ev); refreshHud(); dirty(); persist(); drawSheet();
     }; };
     return h('div', { class: 'card' }, h('h3', { text: 'Debug' }), h('div', { class: 'row' },
       h('button', { class: 'btn', type: 'button', text: '+1h', onclick: skip(1) }), h('button', { class: 'btn', type: 'button', text: '+8h', onclick: skip(8) }), h('button', { class: 'btn', type: 'button', text: '+1d', onclick: skip(24) }),
@@ -764,7 +770,7 @@
   // another device are fetched, so the same pet lives on all of a keeper's devices.
   let syncing = false, lastPush = 0, lastPull = 0, lastCheck = 0, pushGap = 6000, conflictOpen = false, cloudNote = '';
   function cloudState() { const c = JSON.parse(JSON.stringify(s)); delete c.settings; return c; } // sound and alerts stay with the device
-  function dirty() { K.markDirty(); }
+  function dirty() { bump(); K.markDirty(); }
   function brief(st) { return st.hatched ? 'level ' + G.level(st) + ', ' + G.stage(st).name + ', ' + G.money(st.cash) : 'an unhatched egg'; }
   function careCount(st) { const t = st.stats; return t.feeds + t.praises + t.grooms + t.posts + t.golf + t.deals + t.rallies + t.briefings; }
   function cloudStatus() {
@@ -784,11 +790,13 @@
   function adopt(remote) {
     const fresh = G.revive(remote.state, now());
     if (!fresh) return false;
+    const floor = Math.max(s.edits, storedEdits());
     fresh.settings = s.settings;
     s = fresh;
+    s.edits = Math.max(s.edits, floor) + 1;
     K.accept(remote.rev);
     zoneNew = noteZone();
-    G.catchUp(s, now()); G.save(s);
+    G.catchUp(s, now()); persist();
     hush(); view.particles.length = 0; view.target = null; praiseOpts = null; draft = null; briefResult = null;
     if (sheet && sheet.id !== 'menu') closeSheet(); else drawSheet();
     refreshHud(); rotateTicker();
@@ -830,6 +838,7 @@
     if (!K.linked() || K.available === false || syncing || conflictOpen) return;
     if (view.mode !== 'room' && !o.leaving) return; // never swap the pet out from under a game in progress
     K.reload(); // another tab on this device may have just synced
+    if (behind()) { if (view.mode !== 'room') return; takeOver(); } // and may have changed him
     const info = K.info();
     if (!info) return;
     if (o.leaving) { if (info.dirty) K.push(cloudState(), { keepalive: true }); return; }
@@ -943,7 +952,7 @@
     if (s.sulking && id !== 'shop') { openSheet('gone', 'Gone Golfing', sheetGone); return; }
     if (id === 'sleep') {
       const r = G.toggleSleep(s, now());
-      if (r.ok && r.slept) { closeSheet(); say(r.say); S.play('sleep'); setTimeout(hush, 2600); refreshHud(); dirty(); G.save(s); }
+      if (r.ok && r.slept) { closeSheet(); say(r.say); S.play('sleep'); setTimeout(hush, 2600); refreshHud(); dirty(); persist(); }
       else if (r.ok) { react(r, { sound: 'wake' }); setAnim('idle', 400); }
       else react(r);
       return;
@@ -981,8 +990,8 @@
     S.play('crack');
     const sc = $('screen'); sc.classList.remove('shake'); void sc.offsetWidth; sc.classList.add('shake');
     spawn('spark', 5, { x: 80, y: 86, spread: 30, spreadY: 20, vy: -0.5 });
-    if (r.hatched) { handle(r.events); refreshHud(); dirty(); G.save(s); showHatch(); }
-    else { $('hatchBtn').textContent = ['Tap the egg', 'Again', 'It moved', 'Keep going', 'It’s cracking', 'Almost', 'One more', 'One more'][Math.min(7, s.eggTaps)]; G.save(s); }
+    if (r.hatched) { handle(r.events); refreshHud(); dirty(); persist(); showHatch(); }
+    else { $('hatchBtn').textContent = ['Tap the egg', 'Again', 'It moved', 'Keep going', 'It’s cracking', 'Almost', 'One more', 'One more'][Math.min(7, s.eggTaps)]; persist(); }
   }
 
   // ---------------------------------------------------------------- drawing
@@ -1105,6 +1114,36 @@
     view.chatterAt = clock() + 16000;
   }
 
+  // ---------------------------------------------------------------- one save, many copies
+  function persist() { written = G.save(s); writtenEdits = s.edits; }
+  function storedEdits() {
+    const raw = G.storedRaw();
+    if (!raw) return 0;
+    if (raw === written) return writtenEdits;
+    try { return Math.max(0, Math.floor(Number(JSON.parse(raw).edits)) || 0); } catch (e) { return 0; }
+  }
+  // Another copy saved something the keeper did that this copy has not seen.
+  function behind() { const raw = G.storedRaw(); return !!raw && raw !== written && storedEdits() > s.edits; }
+  // A change made here outranks every save so far, wherever it was made.
+  function bump() { s.edits = Math.max(s.edits, storedEdits()) + 1; }
+  // Carry on from the other copy's save: it holds what the keeper did there.
+  function takeOver() {
+    const other = G.stored(now());
+    if (!other) return false;
+    s = other; S.enabled = s.settings.sound;
+    written = G.storedRaw(); writtenEdits = s.edits;
+    K.reload();
+    hush(); view.particles.length = 0; view.target = null; praiseOpts = null; draft = null; briefResult = null;
+    if (sheet && sheet.id !== 'menu') closeSheet(); else if (sheet) drawSheet();
+    refreshHud(); rotateTicker();
+    return true;
+  }
+  // Save, unless another copy has moved on: then follow it (never in the middle of a game).
+  function saveOrCatchUp() {
+    if (!behind()) persist();
+    else if (view.mode === 'room') takeOver();
+  }
+
   // ---------------------------------------------------------------- time
   let lastSave = 0, tickCount = 0;
   function tick(force) {
@@ -1116,7 +1155,7 @@
     chatter();
     syncTick();
     if (++tickCount % 7 === 0) rotateTicker();
-    if (force || t - lastSave > 5000) { G.save(s); lastSave = t; }
+    if (force || t - lastSave > 5000) { saveOrCatchUp(); lastSave = t; }
     updateTitle();
   }
 
@@ -1151,10 +1190,10 @@
     alertTimer = setTimeout(function () { if (document.hidden) notify(NEED_ALERT[nx.need]); }, Math.min(nx.ms, 2147e6));
   }
   function toggleAlerts(box) {
-    if (!box.checked) { s.settings.alerts = false; G.save(s); return; }
+    if (!box.checked) { s.settings.alerts = false; persist(); return; }
     if (!('Notification' in window)) { box.checked = false; toast('This browser cannot send alerts.'); return; }
     Notification.requestPermission().then(function (p) {
-      s.settings.alerts = p === 'granted'; box.checked = s.settings.alerts; G.save(s);
+      s.settings.alerts = p === 'granted'; box.checked = s.settings.alerts; persist();
       toast(s.settings.alerts ? 'Alerts on. He will find you.' : 'Alerts are blocked in this browser.');
     });
   }
@@ -1190,7 +1229,7 @@
     view.chatterAt = clock() + 9000;
     handle(r.events);
     refreshHud();
-    G.save(s);
+    persist();
     if (s.hatched) {
       if (r.offline && r.awayH >= 0.5) showRecap(r);
       else setTimeout(function () { if (!modalOpen) greet(r.awayH); }, 700);
@@ -1218,18 +1257,21 @@
       if (e.key === 'Escape') { if (modalOpen) return; if (sheet) closeSheet(); }
     });
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { G.save(s); scheduleAlert(); syncNow({ leaving: true }); }
+      if (document.hidden) { saveOrCatchUp(); scheduleAlert(); syncNow({ leaving: true }); }
       else {
         clearTimeout(alertTimer);
         // if he was looked after in another tab meanwhile, carry on from that tab's save
-        const other = G.stored(now());
-        if (other && other.lastTick > s.lastTick + 3000 && view.mode === 'room') { s = other; S.enabled = s.settings.sound; closeSheet(); }
+        if (behind() && view.mode === 'room') takeOver();
         tick(true);
         lastPull = 0; syncNow(); // and if he was looked after on another device, fetch that
       }
       updateTitle();
     });
-    window.addEventListener('pagehide', function () { G.save(s); syncNow({ leaving: true }); });
+    window.addEventListener('pagehide', function () { saveOrCatchUp(); syncNow({ leaving: true }); });
+    // another copy on this device saved something the keeper did there: follow it
+    window.addEventListener('storage', function (e) {
+      if (e.key === G.SAVE_KEY && view.mode === 'room' && behind()) { takeOver(); tick(true); }
+    });
     window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvent = e; });
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !DEBUG) navigator.serviceWorker.register('sw.js').catch(function () {});
 
