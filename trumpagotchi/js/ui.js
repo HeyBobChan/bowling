@@ -672,13 +672,64 @@
     ['canonIos', 'App Store', 'Canon on the App Store', 'https://apps.apple.com/app/id6761249945'],
     ['canonAndroid', 'Google Play', 'Canon on Google Play', 'https://play.google.com/store/apps/details?id=com.canon.app'],
   ];
+  // His own Don on Canon: the keeper gives their Canon number, approves him in the app, and
+  // he arrives already looking after this pet.
+  let donState = null, donKey = null, donTimer = 0;
   function canonCard() {
-    return h('div', { class: 'card', id: 'canonCard' }, h('h3', { text: 'Alerts that reach your phone' }),
+    const card = h('div', { class: 'card', id: 'canonCard' }, h('h3', { text: 'Alerts that reach your phone' }),
       h('p', { class: 'muted', text: 'This page can only alert you while it stays open. In Canon, a messaging app, he is Don: he writes to you first when he needs something, and typing “burger” feeds him.' }),
       h('div', { class: 'row' }, CANON_STORES.map(function (st) {
         return h('a', { class: 'btn', id: st[0], href: st[3], target: '_blank', rel: 'noopener noreferrer', 'aria-label': st[2] + ' (opens in a new tab)', text: st[1] });
-      })),
-      h('p', { class: 'muted', text: 'For now each Don is set up by hand, one keeper at a time.' }));
+      })));
+    if (!K.don) { put(card, h('p', { class: 'muted', text: 'For now each Don is set up by hand, one keeper at a time.' })); return card; }
+    if (!K.linked()) { put(card, h('p', { class: 'muted', id: 'donStatus', text: 'Turn on cloud save above, and he can have his own Don.' })); return card; }
+    if (donKey !== K.key()) { donKey = K.key(); donState = null; lookAtDon(); return card; } // a new code: look again
+    if (donState === 'here') put(card, h('p', { id: 'donStatus', text: 'Don is on Canon. Say “help” to him there.' }));
+    else if (donState === 'asked') { put(card, h('p', { id: 'donStatus', text: 'Open Canon and approve Don: Settings → Requests. He writes to you as soon as you do.' })); watchDon(); }
+    else if (donState) {
+      const input = h('input', { type: 'tel', id: 'donPhone', placeholder: '+1 555 123 4567', autocomplete: 'tel', maxlength: 24 });
+      if (donState === 'declined' || donState === 'stopped') put(card, h('p', { class: 'muted', id: 'donStatus', text: 'The last Don was not let in. Ask again?' }));
+      put(card, h('label', { class: 'field' }, 'Your Canon phone number', input),
+        h('button', { class: 'btn gold', type: 'button', id: 'donAsk', text: 'Send me my Don', onclick: function () { askDon(input.value); } }));
+    }
+    return card;
+  }
+  const onSettings = function () { return sheet && sheet.id === 'menu' && menuTab === 'settings'; };
+  function lookAtDon() {
+    K.donStatus().then(function (st) {
+      donState = st || 'none'; // if the server cannot say, asking again finds out
+      if (onSettings()) drawSheet();
+    });
+  }
+  // While he waits to be let in, look every ten seconds, as long as Settings is open.
+  function watchDon() {
+    clearTimeout(donTimer);
+    donTimer = setTimeout(function () {
+      if (!onSettings() || donState !== 'asked') return;
+      K.donStatus().then(function (st) {
+        if (!st || st === donState) { watchDon(); return; }
+        donState = st;
+        if (st === 'here') { S.play('ach'); toast('Don is on Canon. Say hello.', 'gold'); }
+        drawSheet();
+      });
+    }, 10000);
+  }
+  function askDon(number) {
+    const button = $('donAsk');
+    if (button) button.disabled = true;
+    K.askDon(number).then(function (r) {
+      if (button) button.disabled = false;
+      const trouble = {
+        'number-taken': 'That number already has a Don. Send him your keeper code in Canon.',
+        full: 'No room for another Don right now. Try again later.',
+        'bad-number': 'Include the country code, like +1 555 123 4567.',
+        busy: 'Too many tries. Wait a little.',
+        offline: 'Could not reach Don. Try again.',
+      }[r.status];
+      if (r.status === 'gone') { cloudGone(); return; }
+      if (trouble) { toast(trouble); S.play('no'); return; }
+      donState = r.status; S.play('ok'); drawSheet();
+    });
   }
   function debugPanel() {
     const skip = function (hrs) { return function () { G.clockOffset += hrs * 3600e3; tick(true); drawSheet(); }; };

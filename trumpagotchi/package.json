@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test tests/sim.test.mjs tests/api.test.mjs tests/alerts.test.mjs tests/don.test.mjs",
-    "test:browser": "node tests/smoke.mjs && node tests/cloud.mjs && node tests/tabs.mjs",
+    "test": "node --test --test-timeout=60000 tests/sim.test.mjs tests/api.test.mjs tests/alerts.test.mjs tests/don.test.mjs tests/host.test.mjs",
+    "test:browser": "node tests/smoke.mjs && node tests/cloud.mjs && node tests/tabs.mjs && node tests/don-signup.mjs",
     "migrate": "node server/migrate.mjs",
     "build:single": "node tools/build-single.mjs",
     "icons": "node tools/make-icons.mjs"
