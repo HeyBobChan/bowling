@@ -38,7 +38,7 @@ npm run build:single # writes dist/trumpagotchi.html (about 220 KB)
 | **Ten stages** | Regular Don, The Kid from Queens, The Developer, The Mogul, The TV Boss, The Candidate, The Nominee, The 45th (level 45, new oval office), The 47th (level 47), Tremendous Form (level 50). |
 | **Five voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM. Every situation has lines in all five: about 700 in total, so he rarely repeats himself. |
 | **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 70 briefings, so more than two months pass before one comes round again. |
-| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of decor, each with a perk. |
+| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of decor, each with a perk. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
 | **The long game** | Daily streaks, 72 executive orders to collect (one a day), 37 trophies, and at level 50 he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
 | **The calendar** | Twenty special days, each with its own greeting, a one-off briefing and, mostly, something in the room: New Year, Groundhog Day, the big game, Valentine's, Presidents' Day, St. Patrick's (green tie), April Fools', Easter, National Hamberder Day, his birthday, the Fourth, Labor Day, Halloween, Thanksgiving week (the turkey pardon), Black Friday, all of December, New Year's Eve, any Friday the 13th, and February 29th. |
 | **Every device** | Optional cloud save: a secret keeper code puts the same pet on any phone or computer. No account. |
@@ -57,6 +57,9 @@ in about four weeks, three times a day in about seven, once a day in about fifte
 - **Saves are versioned and defensive.** Fields added later are filled in on load, odd values
   are clamped, a corrupt save starts a new egg instead of a blank page, and the clock moving
   backwards does nothing.
+- **Several copies, one save.** Two tabs, or a tab and the installed app, share the browser's
+  save. The save counts the keeper's changes (`edits`), and a copy never writes over a save
+  holding more of them: it carries on from that save instead.
 - **No build step, and one dependency** (`pg`), loaded only when a database is configured.
 
 Limit worth knowing: alerts ("he is hungry") only fire while the page is still open in the
@@ -271,15 +274,16 @@ don/main.mjs          Don on Canon: registration, the runner, hello, the alert l
 don/brain.mjs         what the keeper types → the game's actions → what he answers
 don/pet.mjs           his door to the pet: the cloud-save API; don/store.mjs, his notes
 tools/                single-file build, icon and preview-image generator
-tests/                simulation, API, alert and chat tests (Node), two browser tests
+tests/                simulation, API, alert and chat tests (Node), three browser tests
 ```
 
 ## Tests
 
 ```bash
-npm test             # rules, balance and content (32), the cloud-save API (10), time zones and
+npm test             # rules, balance and content (34), the cloud-save API (10), time zones and
                      # alerts (14), Don's chat brain against the real API (14): plain Node
-npm run test:browser # headless Chromium: the first minutes (13 checks), then two devices sharing a pet
+npm run test:browser # headless Chromium: the first minutes (13 checks), two devices sharing a pet,
+                     # and several tabs sharing a device (including buying while he sleeps)
 ```
 
 Set `TEST_DATABASE_URL` to the `trumpagotchi_app` connection of a migrated database and

@@ -66,7 +66,7 @@ try {
     await page.waitForSelector('#modalCard button');
     const s = await state();
     assert.equal(s.hatched, true);
-    assert.equal(s.cash, 1e6);
+    assert.ok(s.cash >= 1e6 && s.cash < 1e6 + 1, 'the $1M loan, plus a second or two of income: ' + s.cash);
     await page.click('#modalCard button');
     assert.equal(await page.isVisible('#actions'), true);
     assert.match(await page.textContent('#stageLine'), /Regular Don/);
