@@ -10,6 +10,18 @@
       ],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "trumpagotchi",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "trumpagotchi/server.mjs"
+      ],
+      "env": {
+        "CLOUD_STORE": "memory"
+      },
+      "port": 8080,
+      "autoPort": true
     }
   ]
 }

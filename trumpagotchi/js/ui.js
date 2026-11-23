@@ -636,6 +636,7 @@
       put(body, h('label', { class: 'toggle' }, h('span', { text: 'Sound' }), h('input', { type: 'checkbox', checked: s.settings.sound, onchange: function (e) { s.settings.sound = e.target.checked; S.enabled = s.settings.sound; G.save(s); S.play('ok'); } })));
       put(body, h('label', { class: 'toggle' }, h('span', null, 'Alerts when he needs you', h('br'), h('small', { class: 'muted', text: 'Works while the app stays open in the background.' })),
         h('input', { type: 'checkbox', checked: s.settings.alerts, onchange: function (e) { toggleAlerts(e.target); } })));
+      put(body, canonCard());
       if (installEvent) put(body, h('button', { class: 'btn gold', type: 'button', text: 'Install as an app', onclick: function () { installEvent.prompt(); installEvent = null; drawSheet(); } }));
       else put(body, h('p', { class: 'muted', text: 'Tip: add this page to your home screen and he lives there like an app.' }));
       const code = h('textarea', { 'aria-label': 'Save code', placeholder: 'Paste a save code here to move him to this device.' });
@@ -658,6 +659,20 @@
       put(body, h('p', { class: 'muted', text: 'Trumpagotchi is a parody for laughs. Everything he “says” is made up. It is not affiliated with or endorsed by any real person, campaign, company or toy.' }));
       if (DEBUG) put(body, debugPanel());
     }
+  }
+  // The page can only alert while it is open. On Canon he is Don and writes first (see don/),
+  // so Settings says where to get the app. Plain links: the stores open outside the game.
+  const CANON_STORES = [
+    ['canonIos', 'App Store', 'Canon on the App Store', 'https://apps.apple.com/app/id6761249945'],
+    ['canonAndroid', 'Google Play', 'Canon on Google Play', 'https://play.google.com/store/apps/details?id=com.canon.app'],
+  ];
+  function canonCard() {
+    return h('div', { class: 'card', id: 'canonCard' }, h('h3', { text: 'Alerts that reach your phone' }),
+      h('p', { class: 'muted', text: 'This page can only alert you while it stays open. In Canon, a messaging app, he is Don: he writes to you first when he needs something, and typing “burger” feeds him.' }),
+      h('div', { class: 'row' }, CANON_STORES.map(function (st) {
+        return h('a', { class: 'btn', id: st[0], href: st[3], target: '_blank', rel: 'noopener noreferrer', 'aria-label': st[2] + ' (opens in a new tab)', text: st[1] });
+      })),
+      h('p', { class: 'muted', text: 'For now each Don is set up by hand, one keeper at a time.' }));
   }
   function debugPanel() {
     const skip = function (hrs) { return function () { G.clockOffset += hrs * 3600e3; tick(true); drawSheet(); }; };
