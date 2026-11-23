@@ -1,4 +1,5 @@
-# Don on Canon: a Trumpagotchi as its keeper's own agent in the Canon messaging app.
+# Don on Canon: a Trumpagotchi as its keeper's own agent in the Canon messaging app,
+# one Don for every keeper who asks.
 # Build from the trumpagotchi directory:  docker build -f don/Dockerfile .
 # Debian rather than Alpine: Canon's kit ships its encryption helper for glibc.
 FROM node:22-bookworm-slim
@@ -13,4 +14,5 @@ COPY server/engine.mjs server/alerts.mjs server/api.mjs ./server/
 COPY don/*.mjs ./don/
 # Runs as root on purpose: his notes and Canon keys live on a mounted volume (/data),
 # which a hosting platform hands over owned by root.
-CMD ["node", "don/main.mjs"]
+# The host starts a Don for every keeper (don/main.mjs each) and minds them.
+CMD ["node", "don/host.mjs"]

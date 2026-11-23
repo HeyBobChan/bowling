@@ -47,7 +47,9 @@ async function openStore() {
   return null;
 }
 const store = await openStore();
-const api = createApi({ store, proxyKey: process.env.PROXY_KEY || '', ipHeader: (process.env.CLIENT_IP_HEADER || '').toLowerCase() });
+// DON_HOST_URL and DON_HOST_KEY: where keepers' Dons are hosted (don/host.mjs), over a private network.
+const don = process.env.DON_HOST_URL && process.env.DON_HOST_KEY ? { url: process.env.DON_HOST_URL.replace(/\/*$/, '/'), key: process.env.DON_HOST_KEY } : null;
+const api = createApi({ store, proxyKey: process.env.PROXY_KEY || '', ipHeader: (process.env.CLIENT_IP_HEADER || '').toLowerCase(), don });
 if (store) {
   setInterval(() => api.sweep(), 10 * 60e3).unref();
   // once a day, let go of pets nobody has saved in a year and a half

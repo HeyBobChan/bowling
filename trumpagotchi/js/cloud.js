@@ -10,6 +10,7 @@
   const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
   K.KEY_LENGTH = 20;
   K.available = null; // null until the server has been asked
+  K.don = false;       // whether that server can also give a keeper their own Don on Canon
 
   // People type codes by hand: ignore case, spaces and dashes, forgive O for 0 and I or L for 1.
   K.normalizeKey = function (input) {
@@ -59,6 +60,7 @@
   K.check = async function () {
     const r = await call('GET', 'status');
     K.available = r.status === 200 && !!(r.data && r.data.sync);
+    K.don = K.available && !!r.data.don;
     return K.available;
   };
   // Turn cloud save on for this pet. The server answers with a brand-new keeper code.
@@ -117,6 +119,21 @@
     if (r.status !== 204 && r.status !== 401) return { ok: false, status: outcome(r.status) };
     link = null; write();
     return { ok: true };
+  };
+
+  // His own Don on Canon. The keeper's Canon number goes to the server once, to ask Canon to
+  // let him in; the keeper then approves him in the app. Statuses: none, asked, here,
+  // declined, stopped; and for a request: number-taken, full, bad-number, busy, gone, offline.
+  K.donStatus = async function () {
+    if (!link) return null;
+    const r = await call('GET', 'don', { key: link.key });
+    return r.status === 200 && r.data ? r.data.status : null;
+  };
+  K.askDon = async function (phone) {
+    if (!link) return { status: 'offline' };
+    const r = await call('POST', 'don', { key: link.key, body: { phone: phone } });
+    if (r.data && r.data.status) return { status: r.data.status };
+    return { status: r.status === 400 ? 'bad-number' : r.status === 429 ? 'busy' : r.status === 401 ? 'gone' : 'offline' };
   };
 
   // A link that carries the code in the part of the address browsers never send to servers.

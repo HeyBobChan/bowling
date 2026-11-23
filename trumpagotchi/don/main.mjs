@@ -1,10 +1,11 @@
 // Don on Canon: one keeper's Trumpagotchi as their own private agent in the Canon
 // messaging app. He registers under his keeper's phone number, waits to be approved in the
 // app, then answers in chat (brain.mjs) and writes first when he needs something
-// (server/alerts.mjs). One process is one Don.
+// (server/alerts.mjs). One process is one Don; host.mjs runs one for every keeper who asks.
 //
 // Settings (environment):
 //   CANON_OWNER_PHONE       the keeper's Canon phone number, E.164. Needed until he is approved.
+//                           A Don a keeper asked for on the site finds it in his notes instead.
 //   DON_DATA_DIR            a private directory that survives restarts (default /data)
 //   SITE_URL                where the game is played (default https://matanbob.com/trumpagotchi/)
 //   PET_API_URL             where the game's API is reached, if not under SITE_URL
@@ -26,8 +27,11 @@ const DATA = resolve(env.DON_DATA_DIR || '/data');
 const HOME = join(DATA, 'canon');
 const SITE = (env.SITE_URL || 'https://matanbob.com/trumpagotchi/').replace(/\/*$/, '/');
 const NAME = (env.DON_NAME || 'Don').slice(0, 50);
-const PHONE = (env.CANON_OWNER_PHONE || '').trim();
 const CHECK_MS = Math.max(1, Number(env.DON_CHECK_MINUTES) || 5) * 60e3;
+
+// His notes. A Don a keeper asked for on the site starts with their keeper code and number here.
+const store = fileStore(join(DATA, 'don.json'));
+const PHONE = (env.CANON_OWNER_PHONE || store.get().ownerPhone || '').trim();
 
 // The keeper's number is nobody else's business, logs included.
 const hush = (text) => (PHONE ? String(text).split(PHONE).join('[owner phone]') : String(text));
@@ -39,8 +43,8 @@ chmodSync(HOME, 0o700);
 env.CANON_HOME = HOME;
 const { codeDriver, createRunner, ensureAgentProfile } = await import('@canonmsg/agent-sdk');
 
-const store = fileStore(join(DATA, 'don.json'));
-const pets = petClient({ baseUrl: env.PET_API_URL || SITE, proxyKey: env.PET_PROXY_KEY || '', caller: 'don:' + NAME.toLowerCase() });
+// Each Don counts as his own caller in the game's limits (DON_ID is set by the host).
+const pets = petClient({ baseUrl: env.PET_API_URL || SITE, proxyKey: env.PET_PROXY_KEY || '', caller: 'don:' + (env.DON_ID || NAME.toLowerCase()) });
 const brain = createBrain({ pets, store, siteUrl: SITE });
 
 // ---------------------------------------------------------------- becoming an agent
@@ -61,16 +65,17 @@ async function credentials() {
           origin: { name: 'Trumpagotchi', url: SITE },
           avatarUrl: SITE + 'icons/icon-512.png',
         },
-        onSubmitted: (requestId) => log('Asked the keeper to approve him in Canon (Settings → Requests). Request ' + requestId + '.'),
+        onSubmitted: (requestId) => { store.set({ phase: 'asking' }); log('Asked the keeper to approve him in Canon (Settings → Requests). Request ' + requestId + '.'); },
       });
     } catch (e) {
       log('Registration did not go through: ' + (e && e.message) + (PHONE ? '' : ' (CANON_OWNER_PHONE is not set)') + '. Trying again in a minute.');
       await sleep(60e3);
       continue;
     }
-    if (progress.status === 'approved') return progress;
+    if (progress.status === 'approved') { store.set({ phase: 'approved', ownerPhone: null }); return progress; } // the number is Canon's business now
     if (progress.status === 'pending') { log('Still waiting for the keeper to approve him in Canon.'); continue; }
     // Rejected, or the key was collected elsewhere or timed out. Asking again is the keeper's call, not his.
+    store.set({ phase: 'declined' });
     log('Registration ended as “' + progress.status + '”. He will not ask again by himself: clear ' + join(HOME, 'agents.json') + ' and restart to start over.');
     for (;;) await sleep(3600e3);
   }
@@ -94,12 +99,14 @@ runner = await createRunner({
   askExpiryMs: 5 * 60e3, // a briefing card he is not answered on does not hold the chat for long
   log: (line) => log('canon: ' + line),
   onFatal: (error) => { // Canon will not have this runner again: stop cleanly rather than restart forever
+    store.set({ phase: 'refused' });
     log('Canon refused him for good: ' + (error && error.message));
     stopping = true;
     stop();
   },
 });
 await runner.start();
+store.set({ phase: 'listening' });
 log('Listening.');
 
 for (const signal of ['SIGTERM', 'SIGINT']) {

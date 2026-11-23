@@ -133,22 +133,24 @@ actually praising him, and he writes first when he needs something. It is option
 page works exactly as before without it.
 
 Settings, under the alerts switch, links to Canon in the App Store and on Google Play
-("Alerts that reach your phone"). The links are in `js/ui.js` (`CANON_STORES`). Having the
-app is not yet enough on its own: see "Running a Don" below for how a keeper gets one.
+("Alerts that reach your phone"). The links are in `js/ui.js` (`CANON_STORES`). With cloud
+save on, the same card asks for the keeper's Canon phone number: the game asks Canon to let a
+new Don in under that number, the keeper approves him in the Canon app (Settings → Requests),
+and he arrives already looking after their pet. The card shows where that stands.
 
 There is no AI model in him. `don/brain.mjs` is plain rules: what the keeper types becomes
 the game's own actions (`js/game.js`), and the game's own lines (`js/content.js`) become
 what he answers.
 
 ```
-keeper's phone ── Canon (end-to-end encrypted room) ── don/ process ── cloud-save API ── the pet
+keeper's phone ── Canon (end-to-end encrypted room) ── their Don (don/) ── cloud-save API ── the pet
 ```
 
 - **One Don, one keeper.** He registers on Canon under his keeper's phone number and does
   nothing until they approve him in the app. He takes orders from his keeper only, in the
   room of just the two of them. Anyone else, and any group, gets small talk.
-- **He holds the keeper code, nothing more.** The keeper sends him the code in their chat
-  (or pastes the link from Settings). From then on he reads and saves the pet through the
+- **He holds the keeper code, nothing more.** A Don asked for in Settings is given it by the
+  game; a keeper can also send it in their chat (or paste the link from Settings). From then on he reads and saves the pet through the
   same API a second phone would use. He has no access to the game's database.
 - **Same pet, same rules.** `server/engine.mjs` loads the page's own `content.js` and
   `game.js`, so a burger in the chat is the burger on the page. If the page saved at the same
@@ -176,37 +178,49 @@ the shop stay on the page.
 The page records the keeper's time zone in the save (`zone`), because a server has no idea
 when its keeper's night is. Looking never saves: only something the keeper asks for does.
 
-### Running a Don
+### Running the Dons
 
 `don/` is its own small service with its own dependencies (`@canonmsg/agent-sdk`); the game
-server does not load any of it. From this folder:
+server does not load any of it. `don/host.mjs` hosts a Don for every keeper who asks: each is
+`don/main.mjs` in a process of his own, with his own Canon identity, keys and notes in a
+directory of his own, so one keeper's Don never touches another's. From this folder:
 
 ```bash
 docker build -f don/Dockerfile -t trumpagotchi-don .
-docker run -v don-data:/data -e CANON_OWNER_PHONE=+15551234567 trumpagotchi-don
+docker run -v don-data:/data -e DON_HOST_KEY=a-long-random-secret trumpagotchi-don
 ```
+
+The game's server reaches the host with `DON_HOST_URL` (for example
+`http://trumpagotchi-don.railway.internal:8080/`) and the same `DON_HOST_KEY`. It asks for a
+Don only with a real keeper code and a well-formed number, a few times an hour per visitor.
+The host keeps one Don per pet and one per number (numbers only as a keyed hash), and lets
+requests nobody approves go after a week. Canon's own approval is the real gate: a Don does
+nothing until the owner of that number lets him in.
 
 | Variable | |
 |---|---|
-| `CANON_OWNER_PHONE` | The keeper's Canon phone number (E.164). Needed until they have approved him. |
+| `DON_HOST_KEY` | Shared with the game's server. Without it the Dons run, but none can be asked for. |
+| `DON_HOST_PORT`, `DON_MAX` | Where the host listens (default 8080, IPv6 and IPv4) and how many Dons keepers may ask for (default 20). |
+| `CANON_OWNER_PHONE` | The first Don's keeper, set up by hand before there was a host (E.164). Needed until approved. |
 | `DON_DATA_DIR` | A private directory that survives restarts. Default `/data`. |
 | `SITE_URL` | Where the game is played. Default `https://matanbob.com/trumpagotchi/`. |
 | `PET_API_URL` | Where the game's API is reached, if not under `SITE_URL`. |
-| `PET_PROXY_KEY` | The game server's `PROXY_KEY`, so it counts this Don as one caller in its limits. |
+| `PET_PROXY_KEY` | The game server's `PROXY_KEY`, so it counts each Don as one caller in its limits. |
 | `CANON_ENVIRONMENT_ID` | Default `canon-prod-v1`. |
 | `DON_NAME`, `DON_CHECK_MINUTES` | His name on Canon (default `Don`) and how often he looks at himself (default 5). |
 
-On first start he asks Canon to register him and waits. The keeper approves the request in
-the Canon app (Settings → Requests), he says hello, and the keeper sends him the keeper code.
+On first start a Don asks Canon to register him and waits. The keeper approves the request in
+the Canon app (Settings → Requests) and he says hello.
 
-The data directory holds his Canon identity and encryption keys (`canon/`) and his notes
-(`don.json`: the keeper code, the room he talks in, what he has already said). Unlike the
-game server, which keeps only a hash, he needs the keeper code itself, so that directory is
-private to him and must not be shared or backed up carelessly. Lose it and he has to be
-approved and linked again; the pet itself is untouched.
+The data directory holds the first Don at its root and every other in `dons/<id>/`: his Canon
+identity and encryption keys (`canon/`) and his notes (`don.json`: the keeper code, the room he
+talks in, what he has already said; the number only until he is approved). Unlike the game
+server, which keeps only a hash, he needs the keeper code itself, so that directory is private
+and must not be shared or backed up carelessly. Lose it and he has to be approved and linked
+again; the pet itself is untouched.
 
-Today this runs one Don, for the first keeper. Hosting a Don for every keeper who asks for
-one (each still their own agent, started on demand) is the next step.
+Every Don runs all the time, about 110 MB each. Starting one only when Canon wakes him, which
+Canon's kit supports, would make idle Dons free; that is the step to take if many keepers come.
 
 ## Where it is live
 
@@ -218,9 +232,11 @@ restricted login above. matanbob.com forwards `/trumpagotchi/` to it, read-only 
 the cloud-save API (that route lives in `HeyBobChan/personal_website`). The service also
 answers directly at https://trumpagotchi-production.up.railway.app.
 
-Don runs beside it as the service `trumpagotchi-don`: the same folder built with
-`don/Dockerfile`, with a volume at `/data`. It serves nothing: it only connects out, to Canon
-and to the game's API.
+The Dons run beside it as the service `trumpagotchi-don`: the same folder built with
+`don/Dockerfile` (set in the service's settings), with a volume at `/data`. It has no public
+address: it connects out to Canon and the game's API, and answers the game's server on
+Railway's private network. Upload it without `railway.json`, which configures the game's
+service.
 
 Like the other services in that project it takes source uploads, so a GitHub push alone
 does not publish. To release, upload the committed contents of this folder to that service
@@ -270,20 +286,23 @@ server/schema.sql     the trumpagotchi schema; permissions.sql, the restricted l
 server/migrate.mjs    creates both, then proves the login is fenced in
 server/engine.mjs     the page's own rules loaded on a server, in the keeper's time zone
 server/alerts.mjs     when a pet nobody is watching speaks up, and what he says
-don/main.mjs          Don on Canon: registration, the runner, hello, the alert loop
+don/host.mjs          hosts a Don for every keeper who asks, and answers the game's server
+don/main.mjs          one Don on Canon: registration, the runner, hello, the alert loop
 don/brain.mjs         what the keeper types → the game's actions → what he answers
 don/pet.mjs           his door to the pet: the cloud-save API; don/store.mjs, his notes
 tools/                single-file build, icon and preview-image generator
-tests/                simulation, API, alert and chat tests (Node), three browser tests
+tests/                simulation, API, alert, chat and hosting tests (Node), four browser tests
 ```
 
 ## Tests
 
 ```bash
-npm test             # rules, balance and content (34), the cloud-save API (10), time zones and
-                     # alerts (14), Don's chat brain against the real API (14): plain Node
+npm test             # rules, balance and content (34), the cloud-save API and asking for a Don (13),
+                     # time zones and alerts (14), Don's chat brain against the real API (14),
+                     # hosting a Don for every keeper (9): plain Node
 npm run test:browser # headless Chromium: the first minutes (13 checks), two devices sharing a pet,
-                     # and several tabs sharing a device (including buying while he sleeps)
+                     # several tabs sharing a device (including buying while he sleeps), and a
+                     # keeper asking for their Don in Settings
 ```
 
 Set `TEST_DATABASE_URL` to the `trumpagotchi_app` connection of a migrated database and

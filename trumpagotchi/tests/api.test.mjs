@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { createApi, newKey, normalizeKey, hashKey, limiter, validState, KEY_LENGTH } from '../server/api.mjs';
+import { createApi, newKey, normalizeKey, normalizePhone, hashKey, limiter, validState, KEY_LENGTH } from '../server/api.mjs';
 import { createMemoryStore } from '../server/store-memory.mjs';
 
 const save = (extra) => Object.assign({ v: 1, name: 'The Donald', xp: 120, cash: 1e6, needs: { food: 50, ego: 50, fun: 50, glow: 50, energy: 80 } }, extra);
@@ -66,7 +66,7 @@ function suite(name, makeStore) {
     const { call, close } = await listen({ store });
     t.after(async () => { await close(); await store.close(); });
 
-    assert.deepEqual((await call('GET', '/api/status')).data, { sync: true });
+    assert.deepEqual((await call('GET', '/api/status')).data, { sync: true, don: false });
 
     const made = await call('POST', '/api/pets', { body: { state: save() } });
     assert.equal(made.status, 201);
@@ -159,7 +159,7 @@ test('bad requests get clear answers and never reach the store', async (t) => {
 test('without a store the game still runs: status says so and saves are refused', async (t) => {
   const { call, close } = await listen({ store: null });
   t.after(close);
-  assert.deepEqual((await call('GET', '/api/status')).data, { sync: false });
+  assert.deepEqual((await call('GET', '/api/status')).data, { sync: false, don: false });
   assert.equal((await call('POST', '/api/pets', { body: { state: save() } })).status, 503);
 });
 
@@ -208,4 +208,86 @@ test('an edge header is used for the visitor address only when configured', asyn
   assert.equal((await post(edge, '203.0.113.5')).status, 429);
   assert.equal((await post(plain, '203.0.113.7')).status, 201);
   assert.equal((await post(plain, '203.0.113.8')).status, 429, 'an unconfigured header is not trusted');
+});
+
+// ---------------------------------------------------------------- his own Don on Canon
+// A stand-in for don/host.mjs: it records what it is asked and answers as told.
+async function fakeHost(answer = () => ({ http: 201, status: 'asked' })) {
+  const heard = [];
+  const server = createServer(async (req, res) => {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const asked = { method: req.method, path: req.url, key: req.headers['x-don-host-key'], body: body ? JSON.parse(body) : null };
+    if (req.url === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); res.end('{"ok":true}'); return; }
+    heard.push(asked);
+    const out = answer(asked);
+    res.writeHead(out.http, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ status: out.status }));
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  return { heard, url: 'http://127.0.0.1:' + server.address().port + '/', close: () => new Promise((r) => server.close(r)) };
+}
+
+test('phone numbers: the country code is required, the punctuation is not', () => {
+  assert.equal(normalizePhone('+1 (555) 123-4567'), '+15551234567');
+  assert.equal(normalizePhone('00972 50.123.4567'), '+972501234567');
+  assert.equal(normalizePhone('\u200e+972-50-123-4567'), '+972501234567');
+  for (const bad of ['555 123 4567', '+0123456789', '+1 555', '+1555123456789012', 'call me', null]) assert.equal(normalizePhone(bad), null, String(bad));
+});
+
+test('Don: without a host the game has no Dons to offer', async (t) => {
+  const { call, close } = await listen({ store: createMemoryStore() });
+  t.after(close);
+  assert.deepEqual((await call('GET', '/api/status')).data, { sync: true, don: false });
+  const { data } = await call('POST', '/api/pets', { body: { state: save() } });
+  assert.equal((await call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } })).status, 404);
+});
+
+test('Don: a keeper asks with their code and number, and the host’s answer comes back', async (t) => {
+  const host = await fakeHost(({ method }) => (method === 'GET' ? { http: 200, status: 'here' } : { http: 201, status: 'asked' }));
+  const { call, close } = await listen({ store: createMemoryStore(), don: { url: host.url, key: 'shared' } });
+  t.after(async () => { await close(); await host.close(); });
+  assert.deepEqual((await call('GET', '/api/status')).data, { sync: true, don: true });
+  const { data } = await call('POST', '/api/pets', { body: { state: save() } });
+  const typed = data.key.toLowerCase().replace(/(.{5})(?=.)/g, '$1-');
+  const asked = await call('POST', '/api/don', { key: typed, body: { phone: '+1 (555) 123-4567' } });
+  assert.deepEqual([asked.status, asked.data], [201, { status: 'asked' }]);
+  assert.deepEqual(host.heard[0], { method: 'POST', path: '/dons', key: 'shared', body: { key: data.key, phone: '+15551234567' } });
+  assert.equal(asked.headers.get('cache-control'), 'no-store');
+  const looked = await call('GET', '/api/don', { key: data.key });
+  assert.deepEqual([looked.status, looked.data], [200, { status: 'here' }]);
+  assert.deepEqual(host.heard[1], { method: 'GET', path: '/dons/' + hashKey(data.key), key: 'shared', body: null });
+});
+
+test('Don: the host’s refusals reach the keeper as they are', async (t) => {
+  let next = { http: 409, status: 'number-taken' };
+  const host = await fakeHost(() => next);
+  const { call, close } = await listen({ store: createMemoryStore(), don: { url: host.url, key: 'shared' } });
+  t.after(async () => { await close(); await host.close(); });
+  const { data } = await call('POST', '/api/pets', { body: { state: save() } });
+  const ask = () => call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } });
+  assert.deepEqual([(await ask()).status, (await ask()).data], [409, { status: 'number-taken' }]);
+  next = { http: 503, status: 'full' };
+  assert.deepEqual([(await ask()).status], [503]);
+  next = { http: 200, status: 'something odd' };
+  assert.equal((await ask()).status, 503, 'only known answers are passed on');
+});
+
+test('Don: bad numbers, unknown codes, a host that is down, and too many requests', async (t) => {
+  const host = await fakeHost();
+  const store = createMemoryStore();
+  const { call, close } = await listen({ store, don: { url: host.url, key: 'shared' }, limits: { donAsks: 2 } });
+  const down = await listen({ store, don: { url: 'http://127.0.0.1:9/', key: 'shared' } });
+  t.after(async () => { await close(); await down.close(); await host.close(); });
+  const { data } = await call('POST', '/api/pets', { body: { state: save() } });
+  assert.equal((await call('POST', '/api/don', { key: data.key, body: { phone: '555 1234' } })).status, 400);
+  assert.equal((await call('POST', '/api/don', { key: newKey(), body: { phone: '+15551234567' } })).status, 401);
+  assert.equal((await call('POST', '/api/don', { body: { phone: '+15551234567' } })).status, 401);
+  assert.equal((await call('GET', '/api/don', { key: newKey() })).status, 401);
+  assert.equal(host.heard.length, 0, 'nothing reaches the host without a real pet and a real number');
+  assert.equal((await call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } })).status, 201);
+  assert.equal((await call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } })).status, 201);
+  assert.equal((await call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } })).status, 429);
+  assert.equal((await down.call('POST', '/api/don', { key: data.key, body: { phone: '+15551234567' } })).status, 503);
+  assert.deepEqual((await down.call('GET', '/api/status')).data, { sync: true, don: false });
 });

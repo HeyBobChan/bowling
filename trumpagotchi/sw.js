@@ -1,6 +1,6 @@
 /* Trumpagotchi service worker: the whole app is a handful of static files, so cache them
    and he keeps working with no signal. Bump VERSION whenever a file changes. */
-const VERSION = 'tg-v7';
+const VERSION = 'tg-v8';
 const SHELL = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/content.js', 'js/game.js', 'js/art.js', 'js/audio.js', 'js/minigames.js', 'js/cloud.js', 'js/ui.js',

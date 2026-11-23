@@ -23,6 +23,16 @@ export function normalizeKey(input) {
 }
 export const hashKey = (key) => createHash('sha256').update('trumpagotchi:' + key).digest('hex');
 
+// A Canon phone number as Canon wants it (E.164), or null. People type spaces, dashes, dots
+// and brackets, and 00 for +; all of that is fine. The country code is not optional.
+export function normalizePhone(input) {
+  let p = String(input == null ? '' : input).trim().replace(/[\s().\-\u200e\u200f]/g, '');
+  if (p.startsWith('00')) p = '+' + p.slice(2);
+  return /^\+[1-9]\d{7,14}$/.test(p) ? p : null;
+}
+// What a keeper may hear about their Don. Anything else from the host is not passed on.
+export const DON_STATUSES = ['none', 'asked', 'here', 'declined', 'stopped', 'number-taken', 'full'];
+
 function sameSecret(a, b) {
   const x = createHash('sha256').update(String(a)).digest(), y = createHash('sha256').update(String(b)).digest();
   return timingSafeEqual(x, y);
@@ -82,15 +92,46 @@ function send(res, status, body, headers) {
  * @param {string} [o.ipHeader]        a header a trusted edge sets to the visitor's address (Railway: x-real-ip)
  * @param {function} [o.now]
  * @param {object} [o.limits]
+ * @param {object} [o.don]             where Dons are hosted (don/host.mjs): { url, key }; without it, no Dons
+ * @param {function} [o.fetch]
  */
-export function createApi({ store, proxyKey = '', ipHeader = '', now = Date.now, limits = {} }) {
-  const L = Object.assign({ requests: 240, creates: 10, createsEverywhere: 600, badKeys: 20, writes: 30 }, limits);
+export function createApi({ store, proxyKey = '', ipHeader = '', now = Date.now, limits = {}, don = null, fetch = globalThis.fetch }) {
+  const L = Object.assign({ requests: 240, creates: 10, createsEverywhere: 600, badKeys: 20, writes: 30, donAsks: 4, donAsksEverywhere: 40 }, limits);
   const perIp = limiter(L.requests, 60e3, now);            // everything, per visitor, per minute
   const creates = limiter(L.creates, 3600e3, now);          // new pets, per visitor, per hour
   const createsAll = limiter(L.createsEverywhere, 3600e3, now); // new pets, everyone together, per hour
   const badKeys = limiter(L.badKeys, 600e3, now);           // wrong codes, per visitor, per ten minutes
   const writes = limiter(L.writes, 60e3, now);              // saves, per pet, per minute
-  const all = [perIp, creates, createsAll, badKeys, writes];
+  const donAsks = limiter(L.donAsks, 3600e3, now);          // requests for a Don, per visitor, per hour
+  const donAsksAll = limiter(L.donAsksEverywhere, 3600e3, now); // and everyone together, per hour
+  const all = [perIp, creates, createsAll, badKeys, writes, donAsks, donAsksAll];
+
+  // Dons live in their own service (don/host.mjs), reached over a private network with a
+  // shared key. It is asked whether it is up at most once a minute.
+  const hosting = !!(store && don && don.url && don.key);
+  let hostUp = false, hostCheckedAt = -Infinity;
+  async function host(method, path, body) {
+    let res;
+    try {
+      res = await fetch(new URL(path, don.url), {
+        method, headers: Object.assign({ 'x-don-host-key': don.key }, body ? { 'content-type': 'application/json' } : {}),
+        body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(8000),
+      });
+    } catch { hostUp = false; throw new HttpError(503, 'Don cannot be reached right now. Try again in a while.'); }
+    let data = null;
+    try { data = await res.json(); } catch { /* not an answer */ }
+    if (!data || DON_STATUSES.indexOf(data.status) < 0) throw new HttpError(503, 'Don cannot be reached right now. Try again in a while.');
+    hostUp = true; hostCheckedAt = now();
+    return { http: res.status, status: data.status };
+  }
+  async function donAvailable() {
+    if (!hosting) return false;
+    if (now() - hostCheckedAt > 60e3) {
+      hostCheckedAt = now();
+      try { hostUp = (await fetch(new URL('healthz', don.url), { signal: AbortSignal.timeout(3000) })).ok; } catch { hostUp = false; }
+    }
+    return hostUp;
+  }
 
   function visitor(req) {
     const key = req.headers['x-tg-proxy-key'];
@@ -128,7 +169,7 @@ export function createApi({ store, proxyKey = '', ipHeader = '', now = Date.now,
     if (at !== 0) return false;
     const route = req.method + ' ' + pathname.slice(4);
     try {
-      if (route === 'GET /status' || route === 'HEAD /status') { send(res, 200, req.method === 'HEAD' ? undefined : { sync: !!store }); return true; }
+      if (route === 'GET /status' || route === 'HEAD /status') { send(res, 200, req.method === 'HEAD' ? undefined : { sync: !!store, don: await donAvailable() }); return true; }
       if (!store) throw new HttpError(503, 'Cloud saves are not set up on this copy.');
       const ip = visitor(req);
       limit(perIp, ip);
@@ -164,8 +205,29 @@ export function createApi({ store, proxyKey = '', ipHeader = '', now = Date.now,
           return true;
         }
         case 'DELETE /pet': { const { hash } = await keeper(req, ip); await store.remove(hash); send(res, 204); return true; }
+        // His own Don on Canon. The keeper code proves the pet is theirs; the phone number is
+        // the keeper's Canon account, which Canon asks to approve him. It is passed on, not kept.
+        case 'GET /don': {
+          if (!hosting) throw new HttpError(404, 'Not found.');
+          const { hash } = await keeper(req, ip);
+          const out = await host('GET', 'dons/' + hash);
+          send(res, 200, { status: out.status });
+          return true;
+        }
+        case 'POST /don': {
+          if (!hosting) throw new HttpError(404, 'Not found.');
+          await keeper(req, ip);
+          const body = await readJson(req);
+          const phone = normalizePhone(body.phone);
+          if (!phone) throw new HttpError(400, 'Include the country code, like +1 555 123 4567.');
+          limit(donAsks, ip); limit(donAsksAll, 'all');
+          const key = normalizeKey(/^Bearer\s+(.+)$/i.exec(String(req.headers.authorization || ''))[1]);
+          const out = await host('POST', 'dons', { key, phone });
+          send(res, out.http === 201 ? 201 : out.status === 'full' ? 503 : out.status === 'number-taken' ? 409 : 200, { status: out.status });
+          return true;
+        }
         default: {
-          const known = ['/pets', '/pet', '/pet/key', '/status'].includes(pathname.slice(4));
+          const known = ['/pets', '/pet', '/pet/key', '/status', '/don'].includes(pathname.slice(4));
           throw new HttpError(known ? 405 : 404, known ? 'Method not allowed.' : 'Not found.');
         }
       }
