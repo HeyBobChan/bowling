@@ -21,6 +21,8 @@ export function ensureAudio() {
   return ctx;
 }
 export const audioReady = () => !!ctx;
+// The master gain, for pages that build their own sounds but must obey the same mute.
+export const output = () => master;
 export const isMuted = () => muted;
 export function setMuted(m) {
   muted = m;
