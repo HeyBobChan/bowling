@@ -27,6 +27,7 @@ test.describe('Chameleon Escape', () => {
   test('every character and tree is a piece of the drawing', async ({ page }) => {
     const errors = await load(page);
     await expect(page.getByRole('heading', { level: 1 }).first()).toContainText('הזיקית בורחת');
+    await expect(page.locator('#intro .credit')).toContainText('גבריאל ומיכאלה');
     await expect(page.locator('.game-home')).toHaveAttribute('href', '/');
     const r = await page.evaluate(() => {
       const Z = window.__zikit;

@@ -1,5 +1,7 @@
 # הזיקית בורחת — Chameleon Escape
 
+Designed and drawn by גבריאל ומיכאלה (Gabriel and Michaela).
+
 ```
 Drawing:      drawings/zikit-1-page.webp (the page and the rules), zikit-2-monster.webp,
               zikit-3-trees.png, zikit-4-chameleon.webp (close-ups of the same page)
@@ -94,6 +96,7 @@ bug is food, and that the poop gets thrown.
 - What are the square teeth along the bottom left and bottom right of the page? A wall?
 - Is the yellow clown riding her, stuck to her, or her friend? For now it bobs on her horn.
 - Does the monster have a name?
+- Who drew which part? (The page is credited to both.)
 
 ## Playtest log
 

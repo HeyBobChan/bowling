@@ -7,7 +7,7 @@ import chamUrl from './assets/zikit/chameleon.webp';
 import monUrl from './assets/zikit/monster.webp';
 import forestUrl from './assets/zikit/forest.webp';
 
-// "הזיקית בורחת" — the rules, in the kid's handwriting on drawings/zikit-1-page.webp:
+// "הזיקית בורחת" by גבריאל ומיכאלה (Gabriel and Michaela) — the rules, in their handwriting on drawings/zikit-1-page.webp:
 //   "יש זיקית שבורחת ממפלצת שמנסה לדרוך עליה. לזיקית יש לב 1. אנחנו הזיקית. ברקע יש יער."
 //   There is a chameleon running away from a monster that tries to step on it. The chameleon
 //   has one heart. We are the chameleon. In the background there is a forest.
