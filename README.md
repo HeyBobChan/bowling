@@ -24,6 +24,16 @@ one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
 
 **חיים בצבע** is at `/chana` (https://matanbob.com/kids/chana). A host creates a room on the main screen; guests sort 52 works on their phones, submit, then review the correct exhibition dates and names together. See [event setup and scoring](design/chana-birthday.md). It shares the existing Railway PostgreSQL service.
 
+## Claude’s page
+
+**אברא כדברא** is at `/abra`. It is the one page here that no child drew: asked to add something of
+its own, Claude had no markers, only words. You write a Hebrew word on a notebook line and it
+comes alive above the line, built entirely from the letters of its own name: a dog of כ ל ב, a
+sea of ים, a rainbow whose bands are written in the names of their colours. 473 nouns, a little
+grammar (`שלושה כלבים כחולים`), words that change the whole world (`לילה`, `גשם`, `לרקוד`), and any
+word the page does not know, a child's name for instance, gets up and walks as itself. See the
+[design sheet](design/abra.md).
+
 ## Run it
 
 ```bash
@@ -90,6 +100,11 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
   not drawn in code: `scripts/zikit-cutouts.py` cuts the chameleon, the monster's ten pieces, the four trees and the
   bug out of the four `drawings/zikit-*` photographs and writes three small atlases and the rig (where each piece
   sits and hinges). `design/zikit-parts.webp` shows the page beside every piece. It uses the kit's HUD, input and audio.
+- `src/abra.js` + `src/abra/` — אברא כדברא: a WebGL2 page that draws nothing but letters. `glyphs.js` is the
+  font atlas and the instanced renderer, `shapes.js` turns a silhouette into a calligram, `world.js` keeps
+  the letters alive on springs, `lexicon.js` + `words-data.js` read what a child writes, and `sound.js` gives
+  every letter a note. It shares the kit's mute switch and `?sim` hook (`window.__abra`), not three.js.
+  `npm run test:abra-lexicon` checks the spelling rules and the dictionary on their own.
 - `tests/` — Playwright specs that load each page with `?sim`, drive
   `window.__<game>.step(dt)` and assert the balance rules from the design sheets.
 
@@ -144,5 +159,11 @@ Artifact tool using the `artifact` URL from `games.json` to keep the same link.
 virtual pet with its own page, tests, server and Dockerfile. It is not one of the kids'
 games: it is not in `games.json`, the Vite build does not include it, and the games site
 does not serve it.
+
+## Credits
+
+אברא כדברא uses [Twemoji](https://github.com/twitter/twemoji) graphics (© Twitter / X Corp and contributors,
+CC-BY 4.0) as hidden silhouettes, and the fonts Playpen Sans Hebrew and Fredoka (SIL Open Font License 1.1;
+licence texts in `src/abra/fonts/`).
 
 🤖 Built with [Claude Code](https://claude.com/claude-code)
