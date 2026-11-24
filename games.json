@@ -132,6 +132,25 @@
       }
     },
     {
+      "id": "zikit",
+      "page": "zikit.html",
+      "path": "/zikit",
+      "emoji": "🦎",
+      "title": "הזיקית בורחת",
+      "short": "הזיקית בורחת",
+      "accent": "#0e8fa8",
+      "accentDark": "#0a6377",
+      "artifact": "https://claude.ai/artifact/1xuBgAbXTiooZ6Xz2Nn7LA",
+      "lobby": {
+        "genre": "בריחה ולשון ארוכה",
+        "description": "המשחק של גבריאל ומיכאלה: מפלצת ענקית מנסה לדרוך על הזיקית — ויש לה רק לב אחד! בורחים מהקשקוש האדום, קופצים מעל הגל ותופסים חרקים בלשון.",
+        "image": "/drawings/zikit-1-page.webp",
+        "imageAlt": "הציור המקורי של גבריאל ומיכאלה: זיקית ירוקה עם שיער צבעוני, מפלצת כחולה גדולה, ארבעה עצים וחוקי המשחק בכתב יד",
+        "tint": "#e2f4f1",
+        "action": "יאללה, בורחים"
+      }
+    },
+    {
       "id": "chana",
       "page": "chana.html",
       "path": "/chana",

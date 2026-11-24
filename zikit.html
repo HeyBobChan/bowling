@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>הזיקית בורחת!</title>
+  <link rel="icon" href="data:,">
+  <style>
+    #app canvas { width: 100%; height: 100%; touch-action: none; }
+    body:not(.playing) .hud.badge { visibility: hidden; }
+    #heart { direction: ltr; }
+    #heart.lost { filter: grayscale(1); opacity: .45; }
+    #intro { background: rgba(248, 245, 236, .84); gap: 8px; }
+    #intro .rules { font-size: clamp(18px, 3vw, 26px); font-weight: 900; max-width: 34ch; }
+    #hint {
+      bottom: 14px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(13px, 2vw, 17px); font-weight: 700; color: #6b5d4a;
+      background: rgba(248, 245, 236, .86); border-radius: 12px; padding: 4px 14px; white-space: nowrap;
+    }
+    .portrait-tip { display: none; }
+    @media (max-width: 720px) {
+      #heart { top: 16px; bottom: auto; }   /* the tongue button lives at the bottom */
+      #intro { padding-top: 132px; }
+      #hint { bottom: 70px; white-space: normal; text-align: center; width: 88vw; }
+    }
+    @media (orientation: portrait) and (max-width: 720px) { .portrait-tip { display: block; } }
+  </style>
+</head>
+<body>
+  <div id="app"><canvas id="game"></canvas></div>
+
+  <div id="score" class="hud badge tr">⭐ 0</div>
+  <div id="dist" class="hud badge tl">📏 0 מ׳</div>
+  <div id="heart" class="hud badge tc" aria-label="לב אחד">❤️</div>
+  <div id="msg" class="hud msg"></div>
+  <div id="hint" class="hud hidden"></div>
+
+  <div id="intro" class="overlay">
+    <h1>🦎 הזיקית בורחת! 🦎</h1>
+    <p class="tip credit">המשחק והציור של <b>גבריאל ומיכאלה</b></p>
+    <p class="rules">יש זיקית שבורחת ממפלצת שמנסה <b>לדרוך עליה</b>. אנחנו הזיקית — ויש לה רק ❤️ אחד!</p>
+    <p class="tip">⬅️ ➡️ <b>החצים</b> = רצים · המפלצת נוחתת על <b>הקשקוש האדום</b> — בורחים ממנו מהר!</p>
+    <p class="tip"><b>רווח</b> = קופצים מעל הגל שהיא עושה כשהיא נוחתת, ומעל הקקי שהיא זורקת</p>
+    <p class="tip">👅 <b>Shift</b> = שולפים לשון ותופסים חרקים <bdi dir="ltr">+10</bdi> · כשהיא נוחתת ליד עץ — החרקים נופלים ממנו!</p>
+    <button id="startBtn">יאללה, בורחים!</button>
+    <p class="tip portrait-tip">📱 עדיף לסובב את הטלפון לרוחב — רואים יותר יער</p>
+    <p class="tip keys">רצים: <kbd>←</kbd> <kbd>→</kbd> · קפיצה: <kbd>רווח</kbd> / <kbd>↑</kbd> · לשון: <kbd>Shift</kbd> · בטלפון: ג׳ויסטיק, ⤒ ו־👅</p>
+    <p class="tip other-game"></p>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <h1 id="goTitle">😵 המפלצת דרכה עליכם!</h1>
+    <p class="big-score" id="finalScore"></p>
+    <p id="goDetail"></p>
+    <p id="bestScore"></p>
+    <div class="row">
+      <button id="restartBtn">עוד פעם!</button>
+    </div>
+    <p class="tip other-game"></p>
+  </div>
+
+  <script type="module" src="/src/zikit.js"></script>
+</body>
+</html>
