@@ -1,8 +1,8 @@
-# 🎳⚽🦖🥊🎿🤸 המשחקייה של ב׳3 (The Marker Games)
+# 🎳⚽🦖🥊🎿🤸🦎 המשחקייה של ב׳3 (The Marker Games)
 
 The game roster is at `/` (index.html), with original artwork and links to every game.
 
-Seven games designed by kids, drawn with markers or pencil, and brought to life. Every
+Eight games designed by kids, drawn with markers or pencil, and brought to life. Every
 game is a page of the same little kit: cel-shaded "marker on paper" rendering, one
 keyboard or a touch pad, one or two players, and a headless test that drives it.
 
@@ -15,6 +15,7 @@ keyboard or a touch pad, one or two players, and a headless test that drives it.
 | 🎿 **רוקרוק בשלג** (Kelpie Downhill) | `/ski` | Our real dog, as a 3D model, skis an endless mountain that gets harder zone by zone: follow the groomed lane through the gates (a streak multiplies them), grab the bones, jump the fallen logs, launch off kickers and spin. Three bones, and a golden one now and then. |
 | 🤸 **קופצים מעל הרעים** (Jump Over the Bad Guys) | `/jump` | Pick one of three box characters, walk both ways and jump over the bad guys who want to eat you — flipping feet, head, feet, head. Climb the green towers; the cute one double-jumps, the scary one slams down with a roar, the regular one glides on its wing. Once in a while the monster king stomps in and blocks the way: dodge his hands, then climb his sleeping hand and arm and bounce off his head to get over him. A 2D canvas game, not three.js. |
 | 🐾 **שחור לבן ביפו** (Jaffa Hop) | `/jaffa` | A black-and-white dog hops along Jerusalem Boulevard in Jaffa, dodging Wolt delivery riders and youths on electric scooters. Collect bones (+10) and rice bags (+50 and five seconds of protection), shelter in ficus plazas, and beat your best score. Original Arabic-inspired music and a completely black-and-white pencil streetscape using the actual characters from the drawing. |
+| 🦎 **הזיקית בורחת** (Chameleon Escape) | `/zikit` | A chameleon runs through a forest from a monster that tries to step on it — and it has one heart. She marks the ground with a red scribble and drops on it; she lands where you are going, so a runner has to stop. Jump the wave her landing makes and the poop she throws off her head, and shoot your tongue at the bugs she shakes out of the trees. The chameleon, the monster (in ten moving pieces), the trees and the bug are all cut straight out of the drawing. A 2D canvas game. |
 
 The drawings the games were built from are in [`drawings/`](drawings/README.md); the
 one-page design sheets ("verb sheets") are in [`design/`](design/README.md).
@@ -47,6 +48,7 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
 ## Controls
 
 - **Jaffa Hop:** arrows/WASD move one tile; Space hops forward; swipe, tap, or use the direction buttons on touch screens. P/Escape pauses; M toggles sound. Three collisions end a run, with brief protection after each hit.
+- **Chameleon Escape:** arrows or A/D run; Space, Enter or ↑ jumps; Shift shoots the tongue. Touch: stick, ⤒ and 👅.
 - **One player:** arrows or WASD to move · **Space** = the action (shoot / head / punch) ·
   **Shift** = dash (punch game) · Enter or Space starts and restarts.
 - **Two players** (penalties, punch): player 1 = arrows + Enter + right Shift, player 2 =
@@ -84,6 +86,10 @@ and outline bookkeeping stay bounded; match state and physics bodies still reset
   model (`src/assets/dog.glb`, see `design/ski.md`) was exported for Babylon, but it uses the kit's
   HUD, input, audio and `?sim` hook like every other page.
 - `src/jaffa.js`, `jaffa-world.js`, `jaffa-sketch.js`, `jaffa-motion.js`, and `jaffa-music.js` — the Jaffa game: grid hopping, bounded procedural street scenery, original-drawing dog/rider cutouts, animated pencil legs and wheels, and monochrome rendering, and an original synthesized Hijaz-inspired melody and drum rhythm. Its responsive HTML/CSS interface shares the kit's sound effects and mute preference. `?sim` exposes `window.__jaffa` for gameplay and resource checks.
+- `src/zikit.js` + `src/zikit-rig.json` + `src/assets/zikit/` — the chameleon game, the other 2D page. Its sprites are
+  not drawn in code: `scripts/zikit-cutouts.py` cuts the chameleon, the monster's ten pieces, the four trees and the
+  bug out of the four `drawings/zikit-*` photographs and writes three small atlases and the rig (where each piece
+  sits and hinges). `design/zikit-parts.webp` shows the page beside every piece. It uses the kit's HUD, input and audio.
 - `tests/` — Playwright specs that load each page with `?sim`, drive
   `window.__<game>.step(dt)` and assert the balance rules from the design sheets.
 
