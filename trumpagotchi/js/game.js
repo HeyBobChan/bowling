@@ -75,6 +75,7 @@
       asleep: false, sulking: false, neglectH: 0,
       tariff: 0, bronzeUntil: 0, lastPetAt: 0,
       decor: [], orders: [], ach: {},
+      holdings: { term: 0, bands: C.ACQ_BANDS.map(function () { return 0; }) }, // acquisitions: bought this term, and how far into each band
       posts: [], postCharges: POST_MAX, postChargeAt: now, last3am: '',
       zone: '', // the keeper's time zone (an IANA name), so a server can tell his night from his day
       seenBriefings: [], seasonsDone: {},
@@ -83,16 +84,17 @@
       stats: {
         burgers: 0, cokes: 0, salads: 0, feeds: 0, praises: 0, grooms: 0, golf: 0, golfHoles: 0,
         deals: 0, dealsWalked: 0, rallies: 0, posts: 0, posts3am: 0, hairTouches: 0, pets: 0,
-        fired: 0, days: 0, bestCrowd: 0, bestDeal: 0, earned: 0, briefings: 0,
+        fired: 0, days: 0, bestCrowd: 0, bestDeal: 0, earned: 0, briefings: 0, acqSpent: 0,
       },
       settings: { sound: true, alerts: false },
     };
   };
 
   function merge(base, saved) { // fill in anything a newer version added
+    const plain = function (v) { return !!v && typeof v === 'object' && !Array.isArray(v); };
     for (const k in base) {
       if (!(k in saved) || saved[k] == null) saved[k] = base[k];
-      else if (base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) merge(base[k], saved[k]);
+      else if (plain(base[k])) { if (plain(saved[k])) merge(base[k], saved[k]); else saved[k] = base[k]; } // an odd value where a group belongs: start the group afresh
     }
     return saved;
   }
@@ -116,6 +118,8 @@
     s.name = String(s.name || base.name).slice(0, 18);
     const ids = function (arr, known) { return Array.isArray(arr) ? arr.filter(function (x, i) { return known.indexOf(x) >= 0 && arr.indexOf(x) === i; }) : []; };
     s.decor = ids(s.decor, C.DECOR.map(function (d) { return d.id; }));
+    const hold = s.holdings && typeof s.holdings === 'object' ? s.holdings : {};
+    s.holdings = { term: Math.floor(num(hold.term, 0, 1e6, 0)), bands: C.ACQ_BANDS.map(function (b, i) { return Math.floor(num(Array.isArray(hold.bands) ? hold.bands[i] : 0, 0, 1e6, 0)); }) };
     s.orders = ids(s.orders, C.ORDERS.map(function (o) { return o.id; }));
     s.seenBriefings = ids(s.seenBriefings, C.BRIEFINGS.map(function (b) { return b.id; }));
     s.posts = (Array.isArray(s.posts) ? s.posts : []).filter(function (p) { return p && typeof p.t === 'string'; }).slice(0, 30)
@@ -209,6 +213,7 @@
   G.perks = function (s) {
     const p = { ego: 0, fun: 0, glow: 0, income: 0, xp: 0, golf: 0, coke: 0 };
     for (const d of C.DECOR) if (s.decor.indexOf(d.id) >= 0) for (const k in p) if (d[k]) p[k] += d[k];
+    p.income += G.ACQ.income * G.owned(s); // everything he owns pays a little
     return p;
   };
   G.termBonus = function (s) { return 1 + 0.25 * (s.term - 1); };
@@ -624,6 +629,53 @@
   };
 
   // ---------------------------------------------------------------- games
+  // ---------------------------------------------------------------- acquisitions
+  // The shop that never runs out (C.ACQ_BANDS). Each acquisition costs `growth` times the one
+  // before, counted from the start of the current term, and pays `income` (1%) more licensing
+  // income for good. Its price decides which band it comes from, so what he buys grows as he
+  // does; within a band the items come in order, then round again with a number.
+  // He can take on `first` acquisitions plus `perLevel` for every level he has this term. It
+  // rarely matters the first time round; after "Run again" it turns the fortune he carries
+  // over into a steady stream of purchases instead of one spree and then weeks of nothing.
+  G.ACQ = { base: 1.5e5, growth: 1.13, income: 0.01, first: 4, perLevel: 2.5 };
+  G.acqAllowed = function (s) { return G.ACQ.first + Math.floor(G.ACQ.perLevel * G.level(s)); };
+  // The level at which the next acquisition (or the one `ahead` after it) may be bought.
+  G.acqLevel = function (s, ahead) { return Math.max(1, Math.ceil((s.holdings.term + (ahead || 0) + 1 - G.ACQ.first) / G.ACQ.perLevel)); };
+  G.owned = function (s) { let n = 0; for (const b of s.holdings.bands) n += b; return n; };
+  G.acqPrice = function (s, ahead) { return Math.round(G.ACQ.base * Math.pow(G.ACQ.growth, s.holdings.term + (ahead || 0))); };
+  G.bandFor = function (cost) { let b = 0; while (b < C.ACQ_BANDS.length - 1 && cost > C.ACQ_BANDS[b].upTo) b++; return b; };
+  // The next `count` things on offer, in order. Nothing is bought.
+  G.acqNext = function (s, count) {
+    const seen = s.holdings.bands.slice(), out = [];
+    for (let i = 0; i < (count || 1); i++) {
+      const cost = G.acqPrice(s, i), b = G.bandFor(cost), band = C.ACQ_BANDS[b];
+      const k = seen[b]++, item = band.items[k % band.items.length], round = Math.floor(k / band.items.length);
+      out.push({ band: b, icon: band.icon, kind: band.name, cost: cost, name: round ? item[0] + ' No. ' + (round + 1) : item[0], note: round ? C.ACQ_AGAIN[k % C.ACQ_AGAIN.length] : item[1] });
+    }
+    return out;
+  };
+  G.buyNext = function (s, now) {
+    if (!s.hatched) return res(false, { reason: 'egg' });
+    const it = G.acqNext(s, 1)[0];
+    if (s.holdings.term >= G.acqAllowed(s)) return res(false, { reason: 'later', level: G.acqLevel(s) });
+    if (s.cash < it.cost) return res(false, { reason: 'cash', say: G.say(s, 'noCash') });
+    const away = s.asleep ? 'asleep' : s.sulking ? 'gone' : null; // delivered quietly, as with decor
+    const r = res(true, away ? { quiet: away, bought: it } : { anim: 'dance', bought: it });
+    addCash(s, -it.cost, r.events, now);
+    s.stats.acqSpent += it.cost;
+    s.holdings.term++;
+    s.holdings.bands[it.band]++;
+    if (!away) applyNeeds(s, { ego: 6 }); // he does love owning things
+    r.xp = addXp(s, 8, r.events, now);
+    const n = G.owned(s);
+    unlock(s, 'acq1', r.events, now);
+    if (n >= 25) unlock(s, 'acq25', r.events, now);
+    if (n >= 100) unlock(s, 'acq100', r.events, now);
+    if (n >= 250) unlock(s, 'acq250', r.events, now);
+    if (!away) r.say = G.say(s, 'acquired', { thing: it.name });
+    return r;
+  };
+
   G.canPlay = function (s, game) {
     const b = blocked(s); if (b) return { ok: false, reason: b };
     if (s.needs.energy < G.COST[game]) return { ok: false, reason: 'tired', say: G.say(s, 'lowEnergy') };
@@ -736,6 +788,7 @@
     const r = res(true, { anim: 'dance' });
     s.term++;
     s.xp = 0; s.tariff = 0; s.neglectH = 0; s.asleep = false;
+    s.holdings.term = 0; // he keeps everything he owns; prices start again from the bottom
     s.needs = { food: 70, ego: 70, fun: 70, glow: 70, energy: 90 };
     if (s.term >= 2) unlock(s, 'term2', r.events, now);
     if (s.term >= 3) unlock(s, 'term3', r.events, now);

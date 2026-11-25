@@ -456,14 +456,36 @@
     }
   }
 
+  function delivered(r) { if (r.ok && r.quiet) toast(r.quiet === 'asleep' ? 'Delivered quietly. He’ll find it when he wakes up.' : 'Delivered. It’ll be here when he’s back.'); }
   function sheetShop(body) {
     put(body, h('div', { class: 'card center' }, h('div', { class: 'big-num', text: G.money(s.cash) }), h('p', { class: 'muted', text: 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' / hour, even while you are away.' })));
-    put(body, h('div', { class: 'list' }, C.DECOR.map(function (d) {
+    // Acquisitions: the shop that never runs out. The next one can be bought; two more are shown.
+    const owned = G.owned(s), next = G.acqNext(s, 3);
+    put(body, h('h3', { class: 'sheet-h', text: 'Acquisitions' }));
+    put(body, h('p', { class: 'muted', id: 'acqLine', text: (owned ? 'He owns ' + owned.toLocaleString('en-US') + (owned === 1 ? ' thing' : ' things') + ', worth ' + G.money(s.stats.acqSpent) + '. ' : '') + 'Each one pays 1% more income, for good. There is always something else.' }));
+    put(body, h('div', { class: 'list' }, next.map(function (it, i) {
+      const level = G.acqLevel(s, i), later = level > G.level(s);
+      const main = h('span', { class: 'item-main' }, h('b', { text: it.name }), h('small', { text: it.note }), h('span', { class: 'fx', text: it.kind + ' · +1% income' }));
+      const price = h('span', { class: 'price' + (it.cost > s.cash ? ' poor' : '') }, G.money(it.cost), later ? h('small', { text: 'AT LEVEL ' + level }) : null);
+      if (i > 0) return h('div', { class: 'item then', 'aria-label': 'After that: ' + it.name + ', ' + G.money(it.cost) }, h('span', { class: 'item-icon', 'aria-hidden': 'true', text: it.icon }), main, price);
+      return h('button', { class: 'item', type: 'button', id: 'acqBuy', onclick: function () {
+        const r = G.buyNext(s, now());
+        if (r.reason === 'later') toast('He can take on more at level ' + r.level + '. One thing at a time. Two, maybe.');
+        react(r, { sound: 'coin', ms: 2400, fx: r.quiet ? null : confetti });
+        delivered(r);
+        drawSheet();
+      } }, h('span', { class: 'item-icon', 'aria-hidden': 'true', text: it.icon }), main, price);
+    })));
+    // the office: twelve pieces, each with a perk; the ones he has go to the bottom
+    put(body, h('h3', { class: 'sheet-h', text: 'For the office' }));
+    const decor = C.DECOR.filter(function (d) { return s.decor.indexOf(d.id) < 0; }).concat(C.DECOR.filter(function (d) { return s.decor.indexOf(d.id) >= 0; }));
+    if (s.decor.length >= C.DECOR.length) { put(body, h('p', { class: 'muted', text: 'Every piece of office decor: owned. Gold everything.' })); return; }
+    put(body, h('div', { class: 'list' }, decor.map(function (d) {
       const owned = s.decor.indexOf(d.id) >= 0;
       return h('button', { class: 'item' + (owned ? ' owned' : ''), type: 'button', disabled: owned, onclick: function () {
         const r = G.buyDecor(s, d.id, now());
         react(r, { sound: 'coin', ms: 2400, fx: r.quiet ? null : confetti });
-        if (r.ok && r.quiet) toast(r.quiet === 'asleep' ? 'Delivered quietly. He’ll find it when he wakes up.' : 'Delivered. It’ll be here when he’s back.');
+        delivered(r);
         drawSheet();
       } },
         h('span', { class: 'item-icon', 'aria-hidden': 'true', text: owned ? '✅' : '🖼️' }),
@@ -629,6 +651,7 @@
       const st = s.stats, days = Math.max(1, Math.ceil((now() - s.born) / 864e5));
       const rows = [
         ['Level', G.level(s) + ' · ' + G.stage(s).name], ['Term', G.roman(s.term)], ['Age', days + (days === 1 ? ' day' : ' days')],
+        ['Acquisitions', G.owned(s).toLocaleString('en-US') + ' (' + G.money(st.acqSpent) + ')'],
         ['Streak', s.streak.n + ' (best ' + s.streak.best + ')'], ['Money earned', G.money(st.earned)], ['Income', G.money(G.incomePerHour(s)) + '/h'],
         ['Hamberders', st.burgers], ['Diet Cokes', st.cokes], ['Salads (regrettable)', st.salads], ['Lettuce tariff', s.tariff + '%'],
         ['Compliments paid', st.praises], ['Times fired', st.fired], ['Posts', st.posts], ['3 AM posts', st.posts3am],
@@ -1066,7 +1089,7 @@
     const env = {
       scene: scene, frame: f, decor: decorMap(), hour: d.getHours() + d.getMinutes() / 60,
       season: season, bunting: lv >= 32 && lv < 45, festive: FESTIVE.indexOf(season) >= 0, buttonLit: view.buttonLit > view.frame,
-      look: look, x: view.x, resting: !s.hatched || s.sulking || (s.asleep && indoors),
+      look: look, x: view.x, resting: !s.hatched || s.sulking || (s.asleep && indoors), holdings: G.owned(s),
     };
     A.drawRoom(x, env);
     if (!s.hatched) { A.drawEgg(x, 80, A.FLOOR, s.eggTaps, f); return; }
@@ -1141,6 +1164,7 @@
     const tn = (C.NEWS && C.NEWS.tier[G.tier(s)]) || ['He is doing tremendously.']; // tolerate an older content file mid-release
     pool.push(['post', tn[tickerN % tn.length]]);
     pool.push(['shop', 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' an hour and climbing.']);
+    if (s.hatched) pool.push(['shop', 'Rumour: his next acquisition is \u201C' + G.acqNext(s, 1)[0].name + '\u201D. Price on request.']);
     if (s.posts.length) pool.push(['post', 'He posted: \u201C' + s.posts[0].t + '\u201D']);
     if (G.briefing(s)) pool.push(['brief', 'Today\u2019s briefing is ready. He has not read it.']);
     if (s.streak.n > 1) pool.push(['brief', 'Day ' + s.streak.n + ' of your streak. Loyalty has been noted.']);

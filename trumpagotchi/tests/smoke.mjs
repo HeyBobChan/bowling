@@ -96,6 +96,28 @@ try {
     await page.click('#sheetClose');
   });
 
+  await step('the shop sells the next acquisition, and there is always another', async () => {
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.cash = 1e6; for (const k of window.TG.game.NEEDS) s.needs[k] = 70; window.TG.ui.refresh(); });
+    await page.click('#act-shop');
+    assert.match(await page.textContent('#acqBuy'), /Gold Stapler.*\$150K/s);
+    assert.equal(await page.locator('#sheetBody .item.then').count(), 2);
+    await page.click('#acqBuy');
+    const s = await state();
+    assert.equal(s.holdings.term, 1);
+    assert.ok(Math.abs(s.cash - 850e3) < 50, 'paid ' + (1e6 - s.cash));
+    assert.match(await page.textContent('#acqBuy'), /Monogrammed Bathrobe/);
+    assert.match(await page.textContent('#acqLine'), /He owns 1 thing, worth \$150K/);
+    assert.equal(await page.isVisible('#bubble'), true, 'he has something to say about it');
+    // he can only take on so much at once
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.cash = 1e12; s.holdings.term = window.TG.game.acqAllowed(s); window.TG.ui.refresh(); });
+    await page.click('#sheetClose'); await page.click('#act-shop');
+    assert.match(await page.textContent('#acqBuy'), /AT LEVEL \d+/);
+    await page.click('#acqBuy');
+    assert.match(await page.textContent('#toasts'), /more at level \d+/);
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.holdings.term = 1; s.cash = 1e6; window.TG.ui.refresh(); });
+    await page.click('#sheetClose');
+  });
+
   await step('settings link to Canon in both stores, outside the game', async () => {
     await page.click('#menuBtn');
     await page.click('.tab >> nth=3');

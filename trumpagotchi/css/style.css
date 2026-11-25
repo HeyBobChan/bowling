@@ -240,6 +240,8 @@ a.btn { color: inherit; text-decoration: none; touch-action: manipulation; }
 }
 .item:active { background: var(--navy-3); }
 .item[disabled] { opacity: 0.5; }
+.item.then { opacity: 0.55; min-height: 48px; }
+.sheet-h { font-family: var(--serif); font-size: 17px; color: var(--gold-l); margin: 6px 2px -3px; }
 .item.owned { border-color: var(--gold-d); background: #1a2242; }
 .item-icon { font-size: 26px; width: 34px; text-align: center; flex: none; }
 .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }

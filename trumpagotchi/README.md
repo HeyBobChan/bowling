@@ -39,7 +39,7 @@ npm run build:single # writes dist/trumpagotchi.html (about 220 KB)
 | **Seven more of something else** | Past level 50 there is no president left to become, so his own features take over. Gold Standard (55, plated head to toe), The Hair (62, it has eyes now and makes the decisions), The Long Tie (70, it has been all the way round), The Biggest (78, he outgrows the office and stands in the city), The Tower (86, he and the building are one), The Orange Giant (93, a planet with moons), The Everything (100, a face in the sky, and the page turns gold). Each change comes on a little every level. |
 | **Six voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM, and from level 62 BEYOND. Every situation has lines in all six, about 850 in total, and each of the seven later forms has things to say about being what it is. |
 | **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 92 briefings, so about three months pass before one comes round again. Fourteen of them only arrive once he is the thing they are about. |
-| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of decor, each with a perk. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
+| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of office decor, each with a perk, and on acquisitions, which never run out: about 200 things from a gold stapler through golf courses, airlines and the weather to moons and, finally, ideas, each a little dearer than the last and each paying 1% more income for good. A list that is used up comes round again with numbers (Golf Course No. 2). He can take on two and a half more for every level, so a fortune buys a steady stream rather than everything at once. As he buys, the view from his window, and later the whole city, turns gold. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
 | **The long game** | Daily streaks, 100 executive orders to collect (one a day; sixteen can only be signed by what he becomes), 44 trophies, and 100 levels. At level 100, having been everything, he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
 | **The calendar** | Twenty special days, each with its own greeting, a one-off briefing and, mostly, something in the room: New Year, Groundhog Day, the big game, Valentine's, Presidents' Day, St. Patrick's (green tie), April Fools', Easter, National Hamberder Day, his birthday, the Fourth, Labor Day, Halloween, Thanksgiving week (the turkey pardon), Black Friday, all of December, New Year's Eve, any Friday the 13th, and February 29th. |
 | **Every device** | Optional cloud save: a secret keeper code puts the same pet on any phone or computer. No account. |
@@ -161,9 +161,9 @@ keeper's phone ── Canon (end-to-end encrypted room) ── their Don (don/) 
 
 What he understands: `burger`, `coke`, `taco`, `chicken`, `steak`, `cake`, `ice cream`,
 `salad`; any compliment (louder is better) or insult; `comb`, `hairspray`, `bronzer`;
-`good night`, `wake up`; `post`; `briefing` (a card to tap, or 1, 2, 3); `status`; `sorry`
-when he has walked out; `quiet` and `alerts on`; `unlink`; `help`. Golf, deals, rallies and
-the shop stay on the page.
+`good night`, `wake up`; `post`; `briefing` (a card to tap, or 1, 2, 3); `status`; `shop`
+(what is for sale) and `buy` (the next acquisition); `sorry` when he has walked out; `quiet`
+and `alerts on`; `unlink`; `help`. Golf, deals, rallies and the office decor stay on the page.
 
 ### When he writes first
 
@@ -300,10 +300,10 @@ tests/                simulation, API, alert, chat and hosting tests (Node), fou
 ## Tests
 
 ```bash
-npm test             # rules, balance and content (40), the cloud-save API and asking for a Don (13),
-                     # time zones and alerts (14), Don's chat brain against the real API (14),
+npm test             # rules, balance and content (44), the cloud-save API and asking for a Don (13),
+                     # time zones and alerts (14), Don's chat brain against the real API (15),
                      # hosting a Don for every keeper (9): plain Node
-npm run test:browser # headless Chromium: the first minutes and every later form (15 checks), two devices sharing a pet,
+npm run test:browser # headless Chromium: the first minutes, the shop and every later form (16 checks), two devices sharing a pet,
                      # several tabs sharing a device (including buying while he sleeps), and a
                      # keeper asking for their Don in Settings
 ```
@@ -345,6 +345,11 @@ Everything he says, signs and is told is plain data in `js/content.js`:
   briefing with `min` (a level where a form begins) only arrives once he is that form, and
   pays 38 to 52.
 - `C.SEASONS`, `C.SEASON_BRIEFINGS` and `C.seasonFor`: the special days.
+- `C.ACQ_BANDS`: the acquisitions, in six bands by price, from small luxuries to ideas. Add
+  items to the end of a band's list (saves count how far into each band he has got); a band
+  is offered up to its `upTo` price. `C.ACQ_AGAIN` is what is said when a band comes round
+  again. Prices, the income they pay and how many he may take on per level are `G.ACQ` in
+  `js/game.js`; the last pacing test fails if the shop ever runs dry or turns into a spree.
 - `C.ORDERS`: the collectible orders. Only ever add to the end: saves refer to them by position.
   A third entry is a level: he cannot sign that order before he is the thing it is about.
 - `C.NEWS`, `C.COMPLIMENTS`, `C.AWAY_EVENTS`, `C.HUMBLE_LINES` and the deal lists.

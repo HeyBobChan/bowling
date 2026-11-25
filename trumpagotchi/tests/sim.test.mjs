@@ -573,6 +573,101 @@ test('another term: back to level 1, keep everything, earn more', () => {
   assert.equal(G.termBonus(s), 1.25);
 });
 
+test('acquisitions: always something more to buy, each a little dearer and a little bigger', () => {
+  const s = hatched();
+  s.cash = 1e30; s.xp = G.cumXp(100);
+  const names = new Set(), seen = [];
+  let last = 0;
+  for (let i = 0; i < G.acqAllowed(s); i++) {
+    const next = G.acqNext(s, 3);
+    assert.equal(next.length, 3);
+    const it = next[0];
+    assert.ok(it.cost > last, 'dearer every time');
+    assert.ok(it.name && it.note && it.icon && it.kind, i);
+    assert.ok(!names.has(it.name), 'never the same name twice: ' + it.name);
+    names.add(it.name); seen.push(it.band);
+    last = it.cost;
+    const r = G.buyNext(s, G.now());
+    assert.ok(r.ok, i + ' ' + it.name);
+    assert.equal(r.bought.name, it.name);
+    assert.ok(r.say.includes(it.name), r.say);
+  }
+  // the bands come in order, from small luxuries to the sky
+  for (let i = 1; i < seen.length; i++) assert.ok(seen[i] >= seen[i - 1]);
+  assert.ok(seen[seen.length - 1] >= 4, 'by the end of a term he is buying things in the sky');
+  assert.equal(G.owned(s), G.acqAllowed(s));
+  assert.ok(Math.abs(G.perks(s).income - G.owned(s) * 0.01) < 1e-9, 'each pays 1% more income');
+  for (const id of ['acq1', 'acq25', 'acq100', 'acq250']) assert.ok(s.ach[id], id);
+  // a band used up comes round again, with numbers
+  const small = C.ACQ_BANDS[0];
+  const t = hatched(); t.cash = 1e30; t.xp = G.cumXp(100); t.holdings.bands[0] = small.items.length;
+  const again = G.acqNext(t, 1)[0];
+  assert.equal(again.name, small.items[0][0] + ' No. 2');
+  assert.ok(C.ACQ_AGAIN.includes(again.note));
+  // far, far on, there is still something: the last band never ends
+  t.holdings.term = 400; t.holdings.bands = C.ACQ_BANDS.map(() => 5000);
+  const far = G.acqNext(t, 2);
+  assert.equal(far[0].band, C.ACQ_BANDS.length - 1);
+  assert.match(far[1].name, /No\. \d+$/);
+  assert.ok(isFinite(far[1].cost) && far[1].cost < 1e30);
+});
+
+test('acquisitions: two and a half more every level, delivered quietly if he is out, kept across terms', () => {
+  const s = hatched();
+  s.cash = 1e30;
+  assert.equal(G.level(s), 1);
+  for (let i = 0; i < 6; i++) assert.ok(G.buyNext(s, G.now()).ok, i);
+  const r = G.buyNext(s, G.now());
+  assert.equal(r.ok, false); assert.equal(r.reason, 'later'); assert.equal(r.level, 2);
+  assert.equal(G.acqLevel(s), 2); assert.equal(G.acqLevel(s, 2), 2); assert.equal(G.acqLevel(s, 3), 3);
+  s.xp = G.cumXp(2);
+  for (let i = 0; i < 3; i++) assert.ok(G.buyNext(s, G.now()).ok);
+  assert.equal(G.buyNext(s, G.now()).reason, 'later');
+  // money first
+  const poor = hatched(); poor.cash = 1000;
+  const no = G.buyNext(poor, G.now());
+  assert.equal(no.reason, 'cash'); assert.ok(no.say);
+  assert.equal(G.buyNext(G.newState(G.now()), G.now()).reason, 'egg');
+  // asleep or away: it arrives without a word, and he gets nothing out of it until he is back
+  const away = hatched(); away.cash = 1e9; away.needs.energy = 40; G.toggleSleep(away, G.now());
+  const ego = away.needs.ego;
+  const q = G.buyNext(away, G.now());
+  assert.ok(q.ok); assert.equal(q.quiet, 'asleep'); assert.equal(q.say, undefined); assert.equal(q.anim, undefined);
+  assert.equal(away.needs.ego, ego);
+  const here = hatched(); here.cash = 1e9; here.needs.ego = 50;
+  assert.equal(G.buyNext(here, G.now()).anim, 'dance');
+  assert.equal(here.needs.ego, 56);
+  assert.equal(here.stats.acqSpent, G.ACQ.base);
+  // another term: everything he owns stays, prices start again from the bottom, names carry on
+  const big = hatched(); big.cash = 1e30; big.xp = G.cumXp(100);
+  for (let i = 0; i < 30; i++) G.buyNext(big, G.now());
+  const owned = G.owned(big), firstAgain = G.acqNext(big, 1)[0];
+  G.runAgain(big, G.now());
+  assert.equal(G.owned(big), owned);
+  assert.equal(big.holdings.term, 0);
+  const next = G.acqNext(big, 1)[0];
+  assert.equal(next.cost, G.ACQ.base);
+  assert.notEqual(next.name, C.ACQ_BANDS[0].items[0][0]);
+  assert.ok(firstAgain.cost > next.cost);
+  assert.ok(G.incomePerHour(big) > G.incomePerHour(hatched()) * 1.25, 'what he owns keeps paying');
+});
+
+test('acquisitions: old saves have none, and odd ones are made safe', () => {
+  const t = G.now();
+  const old = JSON.parse(JSON.stringify(hatched(t))); delete old.holdings; delete old.stats.acqSpent;
+  const back = G.revive(old, t);
+  assert.deepEqual(back.holdings, { term: 0, bands: C.ACQ_BANDS.map(() => 0) });
+  assert.equal(back.stats.acqSpent, 0);
+  assert.equal(G.owned(back), 0);
+  for (const junk of [null, 5, 'x', [], { term: -3, bands: 'no' }, { term: 1e99, bands: [1, -1, 'a', 2.7, null, 9, 99] }]) {
+    const s = G.revive(Object.assign(JSON.parse(JSON.stringify(hatched(t))), { holdings: junk }), t);
+    assert.ok(Number.isInteger(s.holdings.term) && s.holdings.term >= 0 && s.holdings.term <= 1e6, JSON.stringify(junk));
+    assert.equal(s.holdings.bands.length, C.ACQ_BANDS.length);
+    for (const b of s.holdings.bands) assert.ok(Number.isInteger(b) && b >= 0);
+    assert.ok(G.acqNext(s, 1)[0].name);
+  }
+});
+
 test('saves survive export and import; junk is rejected', () => {
   const s = hatched();
   s.name = 'Dönny 🍔'; s.xp = 1234; s.decor = ['tv'];
@@ -642,7 +737,7 @@ test('content is complete and consistent', () => {
   assert.ok(C.BRIEFINGS.length >= 60 && C.ORDERS.length >= C.BRIEFINGS.length, 'an order for every daily briefing');
   for (const b of C.BRIEFINGS) if (!b.min) for (const ch of b.choices) assert.ok(ch.fx.xp >= 24 && ch.fx.xp <= 40, b.id + ': ordinary briefings pay alike');
   // a line with a placeholder must be handed that value by the game
-  const allowed = { ate: ['food'], ateCoke: ['n'], ateSalad: ['tariff'], greetLong: ['hours'], rally: ['real', 'claimed'] };
+  const allowed = { ate: ['food'], ateCoke: ['n'], ateSalad: ['tariff'], greetLong: ['hours'], rally: ['real', 'claimed'], acquired: ['thing'] };
   for (const key in C.LINES) for (const tier of C.LINES[key]) for (const line of tier) for (const m of line.matchAll(/\{(\w+)\}/g)) assert.ok((allowed[key] || []).includes(m[1]), key + ' uses {' + m[1] + '}');
   for (const key of ['want', 'tier']) assert.ok(C.NEWS[key]);
   for (const t of C.NEWS.tier) assert.ok(t.length >= 6);
@@ -730,4 +825,41 @@ test('a pet saved at the old top of the game simply carries on', () => {
   // a save from far past the end is brought back to the end, not thrown away
   const wild = G.revive(Object.assign(JSON.parse(JSON.stringify(s)), { xp: 1e12 }), t);
   assert.equal(G.level(wild), 100);
+});
+
+test('pacing: the shop never runs dry, in the first term or the next', () => {
+  // A caretaker who buys the next acquisition whenever there is money for it.
+  const shopper = (hours, terms) => {
+    G.rng = seeded(42);
+    const day0 = at(2026, 1, 5, 0);
+    const s = G.newState(day0 + 8 * HOUR); G.catchUp(s, day0 + 8 * HOUR);
+    for (let i = 0; i < G.EGG_TAPS; i++) G.tapEgg(s, day0 + 8 * HOUR);
+    const perDay = [], terms1 = [], at50 = {};
+    for (let day = 0, term = 1; day < 400; day++) {
+      let n = 0;
+      for (const h of hours) {
+        const t = at(2026, 1, 5 + day, 0) + h * HOUR;
+        lookAfter(s, t, h > 22);
+        while (G.buyNext(s, t).ok) n++;
+      }
+      perDay.push(n); terms1.push(term === 1);
+      if (G.level(s) >= 50 && !at50[term]) at50[term] = G.owned(s);
+      if (G.level(s) >= 100) { if (term >= terms) break; G.runAgain(s, at(2026, 1, 5 + day, 23)); term++; }
+    }
+    let dry = 0, run = 0;
+    for (const n of perDay.slice(2)) { run = n ? 0 : run + 1; dry = Math.max(dry, run); }
+    const avg = perDay.slice(3).reduce((a, b) => a + b, 0) / (perDay.length - 3);
+    const most = Math.max(...perDay.slice(3).filter((n, i) => terms1[i + 3])); // a new term may open with a spree: he has a fortune and the prices start again
+    return { dry, avg, most, mostEver: Math.max(...perDay.slice(3)), owned: G.owned(s), at50, s };
+  };
+  const keen = shopper([8, 13, 18, 22.5], 2);
+  assert.ok(keen.dry <= 3, 'never more than three days without something to buy: ' + keen.dry);
+  assert.ok(keen.avg >= 1.5 && keen.avg <= 4, 'a couple of purchases a day: ' + keen.avg.toFixed(2));
+  assert.ok(keen.most <= 8, 'and no sprees in the first term: ' + keen.most);
+  assert.ok(keen.mostEver <= 32, 'not even when a new term starts: ' + keen.mostEver);
+  assert.ok(keen.at50[1] >= 70 && keen.at50[1] <= 160, 'about a hundred things by level 50: ' + keen.at50[1]);
+  const daily = shopper([19], 1);
+  assert.ok(daily.dry <= 3, 'once a day, too: ' + daily.dry);
+  assert.ok(daily.avg >= 0.8, 'about one a day: ' + daily.avg.toFixed(2));
+  G.rng = seeded(7);
 });

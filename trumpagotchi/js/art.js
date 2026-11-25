@@ -656,22 +656,46 @@
     return night;
   }
 
+  // How many of the buildings out of the window he has bought (see G.owned): from his first
+  // few purchases the view starts turning gold, one building at a time.
+  function boughtView(scene, owned) {
+    if (!owned) return 0;
+    if (scene === 'apt') return Math.min(6, Math.floor(owned / 2));
+    if (scene === 'tower') return Math.min(5, Math.floor(owned / 15));
+    if (scene === 'oval') return Math.min(4, Math.max(0, Math.floor((owned - 70) / 20)));
+    return Math.max(0, Math.min(0.9, (owned - 120) / 150)); // the city, from his height: a share of it
+  }
+  A.boughtView = boughtView;
+  function goldBlock(g, x, y, w, h, night) {
+    R(g, x, y, w, h, night ? '#8a6a1c' : GOLD); R(g, x, y, 1, h, night ? '#a8832a' : GOLD_L); R(g, x + w - 1, y, 1, h, GOLD_D);
+    for (let yy = y + 2; yy < y + h - 1; yy += 3) for (let xx = x + 2; xx < x + w - 2; xx += 3) R(g, xx, yy, 1, 1, night ? '#fff3b0' : GOLD_D);
+  }
+
   function skyline(g, x, y, w, h, scene, night, env) {
     const base = y + h;
     const lit = night ? '#f6d86a' : '#dfe9f5';
+    const mine = boughtView(scene, env.holdings || 0);
     if (scene === 'apt') {
       const c = night ? '#2a2540' : '#8b7f8f';
-      const hs = [[0, 10], [9, 14], [17, 9], [26, 16], [36, 11], [44, 13]];
-      for (const b of hs) { R(g, x + b[0], base - b[1], 9, b[1], c); R(g, x + b[0] + 2, base - b[1] + 3, 2, 2, lit); R(g, x + b[0] + 5, base - b[1] + 7, 2, 2, lit); }
+      const hs = [[0, 10], [9, 14], [17, 9], [26, 16], [36, 11], [44, 13]], order = [3, 1, 5, 0, 4, 2];
+      hs.forEach(function (b, i) {
+        if (order.indexOf(i) < mine) { goldBlock(g, x + b[0], base - b[1], 9, b[1], night); return; }
+        R(g, x + b[0], base - b[1], 9, b[1], c); R(g, x + b[0] + 2, base - b[1] + 3, 2, 2, lit); R(g, x + b[0] + 5, base - b[1] + 7, 2, 2, lit);
+      });
       R(g, x + 29, base - 21, 4, 5, night ? '#3a3450' : '#6f5a4a'); R(g, x + 30, base - 16, 1, 3, INK); R(g, x + 32, base - 16, 1, 3, INK);
     } else if (scene === 'tower') {
       const c = night ? '#1c2244' : '#7d93b3', c2 = night ? '#252c55' : '#93a8c6';
-      const hs = [[0, 18, 8], [8, 26, 7], [15, 14, 9], [34, 22, 8], [42, 30, 10]];
-      for (const b of hs) { R(g, x + b[0], base - b[1], b[2], b[1], b[0] % 2 ? c : c2); for (let yy = base - b[1] + 2; yy < base - 1; yy += 4) R(g, x + b[0] + 2, yy, b[2] - 4, 1, lit); }
+      const hs = [[0, 18, 8], [8, 26, 7], [15, 14, 9], [34, 22, 8], [42, 30, 10]], order = [4, 1, 3, 0, 2];
+      hs.forEach(function (b, i) {
+        if (order.indexOf(i) < mine) { goldBlock(g, x + b[0], base - b[1], b[2], b[1], night); return; }
+        R(g, x + b[0], base - b[1], b[2], b[1], b[0] % 2 ? c : c2); for (let yy = base - b[1] + 2; yy < base - 1; yy += 4) R(g, x + b[0] + 2, yy, b[2] - 4, 1, lit);
+      });
       R(g, x + 24, base - 34, 10, 34, GOLD); R(g, x + 24, base - 34, 2, 34, GOLD_L); R(g, x + 32, base - 34, 2, 34, GOLD_D);
       for (let yy = base - 31; yy < base - 1; yy += 3) R(g, x + 27, yy, 4, 1, night ? '#fff3b0' : GOLD_D);
       R(g, x + 28, base - 37, 2, 3, GOLD_D);
     } else {
+      // far off over the lawn, his towers going up as he buys more
+      [[22, 17, 4], [41, 13, 5], [3, 11, 4], [33, 15, 3]].forEach(function (t, i) { if (i < mine) { goldBlock(g, x + t[0], base - 9 - t[1], t[2], t[1], night); R(g, x + t[0] + (t[2] >> 1), base - 11 - t[1], 1, 2, GOLD_D); } });
       R(g, x, base - 9, w, 9, night ? '#17402a' : '#4f9c4a'); R(g, x, base - 10, w, 1, night ? '#205236' : '#6cb85e');
       R(g, x + 12, base - 30, 4, 22, night ? '#b9bdd0' : '#f4f1e6'); R(g, x + 13, base - 32, 2, 2, night ? '#b9bdd0' : '#f4f1e6');
       for (const tx of [2, 30, 43]) { ellipse(g, x + tx + 3, base - 13, 4, 4, night ? '#12331f' : '#2f7a3a'); R(g, x + tx + 3, base - 9, 1, 3, '#4a3320'); }
@@ -887,8 +911,10 @@
     const f = env.frame || 0, L = env.look || {}, night = bigSky(g, env.hour, f, 108);
     const far = night ? '#171d42' : '#9fb2cf', near = night ? '#0f1330' : '#5d6f8f', near2 = night ? '#151a3c' : '#6c7fa1', lit = night ? '#f6d86a' : '#e6eef8';
     for (let i = 0; i < 32; i++) { const h = 6 + Math.floor(hash(i + 3) * 16); R(g, i * 5, 104 - h, 5, h + 4, far); }
+    const share = boughtView('skyline', env.holdings || 0);
     for (let x = 0, i = 0; x < A.W; i++) {
       const w = 6 + Math.floor(hash(i + 20) * 7), h = 8 + Math.floor(hash(i + 40) * 17);
+      if (hash(i + 77) < share) { goldBlock(g, x, 108 - h, w, h, night); x += w + (hash(i + 60) > 0.7 ? 2 : 0); continue; }
       R(g, x, 108 - h, w, h, i % 2 ? near : near2); R(g, x, 108 - h, 1, h, shade(i % 2 ? near : near2, 0.12));
       for (let yy = 108 - h + 2; yy < 106; yy += 3) for (let xx = x + 2; xx < x + w - 1; xx += 2) if (hash(i * 31 + yy * 7 + xx) > (night ? 0.45 : 0.78)) R(g, xx, yy, 1, 1, lit);
       x += w + (hash(i + 60) > 0.7 ? 2 : 0);
