@@ -30,7 +30,18 @@
   const ymd = function (y, m, d) { return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0'); };
 
   // ---------------------------------------------------------------- levels
-  G.cumXp = function (L) { return 60 * (L - 1) + 8 * (L - 1) * L; };
+  // To level 50 each level costs more than the last. Beyond it the cost starts lower and is
+  // nearly flat, so the forms past the presidency arrive at a steady pace: about every nine
+  // days for someone who looks in a few times a day, every two to three weeks at once a day
+  // (tests/sim.test.mjs measures this). The long game stays long without becoming endless.
+  const BEYOND_FROM = 50;
+  G.cumXp = function (L) {
+    const n = Math.min(L, BEYOND_FROM);
+    const base = 60 * (n - 1) + 8 * (n - 1) * n;
+    if (L <= BEYOND_FROM) return base;
+    const k = L - BEYOND_FROM;
+    return base + 700 * k + 2 * k * (k + 1);
+  };
   G.levelFor = function (xp) {
     let L = 1;
     while (L < C.MAX_LEVEL && xp >= G.cumXp(L + 1)) L++;
@@ -186,7 +197,7 @@
   G.dayKey = function (t) { const w = G.wall(t); return ymd(w.y, w.m, w.d); };
   G.money = function (n) {
     const neg = n < 0; n = Math.abs(n);
-    const units = [[1e15, 'Q'], [1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+    const units = [[1e24, 'Sp'], [1e21, 'Sx'], [1e18, 'Qi'], [1e15, 'Q'], [1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
     for (const u of units) {
       if (n >= u[0]) {
         const v = n / u[0];
@@ -227,6 +238,10 @@
     return list[0][1] < 35 ? list[0][0] : null;
   };
   G.say = function (s, key, vars) {
+    if (key === 'idleHappy' && s.hatched) { // half his idle talk is about whatever he has become
+      const own = C.STAGE_LINES && C.STAGE_LINES[G.stage(s).id];
+      if (own && G.rng() < 0.5) return own[Math.floor(G.rng() * own.length)];
+    }
     return C.fill(C.line(key, G.tier(s), G.rng), vars);
   };
 
@@ -258,6 +273,13 @@
       if (after >= 45) unlock(s, 'lv45', ev, now);
       if (after >= 47) unlock(s, 'lv47', ev, now);
       if (after >= 50) unlock(s, 'lv50', ev, now);
+      if (after >= 55) unlock(s, 'lv55', ev, now);
+      if (after >= 62) unlock(s, 'lv62', ev, now);
+      if (after >= 70) unlock(s, 'lv70', ev, now);
+      if (after >= 78) unlock(s, 'lv78', ev, now);
+      if (after >= 86) unlock(s, 'lv86', ev, now);
+      if (after >= 93) unlock(s, 'lv93', ev, now);
+      if (after >= 100) unlock(s, 'lv100', ev, now);
     }
     return gained;
   }
@@ -334,6 +356,15 @@
     if (s.postCharges >= POST_MAX) s.postChargeAt = t;
   }
 
+  // Some briefings and orders are about a thing he has to have become first (`min`, a level).
+  // Once he has, they are likely to turn up soon rather than wait their turn among the rest.
+  function reached(s, item) { return !item.min || G.level(s) >= item.min; }
+  function soonest(list) {
+    const own = list.filter(function (x) { return x.min; });
+    const from = own.length && G.rng() < 0.6 ? own : list;
+    return from[Math.floor(G.rng() * from.length)];
+  }
+
   // A new calendar day: streak, the day's briefing, counters.
   function rollDay(s, now, ev) {
     const today = G.dayKey(now);
@@ -353,9 +384,10 @@
     if (season && C.SEASON_BRIEFINGS[season] && !s.seasonsDone[seasonKey]) {
       s.daily.briefing = 'season:' + season;
     } else {
-      let pool = C.BRIEFINGS.filter(function (b) { return s.seenBriefings.indexOf(b.id) < 0; });
-      if (!pool.length) { s.seenBriefings = []; pool = C.BRIEFINGS; }
-      s.daily.briefing = pool[Math.floor(G.rng() * pool.length)].id;
+      const open = C.BRIEFINGS.filter(function (b) { return reached(s, b); });
+      let pool = open.filter(function (b) { return s.seenBriefings.indexOf(b.id) < 0; });
+      if (!pool.length) { s.seenBriefings = []; pool = open; }
+      s.daily.briefing = soonest(pool).id;
     }
     if (!s.hatched) return;
     const k = Math.min(s.streak.n, 7);
@@ -624,7 +656,7 @@
     r.say = G.say(s, won ? 'dealWin' : 'dealLose'); r.anim = won ? 'dance' : (G.tier(s) >= 3 ? 'point' : 'sad');
     return r;
   };
-  G.crowdClaim = function (s, real) { return real * [1, 2, 10, 100, 10000][G.tier(s)]; };
+  G.crowdClaim = function (s, real) { return real * [1, 2, 10, 100, 10000, 1e9][G.tier(s)]; };
   G.finishRally = function (s, taps, now) {
     const r = res(true);
     applyNeeds(s, { energy: -G.COST.rally });
@@ -670,9 +702,9 @@
     }
     else s.seenBriefings.push(br.id);
     // then he signs something
-    const left = C.ORDERS.filter(function (o) { return s.orders.indexOf(o.id) < 0; });
+    const left = C.ORDERS.filter(function (o) { return s.orders.indexOf(o.id) < 0 && reached(s, o); });
     if (left.length) {
-      const o = left[Math.floor(G.rng() * left.length)];
+      const o = soonest(left);
       s.orders.push(o.id);
       r.order = o;
       addXp(s, 15, r.events, now);
@@ -708,7 +740,7 @@
     if (s.term >= 2) unlock(s, 'term2', r.events, now);
     if (s.term >= 3) unlock(s, 'term3', r.events, now);
     r.events.push({ type: 'term', term: s.term });
-    r.say = C.fill(C.line('another', 4, G.rng));
+    r.say = C.fill(C.line('another', C.TIER_NAMES.length - 1, G.rng));
     return r;
   };
 
