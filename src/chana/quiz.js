@@ -1,6 +1,9 @@
 // The second Chana game: a quiz led from the big screen, answered on phones.
-// Loaded by app.js when the address has ?quiz. It keeps its own storage keys and
-// uses data-quiz attributes, so the timeline game's handlers never react to it.
+// Bundled with app.js (imported statically) and started by it when the address has
+// ?quiz. Keep it that way: through matanbob.com/kids/ the proxy rewrites only the
+// page's own asset paths, so an on-demand chunk's stylesheet would 404 there.
+// It keeps its own storage keys and uses data-quiz attributes, so the timeline
+// game's handlers never react to it; its own handlers attach only in startQuiz().
 import './quiz.css';
 import qrcode from './qrcode.mjs';
 

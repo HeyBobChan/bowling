@@ -125,8 +125,9 @@ your invention earns you 5. The table is shown after every round.
 Implementation: `server/chana-quiz-game.mjs` (steps, scoring, what a browser may see),
 `server/chana-quiz-api.mjs`, `server/chana-quiz-router.mjs` (mounted under
 `/api/leaderboards/chana/quiz`, ahead of the timeline router, so the `/kids/` CSP and
-CORS rules already cover it), and `src/chana/quiz.js` + `quiz.css`, loaded only for
-`?quiz`. The answers stay on the server: a browser receives the correct option,
+CORS rules already cover it), and `src/chana/quiz.js` + `quiz.css`, bundled with the Chana page and started
+only for `?quiz`. Do not turn it into an on-demand chunk: through `/kids/` the proxy
+rewrites only the page's own asset paths, and the chunk's stylesheet would 404. The answers stay on the server: a browser receives the correct option,
 other guests' picks and scores only after the host's reveal.
 
 No schema change: the quiz uses `chana_rooms` and `chana_players` with the existing
