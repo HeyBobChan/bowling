@@ -381,7 +381,7 @@
     greet: ['YOU HAVE RETURNED. I felt it. I feel EVERYTHING now. Mostly ratings.', 'WELCOME BACK to ME! You’re standing in it!', 'THE CARETAKER! I told everyone you were coming. They were VERY impressed.', 'YOU’RE BACK! I never left. I CAN’T. I’m everywhere!', 'HELLO, small friend! Everybody is small now. You’re my FAVORITE small!'],
     greetLong: ['{hours} HOURS! Empires rose and fell! Mostly fell! NOBODY fed me!', 'GONE {hours} HOURS! I measured it in ME-time. It was FOREVER!', '{hours} HOURS without you! I had to be admired by STRANGERS! A disgrace!'],
     greetMorning: ['GOOD MORNING! I made the sun come up. You’re WELCOME!', 'MORNING! I approved it personally. One of my BEST mornings!', 'GOOD MORNING to all of existence, even the parts that are JEALOUS!'],
-    idleHappy: ['I’m beyond winning now. Winning asks ME for advice!', 'They ran out of words for me. I’m having NEW words made. Beautiful words!', 'Scientists are STUDYING me. They don’t understand it. Neither do I. It’s PERFECT!', 'I used to be a man. Great man. Now I’m a WHOLE THING!', 'Physics called. Very respectful. They’re changing some laws for me!', 'There has never been anything like me. I checked. I checked EVERYWHERE!', 'I am bigger than BIG. Big is a small word now. SAD for big!', 'Everything is going according to ME!', 'People look up and say “what IS that?” It’s ME! Tremendous question!', 'History is over. I won it. We’re doing a SEQUEL!'],
+    idleHappy: ['I’m not a man any more. I’m an EVENT!', 'Biology called. I hung up on it!', 'They asked what I am now. I said MORE. They ran!', 'More mouths than ever and I’m STILL not talking enough!', 'I’m beyond winning now. Winning asks ME for advice!', 'They ran out of words for me. I’m having NEW words made. Beautiful words!', 'Scientists are STUDYING me. They don’t understand it. Neither do I. It’s PERFECT!', 'I used to be a man. Great man. Now I’m a WHOLE THING!', 'Physics called. Very respectful. They’re changing some laws for me!', 'There has never been anything like me. I checked. I checked EVERYWHERE!', 'I am bigger than BIG. Big is a small word now. SAD for big!', 'Everything is going according to ME!', 'People look up and say “what IS that?” It’s ME! Tremendous question!', 'History is over. I won it. We’re doing a SEQUEL!'],
     hungry: ['I HUNGER! Not like a person. Like a FORCE! Bring hamberders. MANY!', 'A hunger the size of ME! Do you know how big that is? NOBODY knows!', 'FEED ME! Everything is waiting and it is NOT patient. It gets that from me!', 'I could eat a whole WORLD! Start with a hamberder. We’ll see what happens!'],
     bored: ['I have seen EVERYTHING. I AM most of it. Entertain me!', 'BORED! On a scale you can’t IMAGINE! Somebody schedule a rally. A BIG one!', 'Even being this much gets old. Let’s play golf. I’ll be the COURSE!', 'Nothing is happening! And I’m IN CHARGE of happening!'],
     needEgo: ['Somebody tell me I’m the GREATEST THING! Not person. THING! I earned it!', 'Everyone is being very quiet about me. Suspiciously quiet. PRAISE ME!', 'I am LIMITLESS and I still need a compliment. THAT’S how big I am!', 'My ratings across ALL OF EXISTENCE are slipping! RIGGED! Say something nice!'],
@@ -427,13 +427,13 @@
 
   // What he says about the thing he currently is. Mixed into his idle talk at that stage.
   C.STAGE_LINES = {
-    plated: ['Don’t TOUCH. Fingerprints! I just had myself polished!', 'I’m worth more by the POUND now. And there are a LOT of pounds!', 'Solid gold! The inside too. Probably. Nobody’s allowed to check!', 'I set off EVERY metal detector. They salute!', 'The mirror is embarrassed. It can’t compete!', 'People said I had a heart of gold. Now it’s the WHOLE THING!'],
-    hair: ['The hair says hello. It says it LOUDER than me!', 'I asked the hair for a raise. It’s THINKING about it!', 'The hair had a meeting this morning. I wasn’t invited!', 'It blinks now. Don’t stare. It HATES that!', 'I’m just the part that holds it up. PROUD to do it!', 'The hair wants a hamberder. I’ll pass it up!'],
-    tie: ['The tie called from somewhere FAR. It’s having a great time!', 'People three streets over keep tripping on it. You’re WELCOME!', 'Longest tie EVER! We measured. We ran out of MEASURING!', 'Somebody shut it in a taxi. I felt THAT!', 'It keeps going! Like me! Nobody can find the END of either of us!', 'The tie has its own ZIP CODE now. Several!'],
-    giant: ['I can see my tower from here. I’m LEANING on it!', 'The helicopters keep asking for selfies. I say YES!', 'The clouds are in my way. I’ve asked them to MOVE!', 'I stepped over a river this morning. Didn’t even NOTICE!', 'They’re measuring me again. They need a longer TAPE!', 'Everybody down there looks like ANTS. Great ants! MY ants!'],
-    tower: ['Ninety floors and I’m on ALL of them!', 'The elevator goes straight to my HEAD. Like everything!', 'Somebody’s having a meeting on my forty-second floor. It TICKLES!', 'Rent is due! To ME! I’m the building AND the landlord!', 'The lobby is BEAUTIFUL. It’s where my shoes used to be!', 'PIGEONS! On ME! I’m putting up a SIGN!'],
-    planet: ['I have MOONS now! They orbit ME! Very loyal!', 'The other planets are so small. And so QUIET!', 'A day on me lasts as long as I SAY!', 'They pointed a telescope at me. I waved. I think. Hard to tell!', 'The gravity here is TREMENDOUS! Everything comes to ME!', 'I’m visible with the naked eye! You’re WELCOME, sky!'],
-    all: ['I looked for the edge of me. There ISN’T one!', 'Every star is one of my GOOD ideas!', 'You are inside me right now. NICE, isn’t it?', 'There’s nothing left to win. I’m having some MADE!', 'The night sky? Me. The day sky? ALSO me!', 'There is no second place. I AM second place too!'],
+    plated: ['I’m dripping! It’s GOLD, so it’s fine. Very expensive drips!', 'Something just fell off me. It was worth more than your car.', 'I had gems put in. Some of them are in my FACE. Tremendous look!', 'Don’t lick me. People keep trying. I understand. But don’t.', 'Flakes! Everywhere I go, gold flakes! A very rich snow!', 'Three chins now. All gold. Nobody has three gold chins!'],
+    hair: ['The hair ate my hamberder. I wasn’t finished. It NEVER asks!', 'My feet don’t touch the floor any more. The hair holds me up. Very strong hair!', 'It has more eyes than me now. It counts them at night.', 'The hair bit a reporter. A FAKE reporter. Good hair!', 'Sometimes it talks in its sleep. It says my name. Then it says MORE.', 'It grows every time somebody compliments me. Careful what you say!'],
+    tie: ['Thmmph! The tie comes out of my MOUTH now. I think it lives there!', 'It tied up the desk. Then the flags. Now it’s looking at the TV!', 'In at the mouth, out at the window. Longest tie in HISTORY!', 'I tried to pull it out. It pulled BACK. Very strong tie!', 'Every word has to get past the tie. That’s why they come out so LOUD!', 'The tie wrapped up the TV. Fake news, now gift-wrapped!'],
+    giant: ['I ate a news helicopter. The crew jumped out first. Fast crew. Fake crew!', 'Stepped on a car. It was parked badly. My fault? NO!', 'The helicopters keep coming closer for pictures. Big mistake. Crunchy mistake!', 'I can see my tower from here. I could EAT my tower from here.', 'The city is very small today. And very crunchy.', 'Monsters call me for advice. I tell them: think BIGGER!'],
+    tower: ['Every window is a mouth now. They ALL want to talk about me!', 'I’m bulging on the ninth floor. Nobody look at the ninth floor!', 'Ninety mouths and every one of them is pouting. A RECORD!', 'Gold is running down my walls. It’s not melting. It’s THRIVING!', 'The elevator goes straight down my throat. Express service!', 'Rent is due! Ninety mouths are asking you at once!'],
+    planet: ['I ate a moon this morning. It was small. It had it coming!', 'My mouth is bigger than me now. That’s called GROWTH!', 'The other planets are hiding behind the sun. Smart planets!', 'Gravity pulls everything toward my mouth. I didn’t ask. I ALLOW it!', 'A few moons left. For now. Delicious, the moons!', 'I am mostly mouth. The best mouth in the solar system!'],
+    all: ['Look up! I’m looking back! With ALL the eyes!', 'The stars are watching you. For me. Say something nice!', 'Every mouth in the sky is mine, and they all agree with me!', 'There is no outside any more. There is only my face, and it’s TREMENDOUS!', 'I am the sky now. Look at me when I’m talking to you!', 'You blinked. I saw. I see EVERYTHING!'],
   };
 
   // What neglect does to him. This is the bad ending: he becomes reasonable.
@@ -648,6 +648,8 @@
       ['Spa', 'Treatments: bronze, more bronze, hair.'],
       ['Convention Centre', 'For conventions about him.'],
       ['Billboard', 'His face. Very large. Facing his window.'],
+      ['Triumphal Arch', 'Bigger than the famous one. He had it measured.'],
+      ['Reflecting Pool', 'Fixed by a friend. Reflects only him now.'],
     ] },
     { id: 'big', name: 'Big things', icon: '⛰️', upTo: 1e13, items: [
       ['Airline', 'Every seat is first class. The plane is mostly seats.'],
@@ -690,6 +692,7 @@
       ['Polar Ice Cap', 'Kept very cold. He checks personally.'],
       ['Golf Tour', 'Every tournament. He wins all of them, on a handicap he chose.'],
       ['Spaceport', 'Rockets leave from his front lawn.'],
+      ['Ballroom Wing', 'There used to be a different wing here.'],
     ] },
     { id: 'huge', name: 'Very big things', icon: '🌈', upTo: 1e16, items: [
       ['The Weather', 'Sunny where he is. Always.'],
@@ -732,6 +735,7 @@
       ['Weekends', 'All of them. He works through them anyway.'],
       ['The Thumbs-Up', 'Exclusive rights. Others may use thumbs-sideways.'],
       ['Escalators', 'Every escalator, everywhere. They all go down, grandly.'],
+      ['His Own Coin', 'Worth whatever he says. Today: a lot.'],
     ] },
     { id: 'sky', name: 'Things in the sky', icon: '🪐', upTo: 1e19, items: [
       ['A Moon', 'Small. Gold-plated by Thursday.'],
@@ -793,7 +797,7 @@
     'steak order', 'putting', 'penmanship', 'posture', 'desk', 'chandelier', 'timing', 'taste', 'stamina', 'gold collection', 'thumbs-up'];
   P.activities = ['round of golf', 'phone call', 'lunch', 'rally', 'meeting', 'signing ceremony', 'walk down a ramp', 'press conference',
     'ribbon cutting', 'photo opportunity', 'working lunch', 'victory lap', 'haircut', 'negotiation', 'hamberder summit', 'escalator ride'];
-  P.topics = ['golf', 'hamburgers', 'buildings', 'tariffs', 'television', 'winning', 'gold', 'deals', 'hairspray', 'the weather', 'ramps', 'windmills', 'water pressure',
+  P.topics = ['his coin', 'arches', 'reflecting pools', 'golf', 'hamburgers', 'buildings', 'tariffs', 'television', 'winning', 'gold', 'deals', 'hairspray', 'the weather', 'ramps', 'windmills', 'water pressure',
     'ketchup', 'ties', 'crowds', 'ratings', 'Sharpies', 'cake', 'escalators', 'ballrooms', 'mountains', 'signatures', 'dishwashers', 'handshakes'];
   P.rivals = ['the Teleprompter', 'the Salad', 'the Windmill', 'the Umbrella', 'the Low-Flow Showerhead', 'the Paper Straw', 'the Staircase', 'the Electric Boat', 'the Shark', 'the Treadmill', 'the Briefing Book',
     'the Stapler', 'the Thermostat', 'the Dishwasher', 'the Light Bulb', 'the Escalator', 'the Crossword', 'the Fire Alarm', 'the Kale', 'the Decaf', 'the Printer'];
@@ -1304,6 +1308,28 @@
       { t: 'Let him sleep', fx: { energy: 20, xp: 28 }, r: 'He wakes at the end and says, “Agreed.” The meeting is considered a success.' },
       { t: 'Wake him gently', fx: { ego: -6, energy: 6, xp: 26 }, r: '“I wasn’t sleeping. I don’t sleep. I was blinking for a long time.”' },
     ] },
+    // Things a president of his kind gets up to. They wait for the comeback (level 47), and each
+    // one leaves something behind: a trophy, and most of them something to see out of the window.
+    { id: 'coin', min: 47, title: 'His Own Coin', text: 'Advisers suggest he launch a coin. A digital one. With his face on it.', choices: [
+      { t: 'Launch $DON', fx: { ego: 14, cashH: 6, xp: 40, ach: 'coin' }, r: '$DON is up four thousand percent by lunch. By dinner it is down four thousand and one. He calls it a great day.' },
+      { t: 'Launch $DON and $DON2', fx: { fun: 14, cashH: 8, xp: 42, ach: 'coin' }, r: 'Two coins, twice the face. He buys a great deal of both, from himself.' },
+      { t: 'Make it gold-plated', fx: { glow: 10, ego: 10, xp: 40, ach: 'coin' }, r: 'It is a digital coin, so the gold is digital too. He says you can feel it.' },
+    ] },
+    { id: 'pool', min: 47, title: 'The Reflecting Pool', text: 'The long pool outside needs fixing. A friend of his says he can do it. He has done a pool before. One pool.', choices: [
+      { t: 'Give the friend the job', fx: { ego: 10, fun: 10, xp: 40, ach: 'pool' }, r: 'Fixed in a week, gold at the bottom, and it reflects only him now. Nobody has seen the bill. It is a very good bill.' },
+      { t: 'Fill it with Diet Coke', fx: { energy: 18, xp: 40, ach: 'pool' }, r: 'It fizzes gently in the sun. Visitors are asked not to drink it. Some do.' },
+      { t: 'Make it longer than before', fx: { ego: 16, xp: 42, ach: 'pool' }, r: 'Two feet longer. Nobody notices. He tells everyone, so now they do.' },
+    ] },
+    { id: 'arch', min: 47, title: 'The Arch', text: 'Other cities have a big famous arch. He has been told his could be bigger.', choices: [
+      { t: 'Bigger', fx: { ego: 16, xp: 40, ach: 'arch' }, r: 'Taller than the famous one. He had it measured twice and kept the better measurement.' },
+      { t: 'Gold', fx: { glow: 14, ego: 6, xp: 40, ach: 'arch' }, r: 'Solid gold, very shiny. Pilots use it to find the city, and then to find him.' },
+      { t: 'His name across the top', fx: { ego: 20, xp: 42, ach: 'arch' }, r: 'In letters you can read from the other arch, which he hopes they do.' },
+    ] },
+    { id: 'wing', min: 47, title: 'The Ballroom Does Not Fit', text: 'The new ballroom has come out bigger than planned. A whole wing of the house is in the way.', choices: [
+      { t: 'Knock the wing down', fx: { ego: 14, fun: 10, xp: 42, ach: 'wing' }, r: 'Gone by lunch. Nobody asked the wing. The ballroom is enormous now, and he dances in it alone, beautifully.' },
+      { t: 'Build the ballroom round it', fx: { fun: 14, xp: 40, ach: 'wing' }, r: 'The wing is now inside the ballroom. Parties are held in the wing, inside the ballroom. Very exclusive.' },
+      { t: 'Make the ballroom even bigger', fx: { ego: 18, xp: 42, ach: 'wing' }, r: 'It now has a ballroom of its own. He calls that one the small ballroom. It is huge.' },
+    ] },
     { id: 'lostpen', title: 'The Missing Pen', text: 'The good pen is gone. The signing is in ten minutes.', choices: [
       { t: 'Search the office', fx: { fun: 10, energy: -6, xp: 32 }, r: 'It was behind his ear. It had been there since Tuesday.' },
       { t: 'Blame the pen', fx: { ego: 12, xp: 30 }, r: '“Disloyal pen. Never liked it.” A new pen is sworn in.' },
@@ -1623,6 +1649,10 @@
     ['The Universe Is Renamed', 'Guess.', 100],
     ['There Shall Be No Outside', 'It was not doing well anyway.', 100],
     ['Everything Is Hereby Tremendous', 'By definition. His.', 100],
+    ['The Reflecting Pool Shall Reflect Only Him', 'Fixed by a friend. The bill is classified.', 47],
+    ['$DON Is Legal Tender', 'For hamberders. Some hamberders.', 47],
+    ['The Arch Shall Be Taller Than the Other Arch', 'Measured from the top of his hair.', 47],
+    ['The Ballroom May Take Whatever Room It Needs', 'Wings, lawns, whatever is next to it.', 47],
   ].map(function (o, i) { const order = { id: i, no: 14000 + i * 7 + 1, title: o[0], note: o[1] }; if (o[2]) order.min = o[2]; return order; });
 
   // ---------------------------------------------------------------- achievements
@@ -1654,6 +1684,10 @@
     { id: 'decor6', icon: '✨', name: 'Classy', desc: 'Own 6 pieces of decor.' },
     { id: 'decor12', icon: '💎', name: 'Gold Everything', desc: 'Own all the decor.' },
     { id: 'acq1', icon: '🏷️', name: 'Under New Management', desc: 'Make your first acquisition.' },
+    { id: 'coin', icon: '🪙', name: 'To the Moon', desc: 'Launch his own coin.' },
+    { id: 'pool', icon: '💧', name: 'Fixed by a Friend', desc: 'Have the reflecting pool fixed.' },
+    { id: 'arch', icon: '🏛️', name: 'Arc de Don', desc: 'Build the arch.' },
+    { id: 'wing', icon: '💃', name: 'Room to Dance', desc: 'Make room for the ballroom.' },
     { id: 'acq25', icon: '🏨', name: 'Portfolio', desc: 'Own 25 acquisitions.' },
     { id: 'acq100', icon: '🏙️', name: 'He Owns That Too', desc: 'Own 100 acquisitions.' },
     { id: 'acq250', icon: '🌌', name: 'Everything Must Go (to Him)', desc: 'Own 250 acquisitions.' },
@@ -1803,9 +1837,11 @@
         'Businessman rates own handshake “a ten.”', 'Tower lobby gets fourth chandelier “for balance.”', 'Man in long tie calls shorter ties “a phase.”', 'Mogul says humility is his best quality, “by far.”'],
       ['Candidate rates own speech “a ten, maybe an eleven.”', 'Rally crowd estimated at “everyone.”', 'Candidate promises “so much winning,” no further details.', 'Escalator ride described by rider as “historic.”',
         'Candidate polls himself, wins in a landslide.', 'Red hats sell out; candidate signs the empty box.', 'Rally runs long after candidate applauds own speech.', 'Opponent, a teleprompter, declines to debate.'],
-      ['President declares today “the greatest day,” same as yesterday.', 'Mountain reportedly “being measured.”', 'Sharpie stock soars on signing rumors.', 'President signs order requiring this headline.',
+      ['$DON up 4,000% by lunch, down 4,001% by dinner. “A great day,” he says.', 'Reflecting pool now reflects “mostly him,” engineers confirm.', 'New arch measured. Found “much bigger than the other one” by him.', 'Ballroom expands into neighbouring wing. Wing unavailable for comment.',
+        'President declares today “the greatest day,” same as yesterday.', 'Mountain reportedly “being measured.”', 'Sharpie stock soars on signing rumors.', 'President signs order requiring this headline.',
         'The mountain “has room on the left,” source says.', 'Weather map corrected by hand; forecast now “perfect.”', 'President awards himself prize, gives moving speech.', 'Nation’s Sharpie reserves at “strategic low.”'],
-      ['Scientists confirm: “It’s still getting bigger.”', 'Astronomers rename sky after him “to save time.”', 'Map makers give up, write “HIM” across everything.', 'Gravity issues statement: “We’re working with him.”',
+      ['Hair seen eating a hamberder. Hamberder unavailable for comment.', 'News helicopters advised to keep their distance.', 'Moon reported missing. Planet “looks very full.”', 'Witnesses: “The sky looked at me.”',
+        'Scientists confirm: “It’s still getting bigger.”', 'Astronomers rename sky after him “to save time.”', 'Map makers give up, write “HIM” across everything.', 'Gravity issues statement: “We’re working with him.”',
         'Experts say he is visible from space. Space confirms.', 'New unit of size announced: one “Don”.', 'Local man “remembers when he was just a president.”', 'Weather today: him, with a chance of more.'],
     ],
   };

@@ -1089,7 +1089,7 @@
     const env = {
       scene: scene, frame: f, decor: decorMap(), hour: d.getHours() + d.getMinutes() / 60,
       season: season, bunting: lv >= 32 && lv < 45, festive: FESTIVE.indexOf(season) >= 0, buttonLit: view.buttonLit > view.frame,
-      look: look, x: view.x, resting: !s.hatched || s.sulking || (s.asleep && indoors), holdings: G.owned(s),
+      look: look, x: view.x, resting: !s.hatched || s.sulking || (s.asleep && indoors), holdings: G.owned(s), built: s.ach,
     };
     A.drawRoom(x, env);
     if (!s.hatched) { A.drawEgg(x, 80, A.FLOOR, s.eggTaps, f); return; }
