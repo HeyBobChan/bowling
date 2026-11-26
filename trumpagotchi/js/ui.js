@@ -173,7 +173,7 @@
         h('p', { class: 'muted', text: st.blurb }),
         h('p', { class: 'quote', text: C.EVOLVE_LINES[stageId] || '' }),
         tierNow > tierBefore ? h('p', { class: 'muted', text: 'His voice is now: ' + C.TIER_NAMES[tierNow] + '.' }) : null,
-        A.sceneFor(level) !== A.sceneFor(Math.max(1, level - 1)) ? h('p', { class: 'muted', text: level >= 45 ? 'New office unlocked. It is oval.' : 'New office unlocked. It has a view.' }) : null,
+        A.sceneFor(level) !== A.sceneFor(Math.max(1, level - 1)) ? h('p', { class: 'muted', text: level >= 100 ? 'There is no outside any more.' : level >= 93 ? 'He has left the planet. He is one.' : level >= 78 ? 'He no longer fits in the office.' : level >= 45 ? 'New office unlocked. It is oval.' : 'New office unlocked. It has a view.' }) : null,
         h('button', { class: 'btn gold', type: 'button', text: 'Tremendous', onclick: function () { done(); say(C.EVOLVE_LINES[stageId]); setAnim('dance', 2600); } })
       );
     });
@@ -290,6 +290,7 @@
   function refreshHud() {
     const lv = G.level(s), st = G.stage(s), mood = G.mood(s);
     document.body.dataset.hatched = s.hatched ? '1' : '0';
+    document.body.dataset.form = s.hatched && !s.sulking ? lookNow(now()).form : 'man'; // the page itself turns gold at the very end
     $('cash').textContent = G.money(s.cash);
     $('stageLine').textContent = s.hatched ? s.name + ' · ' + st.name + (s.term > 1 ? ' · Term ' + G.roman(s.term) : '') : st.name;
     $('lvl').textContent = 'LV ' + lv;
@@ -329,8 +330,9 @@
   function describe() {
     if (!s.hatched) return 'A golden egg on a cushion. Tap it to hatch.';
     const mood = G.mood(s);
-    const m = { gone: 'He has gone golfing and left a note.', asleep: 'He is asleep in bed.', humble: 'He looks deflated and oddly reasonable.', angry: 'He looks angry.', sad: 'He looks unhappy.', happy: 'He looks very pleased with himself.', ok: 'He is standing in his office.' }[mood];
-    return s.name + ', level ' + G.level(s) + ', ' + G.stage(s).name + '. ' + m;
+    const m = { gone: 'He has gone golfing and left a note.', asleep: A.hasRoom(sceneNow()) ? 'He is asleep in bed.' : 'He is asleep.', humble: 'He looks deflated and oddly reasonable.', angry: 'He looks angry.', sad: 'He looks unhappy.', happy: 'He looks very pleased with himself.', ok: 'He is standing in his office.' }[mood];
+    const what = G.level(s) > 50 && mood !== 'humble' && mood !== 'gone' ? G.stage(s).blurb + ' ' : ''; // past the presidency, say what he is
+    return s.name + ', level ' + G.level(s) + ', ' + G.stage(s).name + '. ' + what + m;
   }
 
   // ---------------------------------------------------------------- sheets
@@ -378,7 +380,7 @@
     put(body, h('div', { class: 'list' }, C.FOODS.map(function (f) {
       const cost = G.foodCost(s, f);
       return h('button', { class: 'item', type: 'button', onclick: function () {
-        react(G.feed(s, f.id, now()), { sound: 'eat', fx: function () { spawn('crumb', 8, { y: 72, spread: 10, vy: 0.5, g: 0.08, life: 12, x: view.x + 6 * view.face }); } });
+        react(G.feed(s, f.id, now()), { sound: 'eat', fx: function () { const m = A.mouth(lookNow(now()), view.x); spawn('crumb', 8, { y: m[1], spread: 10, vy: 0.5, g: 0.08, life: 12, x: m[0] + 6 * view.face }); } });
         drawSheet();
       } },
         h('span', { class: 'item-icon', 'aria-hidden': 'true', text: f.icon }),
@@ -454,14 +456,36 @@
     }
   }
 
+  function delivered(r) { if (r.ok && r.quiet) toast(r.quiet === 'asleep' ? 'Delivered quietly. He’ll find it when he wakes up.' : 'Delivered. It’ll be here when he’s back.'); }
   function sheetShop(body) {
     put(body, h('div', { class: 'card center' }, h('div', { class: 'big-num', text: G.money(s.cash) }), h('p', { class: 'muted', text: 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' / hour, even while you are away.' })));
-    put(body, h('div', { class: 'list' }, C.DECOR.map(function (d) {
+    // Acquisitions: the shop that never runs out. The next one can be bought; two more are shown.
+    const owned = G.owned(s), next = G.acqNext(s, 3);
+    put(body, h('h3', { class: 'sheet-h', text: 'Acquisitions' }));
+    put(body, h('p', { class: 'muted', id: 'acqLine', text: (owned ? 'He owns ' + owned.toLocaleString('en-US') + (owned === 1 ? ' thing' : ' things') + ', worth ' + G.money(s.stats.acqSpent) + '. ' : '') + 'Each one pays 1% more income, for good. There is always something else.' }));
+    put(body, h('div', { class: 'list' }, next.map(function (it, i) {
+      const level = G.acqLevel(s, i), later = level > G.level(s);
+      const main = h('span', { class: 'item-main' }, h('b', { text: it.name }), h('small', { text: it.note }), h('span', { class: 'fx', text: it.kind + ' · +1% income' }));
+      const price = h('span', { class: 'price' + (it.cost > s.cash ? ' poor' : '') }, G.money(it.cost), later ? h('small', { text: 'AT LEVEL ' + level }) : null);
+      if (i > 0) return h('div', { class: 'item then', 'aria-label': 'After that: ' + it.name + ', ' + G.money(it.cost) }, h('span', { class: 'item-icon', 'aria-hidden': 'true', text: it.icon }), main, price);
+      return h('button', { class: 'item', type: 'button', id: 'acqBuy', onclick: function () {
+        const r = G.buyNext(s, now());
+        if (r.reason === 'later') toast('He can take on more at level ' + r.level + '. One thing at a time. Two, maybe.');
+        react(r, { sound: 'coin', ms: 2400, fx: r.quiet ? null : confetti });
+        delivered(r);
+        drawSheet();
+      } }, h('span', { class: 'item-icon', 'aria-hidden': 'true', text: it.icon }), main, price);
+    })));
+    // the office: twelve pieces, each with a perk; the ones he has go to the bottom
+    put(body, h('h3', { class: 'sheet-h', text: 'For the office' }));
+    const decor = C.DECOR.filter(function (d) { return s.decor.indexOf(d.id) < 0; }).concat(C.DECOR.filter(function (d) { return s.decor.indexOf(d.id) >= 0; }));
+    if (s.decor.length >= C.DECOR.length) { put(body, h('p', { class: 'muted', text: 'Every piece of office decor: owned. Gold everything.' })); return; }
+    put(body, h('div', { class: 'list' }, decor.map(function (d) {
       const owned = s.decor.indexOf(d.id) >= 0;
       return h('button', { class: 'item' + (owned ? ' owned' : ''), type: 'button', disabled: owned, onclick: function () {
         const r = G.buyDecor(s, d.id, now());
         react(r, { sound: 'coin', ms: 2400, fx: r.quiet ? null : confetti });
-        if (r.ok && r.quiet) toast(r.quiet === 'asleep' ? 'Delivered quietly. He’ll find it when he wakes up.' : 'Delivered. It’ll be here when he’s back.');
+        delivered(r);
         drawSheet();
       } },
         h('span', { class: 'item-icon', 'aria-hidden': 'true', text: owned ? '✅' : '🖼️' }),
@@ -534,7 +558,7 @@
   }
 
   function startGolf() {
-    const game = new M.Golf(A.look(G.level(s), { term: s.term }), G.tier(s));
+    const game = new M.Golf(A.look(G.level(s), { term: s.term, person: true }), G.tier(s));
     enterGame('golf', game);
     let result = null;
     game.onEvent = function (ev) {
@@ -558,7 +582,7 @@
   }
 
   function startRally() {
-    const game = new M.Rally(A.look(G.level(s), { term: s.term }), G.tier(s));
+    const game = new M.Rally(A.look(G.level(s), { term: s.term, person: true }), G.tier(s));
     enterGame('rally', game);
     let result = null;
     game.onEvent = function (ev) {
@@ -627,6 +651,7 @@
       const st = s.stats, days = Math.max(1, Math.ceil((now() - s.born) / 864e5));
       const rows = [
         ['Level', G.level(s) + ' · ' + G.stage(s).name], ['Term', G.roman(s.term)], ['Age', days + (days === 1 ? ' day' : ' days')],
+        ['Acquisitions', G.owned(s).toLocaleString('en-US') + ' (' + G.money(st.acqSpent) + ')'],
         ['Streak', s.streak.n + ' (best ' + s.streak.best + ')'], ['Money earned', G.money(st.earned)], ['Income', G.money(G.incomePerHour(s)) + '/h'],
         ['Hamberders', st.burgers], ['Diet Cokes', st.cokes], ['Salads (regrettable)', st.salads], ['Lettuce tariff', s.tariff + '%'],
         ['Compliments paid', st.praises], ['Times fired', st.fired], ['Posts', st.posts], ['3 AM posts', st.posts3am],
@@ -1025,13 +1050,14 @@
     if (!s.hatched) return tapEgg();
     if (s.sulking) return openSheet('gone', 'Gone Golfing', sheetGone);
     if (s.asleep) { toast('Shh. He’s asleep.'); return; }
-    if (s.decor.indexOf('button') >= 0 && x > 104 && x < 122 && y > 52 && y < 66) {
+    if (A.hasRoom(sceneNow()) && s.decor.indexOf('button') >= 0 && x > 104 && x < 122 && y > 52 && y < 66) {
       view.buttonLit = view.frame + 8;
       react(G.feed(s, 'coke', now()), { sound: 'eat' });
       return;
     }
-    if (Math.abs(x - view.x) < 17 && y > A.FLOOR - 64 && y < A.FLOOR + 2) {
-      const onHair = y < A.FLOOR - 45;
+    const where = A.hit(lookNow(now()), view.x, x, y);
+    if (where) {
+      const onHair = where === 'hair';
       react(G.pet(s, now(), onHair), { sound: onHair ? 'no' : 'ok', ms: 1200, fx: function () { if (!onHair) spawn('heart', 2, { y: 52, spread: 20, vy: -0.6 }); else spawn('puff', 3, { y: 46, spread: 20, vy: -0.3 }); } });
     }
   }
@@ -1048,23 +1074,33 @@
   // ---------------------------------------------------------------- drawing
   const FESTIVE = ['inaug', 'presidents', 'july4', 'laborday']; // days the office hangs bunting
   function decorMap() { const m = {}; for (const d of s.decor) m[d] = true; return m; }
+  // What he looks like right now, and where that puts him (see A.look and A.sceneFor).
+  function lookNow(t) {
+    const season = C.seasonFor(new Date(t));
+    return A.look(G.level(s), { humble: G.mood(s) === 'humble', bronze: t < s.bronzeUntil, wilt: s.needs.glow < 25, term: s.term, tie: season === 'stpatrick' ? '#1f9d55' : null });
+  }
+  function sceneNow() { return A.sceneFor(G.level(s), !s.hatched || s.sulking || G.mood(s) === 'humble'); }
   function drawRoom(x, still) {
     const t = now(), d = new Date(t), lv = G.level(s), mood = G.mood(s);
     const season = C.seasonFor(d);
-    A.drawRoom(x, {
-      scene: A.sceneFor(lv), frame: still ? 12 : view.frame, decor: decorMap(), hour: d.getHours() + d.getMinutes() / 60,
-      season: season, bunting: lv >= 32 && lv < 45, festive: FESTIVE.indexOf(season) >= 0, buttonLit: view.buttonLit > view.frame,
-    });
+    const look = lookNow(t), scene = sceneNow(), indoors = A.hasRoom(scene);
     const f = still ? 12 : view.frame;
+    if (look.fixed) view.x = 80;
+    const env = {
+      scene: scene, frame: f, decor: decorMap(), hour: d.getHours() + d.getMinutes() / 60,
+      season: season, bunting: lv >= 32 && lv < 45, festive: FESTIVE.indexOf(season) >= 0, buttonLit: view.buttonLit > view.frame,
+      look: look, x: view.x, resting: !s.hatched || s.sulking || (s.asleep && indoors), holdings: G.owned(s),
+    };
+    A.drawRoom(x, env);
     if (!s.hatched) { A.drawEgg(x, 80, A.FLOOR, s.eggTaps, f); return; }
     if (s.sulking) { A.drawGone(x, f); return; }
-    const look = A.look(lv, { humble: mood === 'humble', bronze: t < s.bronzeUntil, wilt: s.needs.glow < 25, term: s.term, tie: season === 'stpatrick' ? '#1f9d55' : null });
     if (s.asleep) {
-      A.drawBed(x); A.drawDon(x, A.BED.x, A.BED.y, look, A.pose('sleep', f, {}), { lying: true }); A.drawBlanket(x);
+      if (indoors) { A.drawBed(x); A.drawDon(x, A.BED.x, A.BED.y, look, A.pose('sleep', f, {}), { lying: true }); A.drawBlanket(x); }
+      else { A.drawDon(x, view.x, A.FLOOR, look, A.pose('sleep', f, {}), { face: view.face }); A.drawOver(x, env); } // nothing that size has a bed
       x.fillStyle = 'rgba(8,12,40,0.5)'; x.fillRect(0, 0, A.W, A.H);
       return;
     }
-    if (season === 'turkey') A.drawTurkey(x, Math.round(view.turkeyX), 114, f);
+    if (season === 'turkey' && indoors) A.drawTurkey(x, Math.round(view.turkeyX), 114, f);
     let anim = 'idle';
     const c = clock();
     if (still) anim = mood === 'happy' ? 'thumbs' : 'idle';
@@ -1072,6 +1108,7 @@
     else if (c < view.talkUntil) anim = 'talk';
     else if (view.target != null) anim = 'walk';
     A.drawDon(x, view.x, A.FLOOR, look, A.pose(anim, f, { mood: mood, item: view.animItem }), { face: view.face });
+    A.drawOver(x, env);
   }
   function draw() {
     if (view.mode !== 'room' && view.game) view.game.draw(g, view.frame);
@@ -1088,12 +1125,17 @@
       if (p.life <= 0) view.particles.splice(i, 1);
     }
     if (view.mode !== 'room' || !s.hatched || s.sulking) return;
-    if (s.asleep) { if (view.frame % 14 === 0) spawn('z', 1, { x: 70, y: 76, spread: 4, vx: 0.3, vy: -0.5, life: 22 }); return; }
+    if (s.asleep) {
+      const inBed = A.hasRoom(sceneNow());
+      if (view.frame % 14 === 0) spawn('z', 1, { x: inBed ? 70 : 104, y: inBed ? 76 : 40, spread: 4, vx: 0.3, vy: -0.5, life: 22 });
+      return;
+    }
     const c = clock(), busy = c < view.animUntil || c < view.talkUntil;
     if (c < view.animUntil && view.anim === 'dance' && view.frame % 6 === 0) spawn('note', 1, { y: 50, spread: 36, vy: -0.5 });
     if (c < view.animUntil && view.anim === 'angry' && view.frame % 8 === 0) spawn('anger', 1, { y: 48, spread: 26, vy: -0.3 });
-    // wander
-    if (!busy) {
+    // wander (only while he is still something that can walk)
+    if (lookNow(now()).fixed) { view.x = 80; view.target = null; }
+    else if (!busy) {
       if (view.target != null) {
         const dx = view.target - view.x;
         if (Math.abs(dx) < 1) view.target = null;
@@ -1122,6 +1164,7 @@
     const tn = (C.NEWS && C.NEWS.tier[G.tier(s)]) || ['He is doing tremendously.']; // tolerate an older content file mid-release
     pool.push(['post', tn[tickerN % tn.length]]);
     pool.push(['shop', 'Licensing income: ' + G.money(G.incomePerHour(s)) + ' an hour and climbing.']);
+    if (s.hatched) pool.push(['shop', 'Rumour: his next acquisition is \u201C' + G.acqNext(s, 1)[0].name + '\u201D. Price on request.']);
     if (s.posts.length) pool.push(['post', 'He posted: \u201C' + s.posts[0].t + '\u201D']);
     if (G.briefing(s)) pool.push(['brief', 'Today\u2019s briefing is ready. He has not read it.']);
     if (s.streak.n > 1) pool.push(['brief', 'Day ' + s.streak.n + ' of your streak. Loyalty has been noted.']);

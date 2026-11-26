@@ -160,6 +160,37 @@ test('grooming, sleeping, waking, posting', async () => {
   } finally { await w.close(); }
 });
 
+test('shopping from the chat: he shows what is for sale, and buys it when told', async () => {
+  const w = await world(petAt(noon, { cash: 1e6 }));
+  try {
+    const before = await w.cloud();
+    const shop = await w.say('what is in the shop?');
+    assert.match(shop, /^For sale, for me:\nNext: Gold Stapler · \$150K \(.+\)\nThen: .+\nThen: .+\n\nYou have \$1\.00M/);
+    assert.equal((await w.cloud()).rev, before.rev, 'looking saves nothing');
+    const bought = await w.say('buy it');
+    assert.match(bought, /Gold Stapler · −\$150K/);
+    let s = await w.cloud();
+    assert.deepEqual(s.holdings.bands.slice(0, 2), [1, 0]);
+    assert.equal(s.cash, 1e6 - 150e3);
+    assert.ok(s.ach.acq1);
+    // not enough money: he says so, and says what it would take
+    w.clock += 1;
+    for (let i = 0; i < 4; i++) assert.match(await w.say('buy'), /· −\$\d+K\]$/); // $1M buys five of the first ones
+    const poor = await w.say('buy');
+    assert.match(poor, /\[Next: Golden Putter · \$276K · you have \$[\d.]+K\]/);
+    s = await w.cloud();
+    assert.equal(s.holdings.term, 5);
+    // asleep: it is delivered quietly
+    await w.say('good night');
+    w.store.set({}); // nothing else changes
+    const cloud = await w.cloud();
+    cloud.cash = 1e9; cloud.holdings.term = 0;
+    await w.pets.put(w.key, cloud.rev, cloud);
+    const quiet = await w.say('buy');
+    assert.match(quiet, /^Delivered quietly: /);
+  } finally { await w.close(); }
+});
+
 test('looking is not touching: status and chatter save nothing', async () => {
   const w = await world();
   try {

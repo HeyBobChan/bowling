@@ -65,9 +65,10 @@ export function createBrain({ pets, store, siteUrl, now = Date.now }) {
       '• comb, hairspray, bronzer\n' +
       '• good night / wake up\n' +
       '• post · briefing · status\n' +
+      '• buy (the next acquisition) · shop (what’s for sale)\n' +
       '• quiet (I stop writing first) · alerts on\n' +
       '• unlink (I forget the code)\n\n' +
-      'Golf, deals, rallies and the shop need the big screen: ' + siteUrl,
+      'Golf, deals, rallies and the office decor need the big screen: ' + siteUrl,
     cloudDown: 'The cloud is having a moment. Not my fault. Try me again shortly.',
     codeGone: 'That keeper code stopped working. Somebody changed it, probably somebody very jealous. Send me the new one.',
     badCode: 'That is not a keeper code I know. Check it and send it again. Menu → Settings on ' + siteUrl,
@@ -174,7 +175,21 @@ export function createBrain({ pets, store, siteUrl, now = Date.now }) {
       const br = G.briefing(s);
       return br ? { text: briefingText(br), changed: false, briefing: br } : talk(T.noBriefing);
     }
-    if (/\b(golf|deals?|rall(y|ies)|play|games?|shop|buy|decor\w*|trophies|achievements)\b/.test(said)) return talk(T.screen);
+    if (/\b(buy|acquire|purchase|go shopping)\b/.test(said)) { // the next acquisition (G.buyNext)
+      const it = G.acqNext(s, 1)[0], r = G.buyNext(s, t);
+      if (r.reason === 'later') return talk('I can take on more at level ' + r.level + '. One thing at a time. Two, maybe.');
+      if (r.reason === 'cash') return talk(r.say + '\n\n[Next: ' + it.name + ' · ' + G.money(it.cost) + ' · you have ' + G.money(s.cash) + ']');
+      if (!r.ok) return talk(blockedText(r.reason));
+      const paid = it.name + ' · −' + G.money(it.cost);
+      if (r.quiet) return { text: 'Delivered quietly: ' + it.name + '. He’ll find it when he’s back.' + hud(before, s, r.events, paid), changed: true };
+      return done(r, paid);
+    }
+    if (/\b(shop|shopping|catalog(ue)?|for sale)\b/.test(said)) { // looking only
+      const next = G.acqNext(s, 3);
+      return talk('For sale, for me:\n' + next.map((x, i) => (i ? 'Then: ' : 'Next: ') + x.name + ' · ' + G.money(x.cost) + (i ? '' : ' (' + x.note + ')')).join('\n') +
+        '\n\nYou have ' + G.money(s.cash) + '. Say “buy”.');
+    }
+    if (/\b(golf|deals?|rall(y|ies)|play|games?|decor\w*|trophies|achievements)\b/.test(said)) return talk(T.screen);
     if (/\b(pat|pet|hug|high five|cuddle|kiss|tickle)\b/.test(said)) return done(G.pet(s, t, false));
 
     // Anything else is talk, and he hears talk as being about him.

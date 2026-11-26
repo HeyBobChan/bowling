@@ -240,6 +240,8 @@ a.btn { color: inherit; text-decoration: none; touch-action: manipulation; }
 }
 .item:active { background: var(--navy-3); }
 .item[disabled] { opacity: 0.5; }
+.item.then { opacity: 0.55; min-height: 48px; }
+.sheet-h { font-family: var(--serif); font-size: 17px; color: var(--gold-l); margin: 6px 2px -3px; }
 .item.owned { border-color: var(--gold-d); background: #1a2242; }
 .item-icon { font-size: 26px; width: 34px; text-align: center; flex: none; }
 .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -342,3 +344,13 @@ a.btn { color: inherit; text-decoration: none; touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* The Everything: at level 100 there is no outside, so the page goes with him. */
+body[data-form="all"] {
+  --navy-0: #0c0818; --navy-1: #17102a; --navy-2: #241a3c; --navy-3: #3a2a55; --line: #6a5320;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #6a4a12 0%, transparent 60%),
+    radial-gradient(900px 500px at 50% 110%, #3a2208 0%, transparent 60%),
+    var(--navy-0);
+}
+body[data-form="all"] .screen { box-shadow: inset 0 0 0 2px var(--gold-d), 0 0 0 2px #6d4e12, 0 6px 0 #05091a, 0 0 34px rgba(247, 220, 122, 0.45); }

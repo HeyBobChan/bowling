@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 globalThis.window = globalThis;
 await import('../js/content.js');
 await import('../js/game.js');
-const { game: G, content: C } = globalThis.TG;
+await import('../js/art.js'); // only what needs no canvas is used here: how he looks, where he is, where a tap lands
+const { game: G, content: C, art: A } = globalThis.TG;
 
 const HOUR = 3600e3, DAY = 24 * HOUR;
 const at = (y, m, d, h = 9, min = 0) => new Date(y, m - 1, d, h, min).getTime();
@@ -32,6 +33,149 @@ test('levels: the curve only goes up and stages map to levels', () => {
   assert.equal(G.stageFor(47).id, 'p47');
   assert.equal(G.stageFor(50).id, 'gold');
   assert.deepEqual([1, 5, 17, 32, 45].map(C.tierForLevel), [0, 1, 2, 3, 4]);
+});
+
+test('past the presidency: fifty more levels and seven more things to become', () => {
+  assert.equal(C.MAX_LEVEL, 100);
+  assert.deepEqual([54, 55, 61, 62, 70, 78, 86, 93, 99, 100].map((L) => G.stageFor(L).id), ['gold', 'plated', 'plated', 'hair', 'tie', 'giant', 'tower', 'planet', 'planet', 'all']);
+  assert.deepEqual([61, 62, 100].map(C.tierForLevel), [4, 5, 5]);
+  assert.equal(C.TIER_NAMES.length, 6);
+  // the first fifty levels cost exactly what they always did, so nobody's pet moved
+  assert.equal(G.cumXp(50), 22540);
+  assert.equal(G.cumXp(17), 60 * 16 + 8 * 16 * 17);
+  // beyond that, a level costs about the same from first to last
+  for (let L = 50; L < 100; L++) { const cost = G.cumXp(L + 1) - G.cumXp(L); assert.ok(cost >= 700 && cost <= 910, L + ': ' + cost); }
+  assert.equal(G.levelFor(G.cumXp(78) - 1), 77);
+  assert.equal(G.levelFor(G.cumXp(78)), 78);
+  // each form is announced, and has its trophy
+  const s = hatched();
+  const marks = { 55: 'plated', 62: 'hair', 70: 'tie', 78: 'giant', 86: 'tower', 93: 'planet', 100: 'all' };
+  for (const L in marks) {
+    s.xp = G.cumXp(Number(L)) - 1;
+    const ev = [];
+    G.addXp(s, 5, ev, G.now());
+    assert.ok(ev.some((e) => e.type === 'evolve' && e.stage === marks[L]), 'evolves at ' + L);
+    assert.ok(s.ach['lv' + L], 'trophy at ' + L);
+  }
+  assert.equal(G.level(s), 100);
+  G.addXp(s, 1e9, [], G.now());
+  assert.equal(G.level(s), 100, 'and there it stops');
+  assert.equal(G.progress(s), 1);
+});
+
+test('past the presidency: he talks about what he has become, in a voice of its own', () => {
+  const s = hatched();
+  for (const id of ['plated', 'hair', 'tie', 'giant', 'tower', 'planet', 'all']) {
+    assert.ok(C.STAGE_LINES[id].length >= 5, id);
+    s.xp = G.cumXp(C.STAGES.find((x) => x.id === id).min);
+    G.rng = seeded(3);
+    const said = new Set();
+    for (let i = 0; i < 60; i++) said.add(G.say(s, 'idleHappy'));
+    assert.ok(C.STAGE_LINES[id].some((l) => said.has(l)), id + ': his own lines come up');
+    assert.ok([...said].some((l) => !C.STAGE_LINES[id].includes(l)), id + ': and so do the general ones');
+  }
+  s.xp = G.cumXp(62);
+  G.rng = () => 0.99;
+  assert.ok(C.LINES.hungry[5].includes(G.say(s, 'hungry')));
+  s.xp = G.cumXp(61);
+  assert.ok(C.LINES.hungry[4].includes(G.say(s, 'hungry')));
+  s.xp = G.cumXp(40); // below level 55 nothing changed, including how many random numbers are drawn
+  let draws = 0; G.rng = () => { draws++; return 0.5; };
+  G.say(s, 'idleHappy');
+  assert.equal(draws, 1);
+  // posts and crowds scale with him too
+  G.rng = seeded(9);
+  for (let i = 0; i < 40; i++) assert.ok(C.makePost(5, G.rng).text.length > 10);
+  assert.match(C.likesFor(5, () => 0.9), /TRILLION/);
+  s.xp = G.cumXp(70);
+  assert.equal(G.crowdClaim(s, 100), 1e11);
+  assert.equal(G.money(3.2e19), '$32.0Qi');
+  G.rng = seeded(7);
+});
+
+test('past the presidency: briefings and orders about a form wait until he is that form', () => {
+  const gatedB = C.BRIEFINGS.filter((b) => b.min), gatedO = C.ORDERS.filter((o) => o.min);
+  assert.ok(gatedB.length >= 14 && gatedO.length >= 14);
+  for (const x of gatedB.concat(gatedO)) assert.ok([55, 62, 70, 78, 86, 93, 100].includes(x.min), 'a form starts at ' + x.min);
+  for (const b of gatedB) for (const ch of b.choices) assert.ok(ch.fx.xp >= 38 && ch.fx.xp <= 52, b.id + ': later briefings pay a little more');
+  // forty days as an ordinary president: nothing from later turns up
+  let t = at(2026, 3, 2, 9);
+  const s = hatched(t);
+  s.xp = G.cumXp(47);
+  for (let i = 0; i < 40; i++) {
+    for (const k of G.NEEDS) s.needs[k] = 80;
+    s.asleep = false; s.xp = G.cumXp(47);
+    const b = G.briefing(s);
+    assert.ok(!b.min, b.id);
+    const r = G.chooseBriefing(s, 0, t);
+    if (r.order) assert.ok(!r.order.min, r.order.title);
+    t += DAY; G.catchUp(s, t);
+  }
+  // as The Hair, the hair's own business is likely to come up soon
+  s.xp = G.cumXp(62);
+  const seen = [];
+  for (let i = 0; i < 12; i++) {
+    for (const k of G.NEEDS) s.needs[k] = 80;
+    s.asleep = false; s.xp = G.cumXp(62);
+    const b = G.briefing(s);
+    assert.ok(!b.min || b.min <= 62, b.id);
+    seen.push(b.id);
+    const r = G.chooseBriefing(s, 0, t);
+    if (r.order) assert.ok(!r.order.min || r.order.min <= 62, r.order.title);
+    t += DAY; G.catchUp(s, t);
+  }
+  assert.ok(seen.includes('hairvote') || seen.includes('hairdoor'), seen.join(' '));
+  // at the very end every order can be signed
+  s.xp = G.cumXp(100);
+  for (let i = 0; i < 400 && s.orders.length < C.ORDERS.length; i++) {
+    for (const k of G.NEEDS) s.needs[k] = 80;
+    s.asleep = false; s.xp = G.cumXp(100);
+    G.chooseBriefing(s, 0, t);
+    t += DAY; G.catchUp(s, t);
+  }
+  assert.equal(s.orders.length, C.ORDERS.length);
+  assert.ok(s.ach.ordersall);
+});
+
+test('past the presidency: how he looks, where he is, and that neglect makes him a man again', () => {
+  const forms = [50, 55, 62, 70, 78, 85, 86, 92, 93, 99, 100].map((L) => A.look(L, {}).form);
+  assert.deepEqual(forms, ['man', 'man', 'man', 'man', 'man', 'man', 'tower', 'tower', 'planet', 'planet', 'all']);
+  assert.deepEqual([44, 45, 77, 78, 92, 93, 99, 100].map((L) => A.sceneFor(L)), ['tower', 'oval', 'oval', 'skyline', 'skyline', 'space', 'space', 'all']);
+  // levels 1 to 50 are untouched
+  for (const L of [1, 10, 30, 47, 50]) { const k = A.look(L, {}); assert.equal(k.plate, 0); assert.equal(k.mane, 0); assert.equal(k.hairEyes, false); assert.equal(k.tieOut, 0); assert.equal(k.fixed, false); }
+  assert.equal(A.look(50, {}).hh, 7);
+  // each change comes on gradually
+  assert.ok(A.look(52, {}).plate > 0 && A.look(52, {}).plate < 1);
+  assert.equal(A.look(55, {}).plate, 1);
+  const manes = [55, 58, 62, 66, 70, 74, 77].map((L) => A.look(L, {}).hh);
+  for (let i = 1; i < manes.length; i++) assert.ok(manes[i] > manes[i - 1], 'the hair keeps growing: ' + manes);
+  assert.equal(A.look(61, {}).hairEyes, false);
+  assert.equal(A.look(62, {}).hairEyes, true);
+  assert.equal(A.look(69, {}).tieWindow, false);
+  assert.equal(A.look(70, {}).tieWindow, true);
+  assert.ok(A.look(90, {}).H > A.look(86, {}).H);
+  assert.deepEqual([93, 95, 99].map((L) => A.look(L, {}).moons), [0, 2, 6]);
+  // neglected, at any level: a man, in the office, with none of it
+  for (const L of [60, 80, 90, 95, 100]) {
+    const k = A.look(L, { humble: true });
+    assert.equal(k.form, 'man'); assert.equal(k.plate, 0); assert.equal(k.mane, 0); assert.equal(k.fixed, false); assert.equal(k.crown, false);
+    assert.equal(A.sceneFor(L, true), 'oval');
+  }
+  // he turns up to the minigames in person, with hair that fits on the screen
+  for (const L of [80, 90, 95, 100]) { const k = A.look(L, { person: true }); assert.equal(k.form, 'man'); assert.ok(k.hh <= 24, 'hair ' + k.hh); assert.equal(k.tieOut, 0); }
+  // taps: hair is hair and body is body on every form
+  assert.equal(A.hit(A.look(30, {}), 80, 80, A.FLOOR - 20), 'body');
+  assert.equal(A.hit(A.look(30, {}), 80, 80, A.FLOOR - 55), 'hair');
+  assert.equal(A.hit(A.look(30, {}), 80, 120, A.FLOOR - 20), null);
+  assert.equal(A.hit(A.look(77, {}), 80, 80, 20), 'hair', 'the big hair can be touched high up');
+  assert.equal(A.hit(A.look(30, {}), 80, 80, 20), null);
+  assert.equal(A.hit(A.look(88, {}), 80, 80, 60), 'body');
+  assert.equal(A.hit(A.look(88, {}), 80, 80, A.FLOOR - A.look(88, {}).H - 4), 'hair');
+  assert.equal(A.hit(A.look(95, {}), 80, 80, 66), 'body');
+  assert.equal(A.hit(A.look(95, {}), 80, 80, 30), 'hair');
+  assert.equal(A.hit(A.look(95, {}), 80, 10, 110), null);
+  assert.equal(A.hit(A.look(100, {}), 80, 40, 70), 'body');
+  assert.equal(A.hit(A.look(100, {}), 80, 40, 12), 'hair');
 });
 
 test('the egg hatches after enough taps and comes with a small loan', () => {
@@ -199,17 +343,24 @@ test('the daily briefing: one a day, a choice, and an order to collect', () => {
 });
 
 test('briefings do not repeat until every one has been seen', () => {
-  let t = at(2026, 3, 2, 9);
-  const s = hatched(t);
-  const seen = [];
-  for (let i = 0; i < C.BRIEFINGS.length; i++) {
-    for (const k of G.NEEDS) s.needs[k] = 80;
-    s.asleep = false; s.sulking = false;
-    seen.push(G.briefing(s).id);
-    G.chooseBriefing(s, 0, t);
-    t += DAY; G.catchUp(s, t);
-  }
-  assert.equal(new Set(seen).size, C.BRIEFINGS.length);
+  // `level`: held there for the run. Early on only the briefings open to him count as "every one".
+  const run = (level, days) => {
+    let t = at(2026, 3, 2, 9);
+    const s = hatched(t);
+    const seen = [];
+    for (let i = 0; i < days; i++) {
+      for (const k of G.NEEDS) s.needs[k] = 80;
+      s.asleep = false; s.sulking = false;
+      if (level) s.xp = G.cumXp(level);
+      seen.push(G.briefing(s).id);
+      G.chooseBriefing(s, 0, t);
+      t += DAY; G.catchUp(s, t);
+    }
+    return seen;
+  };
+  const open = C.BRIEFINGS.filter((b) => !b.min).length;
+  assert.equal(new Set(run(0, open)).size, open);
+  assert.equal(new Set(run(100, C.BRIEFINGS.length)).size, C.BRIEFINGS.length);
 });
 
 test('seasons: Thanksgiving week brings the turkey pardon', () => {
@@ -287,7 +438,7 @@ test('special days are collected across the year', () => {
 });
 
 test('some foods get remarks of their own, in every register', () => {
-  for (const id of ['steak', 'chicken', 'tacobowl', 'cake', 'icecream']) assert.equal(C.LINES['ate_' + id].length, 5, id);
+  for (const id of ['steak', 'chicken', 'tacobowl', 'cake', 'icecream']) assert.equal(C.LINES['ate_' + id].length, C.TIER_NAMES.length, id);
   const s = hatched();
   G.rng = () => 0.1; // below the chance threshold: he uses the food's own lines
   s.needs.food = 10; s.xp = G.cumXp(47);
@@ -407,14 +558,114 @@ test('another term: back to level 1, keep everything, earn more', () => {
   const s = hatched();
   s.cash = 1e12; G.buyDecor(s, 'tv', G.now());
   assert.equal(G.runAgain(s, G.now()).ok, false);
-  s.xp = G.cumXp(50);
+  s.xp = G.cumXp(50); // no longer the end: there is everything after the presidency still to be
+  assert.equal(G.canRunAgain(s), false);
+  s.xp = G.cumXp(99);
+  assert.equal(G.runAgain(s, G.now()).ok, false);
+  s.xp = G.cumXp(100);
   assert.ok(G.canRunAgain(s));
   const r = G.runAgain(s, G.now());
   assert.ok(r.ok && s.ach.term2);
+  assert.ok(C.LINES.another[5].includes(r.say));
   assert.equal(s.term, 2);
   assert.equal(G.level(s), 1);
   assert.deepEqual(s.decor, ['tv']);
   assert.equal(G.termBonus(s), 1.25);
+});
+
+test('acquisitions: always something more to buy, each a little dearer and a little bigger', () => {
+  const s = hatched();
+  s.cash = 1e30; s.xp = G.cumXp(100);
+  const names = new Set(), seen = [];
+  let last = 0;
+  for (let i = 0; i < G.acqAllowed(s); i++) {
+    const next = G.acqNext(s, 3);
+    assert.equal(next.length, 3);
+    const it = next[0];
+    assert.ok(it.cost > last, 'dearer every time');
+    assert.ok(it.name && it.note && it.icon && it.kind, i);
+    assert.ok(!names.has(it.name), 'never the same name twice: ' + it.name);
+    names.add(it.name); seen.push(it.band);
+    last = it.cost;
+    const r = G.buyNext(s, G.now());
+    assert.ok(r.ok, i + ' ' + it.name);
+    assert.equal(r.bought.name, it.name);
+    assert.ok(r.say.includes(it.name), r.say);
+  }
+  // the bands come in order, from small luxuries to the sky
+  for (let i = 1; i < seen.length; i++) assert.ok(seen[i] >= seen[i - 1]);
+  assert.ok(seen[seen.length - 1] >= 4, 'by the end of a term he is buying things in the sky');
+  assert.equal(G.owned(s), G.acqAllowed(s));
+  assert.ok(Math.abs(G.perks(s).income - G.owned(s) * 0.01) < 1e-9, 'each pays 1% more income');
+  for (const id of ['acq1', 'acq25', 'acq100', 'acq250']) assert.ok(s.ach[id], id);
+  // a band used up comes round again, with numbers
+  const small = C.ACQ_BANDS[0];
+  const t = hatched(); t.cash = 1e30; t.xp = G.cumXp(100); t.holdings.bands[0] = small.items.length;
+  const again = G.acqNext(t, 1)[0];
+  assert.equal(again.name, small.items[0][0] + ' No. 2');
+  assert.ok(C.ACQ_AGAIN.includes(again.note));
+  // far, far on, there is still something: the last band never ends
+  t.holdings.term = 400; t.holdings.bands = C.ACQ_BANDS.map(() => 5000);
+  const far = G.acqNext(t, 2);
+  assert.equal(far[0].band, C.ACQ_BANDS.length - 1);
+  assert.match(far[1].name, /No\. \d+$/);
+  assert.ok(isFinite(far[1].cost) && far[1].cost < 1e30);
+});
+
+test('acquisitions: two and a half more every level, delivered quietly if he is out, kept across terms', () => {
+  const s = hatched();
+  s.cash = 1e30;
+  assert.equal(G.level(s), 1);
+  for (let i = 0; i < 6; i++) assert.ok(G.buyNext(s, G.now()).ok, i);
+  const r = G.buyNext(s, G.now());
+  assert.equal(r.ok, false); assert.equal(r.reason, 'later'); assert.equal(r.level, 2);
+  assert.equal(G.acqLevel(s), 2); assert.equal(G.acqLevel(s, 2), 2); assert.equal(G.acqLevel(s, 3), 3);
+  s.xp = G.cumXp(2);
+  for (let i = 0; i < 3; i++) assert.ok(G.buyNext(s, G.now()).ok);
+  assert.equal(G.buyNext(s, G.now()).reason, 'later');
+  // money first
+  const poor = hatched(); poor.cash = 1000;
+  const no = G.buyNext(poor, G.now());
+  assert.equal(no.reason, 'cash'); assert.ok(no.say);
+  assert.equal(G.buyNext(G.newState(G.now()), G.now()).reason, 'egg');
+  // asleep or away: it arrives without a word, and he gets nothing out of it until he is back
+  const away = hatched(); away.cash = 1e9; away.needs.energy = 40; G.toggleSleep(away, G.now());
+  const ego = away.needs.ego;
+  const q = G.buyNext(away, G.now());
+  assert.ok(q.ok); assert.equal(q.quiet, 'asleep'); assert.equal(q.say, undefined); assert.equal(q.anim, undefined);
+  assert.equal(away.needs.ego, ego);
+  const here = hatched(); here.cash = 1e9; here.needs.ego = 50;
+  assert.equal(G.buyNext(here, G.now()).anim, 'dance');
+  assert.equal(here.needs.ego, 56);
+  assert.equal(here.stats.acqSpent, G.ACQ.base);
+  // another term: everything he owns stays, prices start again from the bottom, names carry on
+  const big = hatched(); big.cash = 1e30; big.xp = G.cumXp(100);
+  for (let i = 0; i < 30; i++) G.buyNext(big, G.now());
+  const owned = G.owned(big), firstAgain = G.acqNext(big, 1)[0];
+  G.runAgain(big, G.now());
+  assert.equal(G.owned(big), owned);
+  assert.equal(big.holdings.term, 0);
+  const next = G.acqNext(big, 1)[0];
+  assert.equal(next.cost, G.ACQ.base);
+  assert.notEqual(next.name, C.ACQ_BANDS[0].items[0][0]);
+  assert.ok(firstAgain.cost > next.cost);
+  assert.ok(G.incomePerHour(big) > G.incomePerHour(hatched()) * 1.25, 'what he owns keeps paying');
+});
+
+test('acquisitions: old saves have none, and odd ones are made safe', () => {
+  const t = G.now();
+  const old = JSON.parse(JSON.stringify(hatched(t))); delete old.holdings; delete old.stats.acqSpent;
+  const back = G.revive(old, t);
+  assert.deepEqual(back.holdings, { term: 0, bands: C.ACQ_BANDS.map(() => 0) });
+  assert.equal(back.stats.acqSpent, 0);
+  assert.equal(G.owned(back), 0);
+  for (const junk of [null, 5, 'x', [], { term: -3, bands: 'no' }, { term: 1e99, bands: [1, -1, 'a', 2.7, null, 9, 99] }]) {
+    const s = G.revive(Object.assign(JSON.parse(JSON.stringify(hatched(t))), { holdings: junk }), t);
+    assert.ok(Number.isInteger(s.holdings.term) && s.holdings.term >= 0 && s.holdings.term <= 1e6, JSON.stringify(junk));
+    assert.equal(s.holdings.bands.length, C.ACQ_BANDS.length);
+    for (const b of s.holdings.bands) assert.ok(Number.isInteger(b) && b >= 0);
+    assert.ok(G.acqNext(s, 1)[0].name);
+  }
 });
 
 test('saves survive export and import; junk is rejected', () => {
@@ -474,7 +725,7 @@ test('money reads well at every size', () => {
 
 test('content is complete and consistent', () => {
   for (const key in C.LINES) {
-    assert.equal(C.LINES[key].length, 5, key + ' has five registers');
+    assert.equal(C.LINES[key].length, C.TIER_NAMES.length, key + ' has every register');
     for (const tier of C.LINES[key]) assert.ok(tier.length > 0 && tier.every((l) => typeof l === 'string' && l.length > 3), key);
   }
   for (const b of C.BRIEFINGS.concat(Object.values(C.SEASON_BRIEFINGS))) {
@@ -484,13 +735,15 @@ test('content is complete and consistent', () => {
   const uniq = (arr) => new Set(arr).size === arr.length;
   assert.ok(uniq(C.BRIEFINGS.map((b) => b.id)));
   assert.ok(C.BRIEFINGS.length >= 60 && C.ORDERS.length >= C.BRIEFINGS.length, 'an order for every daily briefing');
-  for (const b of C.BRIEFINGS) for (const ch of b.choices) assert.ok(ch.fx.xp >= 24 && ch.fx.xp <= 40, b.id + ': ordinary briefings pay alike');
+  for (const b of C.BRIEFINGS) if (!b.min) for (const ch of b.choices) assert.ok(ch.fx.xp >= 24 && ch.fx.xp <= 40, b.id + ': ordinary briefings pay alike');
   // a line with a placeholder must be handed that value by the game
-  const allowed = { ate: ['food'], ateCoke: ['n'], ateSalad: ['tariff'], greetLong: ['hours'], rally: ['real', 'claimed'] };
+  const allowed = { ate: ['food'], ateCoke: ['n'], ateSalad: ['tariff'], greetLong: ['hours'], rally: ['real', 'claimed'], acquired: ['thing'] };
   for (const key in C.LINES) for (const tier of C.LINES[key]) for (const line of tier) for (const m of line.matchAll(/\{(\w+)\}/g)) assert.ok((allowed[key] || []).includes(m[1]), key + ' uses {' + m[1] + '}');
   for (const key of ['want', 'tier']) assert.ok(C.NEWS[key]);
   for (const t of C.NEWS.tier) assert.ok(t.length >= 6);
-  assert.equal(C.POST.templates.length, 5);
+  assert.equal(C.POST.templates.length, C.TIER_NAMES.length);
+  assert.equal(C.POST.night.length, C.TIER_NAMES.length);
+  assert.equal(C.NEWS.tier.length, C.TIER_NAMES.length);
   for (const t of C.POST.templates) assert.ok(t.length >= 12);
   assert.ok(uniq(C.ORDERS.map((o) => o.no)) && uniq(C.ORDERS.map((o) => o.title)));
   assert.ok(uniq(C.ACHIEVEMENTS.map((a) => a.id)));
@@ -504,32 +757,109 @@ test('content is complete and consistent', () => {
   for (const id of defined) assert.ok(awarded.has(id), 'trophy can never be earned: ' + id);
 });
 
+// One visit from a caretaker who does everything on offer.
+function lookAfter(s, t, bedtime) {
+  G.catchUp(s, t);
+  if (s.sulking) G.winBack(s, t);
+  if (s.asleep) G.toggleSleep(s, t);
+  if (G.briefing(s)) G.chooseBriefing(s, 0, t);
+  for (let i = 0; i < 6 && s.needs.food < 80; i++) G.feed(s, 'hamberder', t);
+  for (let i = 0; i < 6 && s.needs.ego < 85; i++) G.praise(s, { t: 'x', p: 3 }, t);
+  for (let i = 0; i < 4 && s.needs.glow < 80; i++) G.groom(s, 'spray', t);
+  while (s.postCharges > 0) G.publish(s, G.draftPost(s), t);
+  for (let i = 0; i < 3 && s.needs.energy >= 35; i++) G.finishGolf(s, 2, t);
+  for (const d of C.DECOR) if (s.decor.indexOf(d.id) < 0 && s.cash >= d.cost) G.buyDecor(s, d.id, t);
+  if (bedtime && s.needs.energy <= 80) G.toggleSleep(s, t);
+}
+// Days (from the first) on which he first reached each of `marks`, visiting at `hours` every day.
+function daysTo(marks, hours, s, limit) {
+  const reached = {}, top = marks[marks.length - 1];
+  const day0 = at(2026, 1, 5, 0);
+  if (!s) { s = G.newState(day0 + 8 * HOUR); G.catchUp(s, day0 + 8 * HOUR); for (let i = 0; i < G.EGG_TAPS; i++) G.tapEgg(s, day0 + 8 * HOUR); }
+  for (let day = 0; day < limit && G.level(s) < top; day++) {
+    for (const h of hours) lookAfter(s, at(2026, 1, 5 + day, 0) + h * HOUR, h > 22);
+    for (const m of marks) if (G.level(s) >= m && !reached[m]) reached[m] = day + 1;
+  }
+  return { reached, s };
+}
+
 test('pacing: a devoted caretaker sees him evolve on day one and peak in about a month', () => {
   G.rng = seeded(42);
-  let t = at(2026, 1, 5, 8);
-  const s = G.newState(t); G.catchUp(s, t);
-  for (let i = 0; i < G.EGG_TAPS; i++) G.tapEgg(s, t);
-  const reached = {};
-  for (let day = 0; day < 90 && G.level(s) < 50; day++) {
-    for (const h of [8, 13, 18, 22.5]) {
-      t = at(2026, 1, 5 + day, 0) + h * HOUR;
-      G.catchUp(s, t);
-      if (s.sulking) G.winBack(s, t);
-      if (s.asleep) G.toggleSleep(s, t);
-      if (G.briefing(s)) G.chooseBriefing(s, 0, t);
-      for (let i = 0; i < 6 && s.needs.food < 80; i++) G.feed(s, 'hamberder', t);
-      for (let i = 0; i < 6 && s.needs.ego < 85; i++) G.praise(s, { t: 'x', p: 3 }, t);
-      for (let i = 0; i < 4 && s.needs.glow < 80; i++) G.groom(s, 'spray', t);
-      while (s.postCharges > 0) G.publish(s, G.draftPost(s), t);
-      for (let i = 0; i < 3 && s.needs.energy >= 35; i++) G.finishGolf(s, 2, t);
-      for (const d of C.DECOR) if (s.decor.indexOf(d.id) < 0 && s.cash >= d.cost) G.buyDecor(s, d.id, t);
-      if (h > 22 && s.needs.energy <= 80) G.toggleSleep(s, t);
-    }
-    for (const m of [5, 17, 45, 50]) if (G.level(s) >= m && !reached[m]) reached[m] = day + 1;
-  }
+  const { reached, s } = daysTo([5, 17, 45, 50], [8, 13, 18, 22.5], null, 90);
   assert.ok(reached[5] <= 2, 'first evolution by day 2: ' + reached[5]);
   assert.ok(reached[17] >= 3 && reached[17] <= 10, 'Mogul within the first week or so: ' + reached[17]);
   assert.ok(reached[45] >= 15 && reached[45] <= 45, 'the presidency takes weeks: ' + reached[45]);
   assert.ok(reached[50] >= 20 && reached[50] <= 60, 'peak in about a month: ' + reached[50]);
   assert.equal(s.ach.comeback, undefined, 'a cared-for pet never storms off');
+});
+
+test('pacing: past the presidency there is a new form every week or two, for months', () => {
+  const forms = [55, 62, 70, 78, 86, 93, 100];
+  const gaps = (hours) => {
+    G.rng = seeded(42);
+    const r = daysTo([50].concat(forms), hours, null, 400).reached;
+    return { days: forms.map((m, i) => r[m] - r[i ? forms[i - 1] : 50]), total: r[100] - r[50] };
+  };
+  const keen = gaps([8, 13, 18, 22.5]);
+  for (const d of keen.days) assert.ok(d >= 4 && d <= 12, 'four visits a day: ' + keen.days);
+  assert.ok(keen.total >= 45 && keen.total <= 80, 'about two months more: ' + keen.total);
+  const daily = gaps([19]);
+  for (const d of daily.days) assert.ok(d >= 8 && d <= 24, 'one visit a day: ' + daily.days);
+  assert.ok(daily.total >= 90 && daily.total <= 150, 'about four months more: ' + daily.total);
+  G.rng = seeded(7);
+});
+
+test('a pet saved at the old top of the game simply carries on', () => {
+  const t = at(2026, 3, 2, 9);
+  const s = hatched(t);
+  s.xp = 22541; // where the game used to stop: level 50, plus the one point it allowed
+  const back = G.revive(JSON.parse(JSON.stringify(s)), t);
+  assert.equal(back.xp, 22541);
+  assert.equal(G.level(back), 50);
+  assert.equal(G.stage(back).id, 'gold');
+  assert.equal(G.canRunAgain(back), false, 'the way on is up, not round again');
+  assert.ok(G.progress(back) < 0.01);
+  for (const k of G.NEEDS) back.needs[k] = 90;
+  G.catchUp(back, t + 2 * HOUR);
+  assert.ok(back.xp > 22541, 'and he gains again');
+  // a save from far past the end is brought back to the end, not thrown away
+  const wild = G.revive(Object.assign(JSON.parse(JSON.stringify(s)), { xp: 1e12 }), t);
+  assert.equal(G.level(wild), 100);
+});
+
+test('pacing: the shop never runs dry, in the first term or the next', () => {
+  // A caretaker who buys the next acquisition whenever there is money for it.
+  const shopper = (hours, terms) => {
+    G.rng = seeded(42);
+    const day0 = at(2026, 1, 5, 0);
+    const s = G.newState(day0 + 8 * HOUR); G.catchUp(s, day0 + 8 * HOUR);
+    for (let i = 0; i < G.EGG_TAPS; i++) G.tapEgg(s, day0 + 8 * HOUR);
+    const perDay = [], terms1 = [], at50 = {};
+    for (let day = 0, term = 1; day < 400; day++) {
+      let n = 0;
+      for (const h of hours) {
+        const t = at(2026, 1, 5 + day, 0) + h * HOUR;
+        lookAfter(s, t, h > 22);
+        while (G.buyNext(s, t).ok) n++;
+      }
+      perDay.push(n); terms1.push(term === 1);
+      if (G.level(s) >= 50 && !at50[term]) at50[term] = G.owned(s);
+      if (G.level(s) >= 100) { if (term >= terms) break; G.runAgain(s, at(2026, 1, 5 + day, 23)); term++; }
+    }
+    let dry = 0, run = 0;
+    for (const n of perDay.slice(2)) { run = n ? 0 : run + 1; dry = Math.max(dry, run); }
+    const avg = perDay.slice(3).reduce((a, b) => a + b, 0) / (perDay.length - 3);
+    const most = Math.max(...perDay.slice(3).filter((n, i) => terms1[i + 3])); // a new term may open with a spree: he has a fortune and the prices start again
+    return { dry, avg, most, mostEver: Math.max(...perDay.slice(3)), owned: G.owned(s), at50, s };
+  };
+  const keen = shopper([8, 13, 18, 22.5], 2);
+  assert.ok(keen.dry <= 3, 'never more than three days without something to buy: ' + keen.dry);
+  assert.ok(keen.avg >= 1.5 && keen.avg <= 4, 'a couple of purchases a day: ' + keen.avg.toFixed(2));
+  assert.ok(keen.most <= 8, 'and no sprees in the first term: ' + keen.most);
+  assert.ok(keen.mostEver <= 32, 'not even when a new term starts: ' + keen.mostEver);
+  assert.ok(keen.at50[1] >= 70 && keen.at50[1] <= 160, 'about a hundred things by level 50: ' + keen.at50[1]);
+  const daily = shopper([19], 1);
+  assert.ok(daily.dry <= 3, 'once a day, too: ' + daily.dry);
+  assert.ok(daily.avg >= 0.8, 'about one a day: ' + daily.avg.toFixed(2));
+  G.rng = seeded(7);
 });

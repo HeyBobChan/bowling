@@ -35,17 +35,20 @@ npm run build:single # writes dist/trumpagotchi.html (about 220 KB)
 |---|---|
 | **Five needs** | Food, Ego, Fun, Glow (hair and tan) and Energy fade in real time, including while the page is closed. |
 | **Tremendousness** | Every bit of care earns it; keeping all his needs above half earns more each hour. It never drops below the start of his current stage. |
-| **Ten stages** | Regular Don, The Kid from Queens, The Developer, The Mogul, The TV Boss, The Candidate, The Nominee, The 45th (level 45, new oval office), The 47th (level 47), Tremendous Form (level 50). |
-| **Five voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM. Every situation has lines in all five: about 700 in total, so he rarely repeats himself. |
-| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 70 briefings, so more than two months pass before one comes round again. |
-| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of decor, each with a perk. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
-| **The long game** | Daily streaks, 72 executive orders to collect (one a day), 37 trophies, and at level 50 he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
+| **Ten stages of a man** | Regular Don, The Kid from Queens, The Developer, The Mogul, The TV Boss, The Candidate, The Nominee, The 45th (level 45, new oval office), The 47th (level 47), Tremendous Form (level 50). |
+| **Seven more of something else** | Past level 50 there is no president left to become, so his own features take over. Gold Standard (55, plated head to toe), The Hair (62, it has eyes now and makes the decisions), The Long Tie (70, it has been all the way round), The Biggest (78, he outgrows the office and stands in the city), The Tower (86, he and the building are one), The Orange Giant (93, a planet with moons), The Everything (100, a face in the sky, and the page turns gold). Each change comes on a little every level. |
+| **Six voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM, and from level 62 BEYOND. Every situation has lines in all six, about 850 in total, and each of the seven later forms has things to say about being what it is. |
+| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 92 briefings, so about three months pass before one comes round again. Fourteen of them only arrive once he is the thing they are about. |
+| **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of office decor, each with a perk, and on acquisitions, which never run out: about 200 things from a gold stapler through golf courses, airlines and the weather to moons and, finally, ideas, each a little dearer than the last and each paying 1% more income for good. A list that is used up comes round again with numbers (Golf Course No. 2). He can take on two and a half more for every level, so a fortune buys a steady stream rather than everything at once. As he buys, the view from his window, and later the whole city, turns gold. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
+| **The long game** | Daily streaks, 100 executive orders to collect (one a day; sixteen can only be signed by what he becomes), 44 trophies, and 100 levels. At level 100, having been everything, he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
 | **The calendar** | Twenty special days, each with its own greeting, a one-off briefing and, mostly, something in the room: New Year, Groundhog Day, the big game, Valentine's, Presidents' Day, St. Patrick's (green tie), April Fools', Easter, National Hamberder Day, his birthday, the Fourth, Labor Day, Halloween, Thanksgiving week (the turkey pardon), Black Friday, all of December, New Year's Eve, any Friday the 13th, and February 29th. |
 | **Every device** | Optional cloud save: a secret keeper code puts the same pet on any phone or computer. No account. |
-| **If you vanish** | He sleeps through the night on his own. A day or two of neglect turns him humble; after three or four days he leaves a note and goes golfing, and you can win him back. He never dies. |
+| **If you vanish** | He sleeps through the night on his own. A day or two of neglect turns him humble; after three or four days he leaves a note and goes golfing, and you can win him back. He never dies. Humility undoes everything for as long as it lasts: a neglected planet is a small, reasonable man standing in the office again. |
 
 Pacing, from the simulated players in the tests: checking in four times a day reaches level 50
-in about four weeks, three times a day in about seven, once a day in about fifteen.
+in about six weeks, and once a day in about eleven. After that a new form arrives every five
+to ten days at four visits a day (level 100 about two months later), and every eleven to
+nineteen days at one visit a day (about four months later).
 
 ## It is built to stay up
 
@@ -158,9 +161,9 @@ keeper's phone ── Canon (end-to-end encrypted room) ── their Don (don/) 
 
 What he understands: `burger`, `coke`, `taco`, `chicken`, `steak`, `cake`, `ice cream`,
 `salad`; any compliment (louder is better) or insult; `comb`, `hairspray`, `bronzer`;
-`good night`, `wake up`; `post`; `briefing` (a card to tap, or 1, 2, 3); `status`; `sorry`
-when he has walked out; `quiet` and `alerts on`; `unlink`; `help`. Golf, deals, rallies and
-the shop stay on the page.
+`good night`, `wake up`; `post`; `briefing` (a card to tap, or 1, 2, 3); `status`; `shop`
+(what is for sale) and `buy` (the next acquisition); `sorry` when he has walked out; `quiet`
+and `alerts on`; `unlink`; `help`. Golf, deals, rallies and the office decor stay on the page.
 
 ### When he writes first
 
@@ -297,10 +300,10 @@ tests/                simulation, API, alert, chat and hosting tests (Node), fou
 ## Tests
 
 ```bash
-npm test             # rules, balance and content (34), the cloud-save API and asking for a Don (13),
-                     # time zones and alerts (14), Don's chat brain against the real API (14),
+npm test             # rules, balance and content (44), the cloud-save API and asking for a Don (13),
+                     # time zones and alerts (14), Don's chat brain against the real API (15),
                      # hosting a Don for every keeper (9): plain Node
-npm run test:browser # headless Chromium: the first minutes (13 checks), two devices sharing a pet,
+npm run test:browser # headless Chromium: the first minutes, the shop and every later form (16 checks), two devices sharing a pet,
                      # several tabs sharing a device (including buying while he sleeps), and a
                      # keeper asking for their Don in Settings
 ```
@@ -317,25 +320,41 @@ address a link must not be able to erase a visitor's pet.
 ## Tuning
 
 The numbers that shape the experience are in `js/game.js`: need decay rates in `step`, the
-level curve in `G.cumXp`, income in `G.incomePerHour`, and the thresholds for humility and
-storming off. The pacing test at the bottom of `tests/sim.test.mjs` fails if a change makes
-the game much faster or slower than intended.
+level curve in `G.cumXp` (steeper every level to 50, nearly flat from there to 100), income in
+`G.incomePerHour`, and the thresholds for humility and storming off. The pacing tests at the
+bottom of `tests/sim.test.mjs` fail if a change makes the game much faster or slower than
+intended, before level 50 or after it.
+
+What he looks like at each level is one function, `A.look` in `js/art.js`: every change is a
+number that slides with level (how gold, how much hair, how far the tie has got), and `form`
+says whether he is still a man, or a tower, a planet, or everything. `A.sceneFor` says where
+he is. The levels at which things happen are the `min` values in `C.STAGES`.
 
 ## Adding writing
 
 Everything he says, signs and is told is plain data in `js/content.js`:
 
-- `C.LINES`: what he says in each situation, as five lists, humble to MAXIMUM. Add a line to
-  any list. `{food}`, `{n}`, `{tariff}`, `{hours}`, `{real}` and `{claimed}` are filled in
-  only for the situations that already use them.
+- `C.LINES`: what he says in each situation, as lists from humble to MAXIMUM, with the sixth
+  register (BEYOND, from level 62) kept together in one block just below. Add a line to any
+  list. `{food}`, `{n}`, `{tariff}`, `{hours}`, `{real}` and `{claimed}` are filled in only for
+  the situations that already use them. The sixth register never names what he currently is.
+- `C.STAGE_LINES`: what each of the seven later forms says about being that form.
 - `C.POST`: word banks and templates for his posts, again per register, plus the 3 AM ones.
 - `C.BRIEFINGS`: the daily briefings. Each is a situation and three choices, each with its
-  effects and what happens. Keep the tremendousness between 24 and 40 so pacing holds.
+  effects and what happens. Keep the tremendousness between 24 and 40 so pacing holds. A
+  briefing with `min` (a level where a form begins) only arrives once he is that form, and
+  pays 38 to 52.
 - `C.SEASONS`, `C.SEASON_BRIEFINGS` and `C.seasonFor`: the special days.
+- `C.ACQ_BANDS`: the acquisitions, in six bands by price, from small luxuries to ideas. Add
+  items to the end of a band's list (saves count how far into each band he has got); a band
+  is offered up to its `upTo` price. `C.ACQ_AGAIN` is what is said when a band comes round
+  again. Prices, the income they pay and how many he may take on per level are `G.ACQ` in
+  `js/game.js`; the last pacing test fails if the shop ever runs dry or turns into a spree.
 - `C.ORDERS`: the collectible orders. Only ever add to the end: saves refer to them by position.
+  A third entry is a level: he cannot sign that order before he is the thing it is about.
 - `C.NEWS`, `C.COMPLIMENTS`, `C.AWAY_EVENTS`, `C.HUMBLE_LINES` and the deal lists.
 
-`npm test` checks the writing is complete and consistent: five registers everywhere, three
+`npm test` checks the writing is complete and consistent: every register everywhere, three
 choices per briefing, no placeholder the game will not fill, a briefing and a greeting for
 every special day, and that every special day actually occurs.
 

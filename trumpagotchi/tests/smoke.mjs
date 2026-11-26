@@ -96,6 +96,28 @@ try {
     await page.click('#sheetClose');
   });
 
+  await step('the shop sells the next acquisition, and there is always another', async () => {
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.cash = 1e6; for (const k of window.TG.game.NEEDS) s.needs[k] = 70; window.TG.ui.refresh(); });
+    await page.click('#act-shop');
+    assert.match(await page.textContent('#acqBuy'), /Gold Stapler.*\$150K/s);
+    assert.equal(await page.locator('#sheetBody .item.then').count(), 2);
+    await page.click('#acqBuy');
+    const s = await state();
+    assert.equal(s.holdings.term, 1);
+    assert.ok(Math.abs(s.cash - 850e3) < 50, 'paid ' + (1e6 - s.cash));
+    assert.match(await page.textContent('#acqBuy'), /Monogrammed Bathrobe/);
+    assert.match(await page.textContent('#acqLine'), /He owns 1 thing, worth \$150K/);
+    assert.equal(await page.isVisible('#bubble'), true, 'he has something to say about it');
+    // he can only take on so much at once
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.cash = 1e12; s.holdings.term = window.TG.game.acqAllowed(s); window.TG.ui.refresh(); });
+    await page.click('#sheetClose'); await page.click('#act-shop');
+    assert.match(await page.textContent('#acqBuy'), /AT LEVEL \d+/);
+    await page.click('#acqBuy');
+    assert.match(await page.textContent('#toasts'), /more at level \d+/);
+    await page.evaluate(() => { const s = window.TG.ui.state(); s.holdings.term = 1; s.cash = 1e6; window.TG.ui.refresh(); });
+    await page.click('#sheetClose');
+  });
+
   await step('settings link to Canon in both stores, outside the game', async () => {
     await page.click('#menuBtn');
     await page.click('.tab >> nth=3');
@@ -140,6 +162,60 @@ try {
     const s = await state();
     assert.ok(s.needs.food < 75 && s.needs.food > 60, 'food ' + s.needs.food);
     await page.click('#modalCard button');
+  });
+
+  await step('past level 50 he becomes other things, and each of them can be looked after', async () => {
+    const forms = { 52: 'man', 58: 'man', 62: 'man', 66: 'man', 70: 'man', 75: 'man', 78: 'man', 82: 'man', 86: 'tower', 90: 'tower', 93: 'planet', 97: 'planet', 100: 'all' };
+    const box = await (await page.$('#scene')).boundingBox();
+    for (const level of Object.keys(forms).map(Number)) {
+      await page.evaluate((level) => {
+        const G = window.TG.game, s = window.TG.ui.state();
+        s.xp = G.cumXp(level) + 5; for (const k of G.NEEDS) s.needs[k] = 60; s.asleep = false; s.sulking = false;
+        window.TG.ui.tick(true);
+      }, level);
+      assert.equal(await page.evaluate(() => document.body.dataset.form), forms[level], 'level ' + level);
+      assert.match(await page.textContent('#stageLine'), new RegExp(await page.evaluate(() => window.TG.game.stage(window.TG.ui.state()).name)));
+      const before = await state();
+      await page.click('#act-feed'); await page.click('#sheetBody .item'); await page.keyboard.press('Escape');
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.6);   // a pat
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.22);  // the hair, wherever it now is
+      await page.evaluate(() => { window.TG.ui.state().needs.energy = 40; });
+      await page.click('#act-sleep');
+      assert.equal((await state()).asleep, true, 'asleep at ' + level);
+      await page.waitForTimeout(120); // a few frames of him asleep
+      await page.click('#act-sleep');
+      const after = await state();
+      assert.equal(after.asleep, false);
+      assert.ok(after.stats.feeds > before.stats.feeds && after.stats.pets + after.stats.hairTouches > before.stats.pets + before.stats.hairTouches, 'fed and patted at ' + level);
+      assert.match(await page.getAttribute('#scene', 'aria-label') || '', new RegExp('level ' + level));
+    }
+    // neglected at the very top: a man again, in the office
+    await page.evaluate(() => { const s = window.TG.ui.state(); for (const k of ['food', 'ego', 'fun', 'glow']) s.needs[k] = 2; window.TG.ui.refresh(); });
+    assert.equal(await page.evaluate(() => document.body.dataset.form), 'man');
+    await page.waitForTimeout(120);
+    // the moment of becoming something: the card names it and says his voice has changed
+    await page.evaluate(() => {
+      const G = window.TG.game, s = window.TG.ui.state();
+      s.xp = G.cumXp(62) - 1; for (const k of G.NEEDS) s.needs[k] = 60; s.needs.food = 30; s.asleep = false;
+      window.TG.ui.refresh();
+    });
+    await page.click('#act-feed'); await page.click('#sheetBody .item');
+    await page.waitForSelector('#modalCard .hero');
+    const card = await page.textContent('#modalCard');
+    assert.match(card, /The Hair/); assert.match(card, /BEYOND/);
+    while (await page.isVisible('#modalCard button')) { await page.click('#modalCard button'); await page.waitForTimeout(80); }
+    await page.keyboard.press('Escape');
+    assert.equal(await sheetOpen(), false);
+    // golf: he turns up in person, whatever he is
+    await page.evaluate(() => { const G = window.TG.game, s = window.TG.ui.state(); s.xp = G.cumXp(95); for (const k of G.NEEDS) s.needs[k] = 80; window.TG.ui.refresh(); });
+    await page.click('#act-play'); await page.click('#sheetBody .item >> nth=0');
+    for (let i = 0; i < 3; i++) { await page.waitForSelector('#gameBtn:not([disabled])', { timeout: 6000 }); await page.click('#gameBtn'); }
+    await page.waitForFunction(() => window.TG.view.mode === 'room', null, { timeout: 8000 });
+    while (await page.isVisible('#modalCard button')) { await page.click('#modalCard button'); await page.waitForTimeout(80); }
+    if (await sheetOpen()) await page.click('#sheetClose');
+    // back to an ordinary pet for the steps that follow
+    await page.evaluate(() => { const G = window.TG.game, s = window.TG.ui.state(); s.xp = G.cumXp(3); for (const k of G.NEEDS) s.needs[k] = 80; s.asleep = false; window.TG.ui.refresh(); window.TG.game.save(s); });
+    assert.deepEqual(errors, []);
   });
 
   await step('the save records where its keeper is', async () => {
