@@ -94,7 +94,7 @@
       level: level, t: t, vol: vol, hair: hair, skin: skin, suit: suit,
       tie: o.tie || (level < 5 ? '#6b7fa8' : RED),
       tieLen: level >= 50 ? 28 : 9 + Math.round(17 * t),
-      ring: o.humble ? 0 : Math.max(0, (skinT - 0.45) * 1.8) * (1 - plate),
+      ring: o.humble ? 0 : Math.max(Math.max(0, (skinT - 0.45) * 1.8) * (1 - plate), span(50, 60) * 0.95), // the goggle marks stay, starker on gold
       squint: t > 0.35 && !o.humble,
       cap: level >= 32 && level < 45 && !o.humble,
       crown: level >= 50 && !o.humble,
@@ -107,6 +107,16 @@
       hairEyes: beyond && level >= 62,
       tieOut: o.person ? 0 : span(62, 70), tieWindow: beyond && level >= 70 && !o.person,
       windows: span(78, 86),
+      // and the monster: none of this is drawn at level 50 or below, or while he is humble
+      grot: span(50, 70),                                         // the face caricatures itself: pucker, jowls, beady eyes, gold teeth
+      lumps: span(53, 56),                                        // the plating goes on thick: lumps, gems, drips, flakes
+      tendrils: beyond && level >= 62 ? Math.min(6, 2 + Math.floor((level - 62) / 2)) : 0,
+      hairMouth: beyond && level >= 64 && !o.person,              // the hair eats first
+      hairEyes2: beyond && level >= 66,
+      dangle: o.person || level >= 78 ? 0 : Math.round(span(66, 72) * 5), // the hair lifts him off the floor like a puppet
+      tongue: beyond && level >= 70 && !o.person,                 // the tie comes out of his mouth
+      tieWrap: beyond && level >= 72 && !o.person,                // and wraps itself round the furniture
+      kaiju: beyond && level >= 78 && !o.person,                  // too big for the office, and hungry
       H: 80 + Math.max(0, Math.min(6, level - 86)) * 2,   // the tower gains floors
       moons: Math.max(0, Math.min(6, level - 93)),          // the planet gains moons
     };
@@ -192,7 +202,12 @@
   function face(g, p, K) {
     const skin = K.skin, skinD = shade(skin, -0.16);
     const fx = 1; // features sit a pixel toward the way he faces
-    if (K.ring > 0.05) { const skinL = mix(skin, '#ffeede', Math.min(0.85, K.ring)); R(g, -10 + fx, -45, 7, 5, skinL); R(g, 4 + fx, -45, 7, 5, skinL); }
+    const gr = K.grot || 0;
+    if (K.ring > 0.05) {
+      const skinL = mix(skin, '#ffeede', Math.min(0.85, K.ring));
+      if (gr > 0.3) { R(g, -11 + fx, -46, 9, 6, skinL); R(g, 3 + fx, -46, 9, 6, skinL); } // goggle marks, wider
+      else { R(g, -10 + fx, -45, 7, 5, skinL); R(g, 4 + fx, -45, 7, 5, skinL); }
+    }
     if (p.flush) { const fl = mix(skin, '#e2331f', 0.45 * p.flush); R(g, -11 + fx, -39, 4, 2, fl); R(g, 7 + fx, -39, 4, 2, fl); }
     // brows
     const brow = K.brow;
@@ -206,6 +221,7 @@
     const line = K.line || INK;
     if (eyes === 'closed') { R(g, le, -42, 4, 1, line); R(g, re, -42, 4, 1, line); }
     else if (eyes === 'happy') { for (const e of [le, re]) { R(g, e, -42, 1, 1, line); R(g, e + 1, -43, 2, 1, line); R(g, e + 3, -42, 1, 1, line); } }
+    else if (gr > 0.5) { for (const e of [le, re]) { R(g, e, -42, 3, 1, '#ffffff'); R(g, e + 1, -42, 1, 1, INK); R(g, e - 1, -43, 5, 1, skinD); } } // beady, sunk in
     else {
       const top = K.squint || p.brows === 'angry' ? -42 : -43, eh = K.squint || p.brows === 'angry' ? 1 : 2;
       for (const e of [le, re]) { R(g, e, top, 4, eh, '#ffffff'); R(g, e + 2, top, 2, eh, '#274a8a'); R(g, e + 2, top, 1, eh, INK); if (!K.plain) R(g, e, top - 1, 4, 1, skinD); }
@@ -213,12 +229,45 @@
     if (!K.plain) { R(g, -1 + fx, -41, 2, 3, skinD); R(g, fx, -39, 2, 1, shade(skin, -0.26)); }
     // mouth
     const mx = fx, lip = K.lip || mix(skin, '#b8433a', 0.55), dark = K.dark || '#5a1818';
+    if (gr > 0) { bigMouth(g, p.mouth, mx, K.lip || mix(skin, '#c8323c', 0.5 + 0.2 * gr), dark, gr); return; }
     switch (p.mouth) {
       case 'open': R(g, mx - 3, -37, 6, 4, dark); R(g, mx - 2, -37, 4, 1, '#ffffff'); R(g, mx - 1, -34, 2, 1, '#d8646b'); break;
       case 'smile': R(g, mx - 4, -36, 8, 1, dark); R(g, mx - 5, -37, 1, 1, dark); R(g, mx + 4, -37, 1, 1, dark); R(g, mx - 3, -35, 6, 1, '#ffffff'); break;
       case 'frown': R(g, mx - 3, -36, 6, 1, dark); R(g, mx - 4, -35, 1, 1, dark); R(g, mx + 3, -35, 1, 1, dark); break;
       case 'flat': R(g, mx - 3, -36, 6, 1, dark); break;
       default: R(g, mx - 2, -37, 4, 2, lip); R(g, mx - 1, -36, 2, 1, dark); if (!K.plain) { R(g, mx - 3, -36, 1, 1, shade(skin, -0.2)); R(g, mx + 2, -36, 1, 1, shade(skin, -0.2)); } break; // the pout
+    }
+  }
+
+  // His mouth, past level 50: it grows with every level into a great puckered pout, and when it
+  // opens there are gold teeth in it. k: 0 to 1.
+  function bigMouth(g, mouth, mx, lip, dark, k) {
+    const w = 4 + Math.round(k * 8), h = 2 + Math.round(k * 3);
+    const x = mx - (w >> 1), y = -36 - (h >> 1);
+    const lipL = shade(lip, 0.2), lipD = shade(lip, -0.3), gold = '#f2c84a';
+    switch (mouth) {
+      case 'open': {
+        const ow = w + 1, oh = h + 2, ox = mx - (ow >> 1), oy = -37 - (h >> 1);
+        R(g, ox - 1, oy - 1, ow + 2, oh + 2, lip); R(g, ox, oy, ow, oh, dark);
+        for (let i = 0; i < ow; i += 2) R(g, ox + i, oy, 1, 2, gold);
+        for (let i = 1; i < ow; i += 2) R(g, ox + i, oy + oh - 1, 1, 1, gold);
+        R(g, mx - 1, oy + oh - 2, 3, 1, '#d8646b');
+        break;
+      }
+      case 'smile': {
+        const sw = w + 4, sx = mx - (sw >> 1);
+        R(g, sx - 1, -38, sw + 2, 5, lip); R(g, sx, -37, sw, 3, dark);
+        for (let i = 0; i < sw; i++) R(g, sx + i, -37, 1, 2, i % 3 === 1 ? '#fffbe8' : gold); // a grin of gold teeth
+        R(g, sx - 2, -39, 2, 2, lipD); R(g, sx + sw, -39, 2, 2, lipD);
+        break;
+      }
+      case 'frown': R(g, x, -36, w, 2, lip); R(g, x + 1, -36, w - 2, 1, dark); R(g, x - 1, -35, 1, 2, lipD); R(g, x + w, -35, 1, 2, lipD); break;
+      case 'flat': R(g, x, -36, w, 2, lip); R(g, x + 1, -36, w - 2, 1, dark); break;
+      default: // the pout, puckered: a ring of lip round a small dark hole
+        R(g, x + 1, y, w - 2, 1, lipL); R(g, x, y + 1, w, Math.max(1, h - 2), lip); R(g, x + 1, y + h - 1, w - 2, 1, lipD);
+        R(g, mx - 1, y + (h >> 1), 2, 1, dark);
+        for (let i = 2; i < w - 2; i += 3) if (h > 2) R(g, x + i, y + 1, 1, h - 2, lipD);
+        if (h >= 4) { R(g, x - 1, y + 1, 1, h - 2, lipD); R(g, x + w, y + 1, 1, h - 2, lipD); }
     }
   }
 
@@ -248,6 +297,17 @@
       if (y + 2 < top) { R(g, x + 7, y + 2, 9 + wide + k * 2, 1, hairD); R(g, x - 3, y + 1, 4, 1, hairL); }
     }
     R(g, -11, top - 1, 9, 1, hairD); R(g, -13 - wide + 2, top - 3, 5, 1, hairD);
+    // tendrils: strands that hang off it and will not keep still
+    const anchors = [[-16 - wide, top + 2], [15 + wide + over, top + 3], [-13 - wide, top - 5], [13 + wide + over, top - 7], [-18 - wide, top - 10], [17 + wide + over, top - 12]];
+    for (let k = 0; k < L.tendrils; k++) {
+      const a = anchors[k], len = 9 + (k % 3) * 6;
+      let x = a[0];
+      for (let j = 0; j < len; j++) {
+        x = a[0] + Math.round(Math.sin((j + f / 3 + k * 5) / 3.5) * (1 + j / 8));
+        R(g, x, a[1] + j, j > len * 0.6 ? 1 : 2, 1, j % 4 === 0 ? hairD : hair);
+      }
+      R(g, x - 1, a[1] + len, 2, 1, hairD); R(g, x - 2, a[1] + len - 1, 1, 1, hairD); // the curl at the end
+    }
     if (!L.hairEyes) return;
     const ey = top - Math.round(hh * 0.52), cx = Math.round(L.lean * 0.5);
     const gaze = [0, 1, 0, -1, 0, 0][Math.floor(f / 22) % 6];
@@ -256,6 +316,18 @@
       if (shut) { R(g, ex, ey + 2, 6, 1, INK); continue; }
       R(g, ex - 1, ey - 1, 8, 6, hairD); R(g, ex, ey, 6, 4, '#ffffff');
       R(g, ex + 2 + gaze, ey + 1, 3, 3, '#274a8a'); R(g, ex + 3 + gaze, ey + 1, 1, 2, INK); R(g, ex + 2 + gaze, ey + 1, 1, 1, '#ffffff');
+    }
+    if (L.hairEyes2) { // it grew more
+      for (const e of [[cx - 17, ey + 5, 4], [cx + 13, ey - 4, 3], [cx - 3, ey - 9, 3]]) {
+        const ex = e[0], h = e[2] - 1;
+        if (shut || (f + ex * 7) % 53 < 3) { R(g, ex, ey + (e[1] - ey) + 1, e[2], 1, INK); continue; }
+        R(g, ex - 1, e[1] - 1, e[2] + 2, h + 2, hairD); R(g, ex, e[1], e[2], h, '#ffffff'); R(g, ex + (e[2] >> 1) + (gaze > 0 ? 0 : -1) + (e[2] > 3 ? 0 : 1), e[1], 1, h, INK);
+      }
+    }
+    if (L.hairMouth) { // and a mouth, lower down, with teeth
+      const my = ey + 9, open = L.hairOpen ? 5 : 2 + ((f >> 4) % 4 === 0 ? 1 : 0);
+      R(g, cx - 8, my - 1, 16, open + 2, hairD); R(g, cx - 7, my, 14, open, '#3a1408');
+      for (let i = 0; i < 14; i += 2) { R(g, cx - 7 + i, my, 1, Math.min(2, open), '#f2c84a'); R(g, cx - 6 + i, my + open - 1, 1, 1, '#f2c84a'); }
     }
     // its brows say what it thinks of you
     const by = ey - 3, bl = cx - 9, br = cx + 4;
@@ -295,18 +367,29 @@
     R(g, 2, y + 5, 2, 1, INK); R(g, 3, y + 4, 1, 3, INK); R(g, 4, y + 6, 2, 1, INK); R(g, 5, y + 3, 1, 4, INK); R(g, 6, y + 5, 3, 1, INK); R(g, 8, y + 4, 1, 2, INK);
   }
 
+  const FOOD_IDS = ['hamberder', 'coke', 'tacobowl', 'chicken', 'steak', 'cake', 'icecream'];
   function paintDon(g, L, p) {
     const skin = L.skin, skinD = shade(skin, -0.16);
     const suit = L.suit, suitD = shade(suit, -0.28), suitA = shade(suit, 0.1);
     const pants = shade(suit, -0.15);
     const hair = L.hair, hairL = shade(hair, 0.28), hairD = shade(hair, -0.22);
-    const sway = p.sway || 0;
+    const sway = p.sway || 0, f = p.f || 0;
+    // The monster's own business. The hair eats before he does; the giant is chewing a helicopter.
+    if (L.hairMouth && p.item && FOOD_IDS.indexOf(p.item) >= 0) {
+      const ey = -52 - Math.round(L.hh * 0.52), cx = Math.round(L.lean * 0.5);
+      p = Object.assign({}, p, { hr: [cx + 9, ey + 15], mouth: 'frown', brows: 'angry' });
+      L = Object.assign({}, L, { hairOpen: true });
+    }
+    const chew = L.kaiju ? f % 360 : -1;
+    if (chew >= 140 && chew < 200) p = Object.assign({}, p, { mouth: chew < 185 ? ((chew >> 2) & 1 ? 'open' : 'flat') : 'smile' });
+    if (L.dangle) { g.save(); g.translate(0, -L.dangle); } // held up by his own hair
 
-    // legs and shoes stay planted; everything above them bobs
+    // legs and shoes stay planted; everything above them bobs (dangling, they swing)
     const l1 = p.leg === 1 ? 1 : 0, l2 = p.leg === 2 ? 1 : 0;
-    R(g, -9, -10, 8, 8 - l1, pants); R(g, 1, -10, 8, 8 - l2, pants);
+    const k1 = L.dangle ? Math.round(Math.sin(f / 9)) : 0, k2 = L.dangle ? -k1 : 0;
+    R(g, -9 + k1, -10, 8, 8 - l1, pants); R(g, 1 + k2, -10, 8, 8 - l2, pants);
     const shoe = L.term >= 3 || L.plate >= 1 ? GOLD : '#16121c';
-    R(g, -10, -2 - l1, 9, 2, shoe); R(g, 1, -2 - l2, 9, 2, shoe);
+    R(g, -10 + k1, -2 - l1, 9, 2, shoe); R(g, 1 + k2, -2 - l2, 9, 2, shoe);
 
     g.save();
     g.translate(sway, p.bob || 0);
@@ -346,7 +429,27 @@
     }
     R(g, -15, -43, 2, 5, skinD); R(g, 13, -43, 2, 5, skinD);
     R(g, -13, -36, 1, 4, skinD); R(g, 12, -36, 1, 4, skinD); R(g, -5, -31, 10, 1, skinD);
-    face(g, p, { skin: skin, brow: mix(hair, '#f7e3a1', 0.25), ring: L.ring, squint: L.squint });
+    if (L.grot > 0.15) { // jowls, then a second chin, then a third
+      const j = Math.round(L.grot * 3);
+      R(g, -14 - (j >> 1), -38, 2 + (j >> 1), 6, skin); R(g, 13, -38, 2 + (j >> 1), 6, skin);
+      R(g, -14 - (j >> 1), -33, 2, 1, skinD); R(g, 13 + (j >> 1), -33, 2, 1, skinD);
+      for (let c = 0; c < j; c++) { const w = 16 - c * 3; R(g, -(w >> 1), -31 + c * 2, w, 2, skin); R(g, -(w >> 1) + 1, -30 + c * 2, w - 2, 1, skinD); }
+    }
+    face(g, p, { skin: skin, brow: mix(hair, '#f7e3a1', 0.25), ring: L.ring, squint: L.squint, grot: L.grot });
+    if (L.tongue) { // the tie comes out of his mouth, down over the chins, to the collar
+      R(g, -3, -37, 7, 3, '#5a1818');
+      for (let j = 0; j < 9; j++) { const x = Math.round(Math.sin((j + f / 3) / 2.5)); R(g, -1 + x, -36 + j, 4, 1, L.tie); R(g, -1 + x, -36 + j, 1, 1, shade(L.tie, 0.2)); }
+    }
+    if (chew >= 140 && chew < 165) { R(g, -7, -37, 15, 1, '#9aa1ab'); R(g, 5, -38, 4, 2, '#20242e'); } // the rotor, still turning, sticking out
+    if (L.lumps > 0) { // thick, lumpy gold leaf, gems pressed into it, and it drips
+      const lumpy = [[-12, -49, 3, 2], [9, -50, 3, 2], [-12, -39, 2, 3], [10, -36, 3, 2], [-11, -20, 3, 3], [8, -17, 3, 2], [-7, -13, 2, 2], [6, -26, 2, 2], [-10, -27, 2, 2], [9, -12, 2, 2]];
+      lumpy.forEach(function (b, i) { R(g, b[0], b[1], b[2], b[3], i % 2 ? shade(b[1] < -30 ? skin : suit, 0.28) : shade(b[1] < -30 ? skin : suit, -0.22)); });
+      for (const gem of [[-11, -23, 2, '#e0313f'], [9, -21, 2, '#2f7be0'], [-9, -15, 1, '#2fd07a'], [10, -27, 1, '#e0313f'], [11, -41, 1, '#2f7be0'], [-12, -45, 1, '#2fd07a']]) { R(g, gem[0], gem[1], gem[2], gem[2], gem[3]); R(g, gem[0], gem[1], 1, 1, '#ffffff'); }
+      [[-4, -30], [3, -29], [-12, -9], [11, -10]].forEach(function (d, i) {
+        const n = 1 + (((f >> 2) + i * 3) % 6);
+        R(g, d[0], d[1], 1, n, skin); R(g, d[0], d[1] + n, 2, 1, shade(skin, 0.25));
+      });
+    }
 
     // hair
     const top = -52, hh = L.hh, over = Math.round(L.vol * 4);
@@ -358,6 +461,10 @@
       R(g, -14, top + 3, 28, 1, capD); R(g, 6, top + 3, 13, 2, cap); R(g, 6, top + 5, 13, 1, capD);
       R(g, 1, top - 1, 9, 3, WHITE); R(g, 2, top, 7, 1, capD);
     } else if (L.mane > 0) {
+      if (L.dangle) for (const sd of [-1, 1]) { // the strands he hangs from
+        const x0 = sd * (15 + L.wide + (sd > 0 ? L.over : 0)), y0 = top + 3;
+        for (let j = 0; j <= 20; j++) R(g, Math.round(x0 + (sd * 12 - x0) * j / 20), Math.round(y0 + (-27 - y0) * j / 20), 1, 1, j % 3 ? hair : hairD);
+      }
       bigHair(g, L, p, hair, hairL, hairD);
       if (L.crown) crown(g, Math.round(L.lean), top - hh - 4);
     } else {
@@ -384,6 +491,7 @@
     if (p.folder) folder(g, -35);
     hands(g, L, p, p.hl, p.hr, skin);
     g.restore();
+    if (L.dangle) g.restore();
     if (L.plate > 0) sheen(g, L, p);
   }
 
@@ -398,15 +506,25 @@
     R(g, -8, -11, 16, 2, RED); R(g, -8, -9, 16, 1, shade(RED, -0.3));
     R(g, -3, -1, 6, 2, RED); // the carpet: the last of the tie
     for (const x of [-15, -11, 10, 14]) R(g, x, -8, 2, 5, '#fff3b0');
-    // shaft
-    R(g, -15, -H, 30, H - 12, gold); R(g, -15, -H, 2, H - 12, goldL); R(g, 13, -H, 2, H - 12, goldD);
+    // shaft: bloated, bulging where it likes
+    for (let y = -H; y < -12; y++) {
+      const bl = y > -H + 26 ? Math.max(0, Math.round(2.2 * Math.sin(y / 6) + 1.3 * Math.sin(y / 2.7))) : 0;
+      const br = y > -H + 26 ? Math.max(0, Math.round(2.2 * Math.sin(y / 5 + 2) + 1.3 * Math.sin(y / 3.3 + 1))) : 0;
+      R(g, -15 - bl, y, 30 + bl + br, 1, gold); R(g, -15 - bl, y, 2, 1, goldL); R(g, 13 + br, y, 2, 1, goldD);
+    }
     R(g, -17, -H + 27, 34, 2, goldD); R(g, -17, -H + 27, 34, 1, goldL); // the ledge where his shoulders were
+    // every window is a little mouth, pouting; one of them is always talking
+    let wi = 0;
     for (let y = -H + 32; y < -20; y += 4) {
-      for (const x of [-11, -7, 5, 9]) {
+      for (const x of [-12, -8, 5, 9]) {
         const on = ((x * 7 + y * 13 + (f >> 6)) & 7) !== 0 && !(p.eyes === 'closed' && ((x + y) & 3));
-        R(g, x, y, 2, 2, on ? '#fff3b0' : glass);
+        if (!on) R(g, x, y, 3, 2, glass);
+        else if (((f >> 3) % 17) === wi % 17) { R(g, x, y, 3, 2, '#d8465a'); R(g, x + 1, y, 1, 2, '#3a0f0a'); }
+        else { R(g, x, y, 3, 1, '#f39aa6'); R(g, x, y + 1, 3, 1, '#d8465a'); R(g, x + 1, y + 1, 1, 1, '#5a1818'); }
+        wi++;
       }
     }
+    [[-13, -H + 29], [11, -H + 29], [-6, -H + 40]].forEach(function (d, i) { const n = 2 + (((f >> 2) + i * 5) % 9); R(g, d[0], d[1], 1, n, goldL); R(g, d[0], d[1] + n, 2, 1, '#fff3b0'); }); // gold, running down it
     // the tie, down the front, to his name
     R(g, -2, -H + 29, 4, H - 46, L.tie); R(g, -2, -H + 29, 1, H - 46, shade(L.tie, 0.18)); R(g, -1, -H + 27, 2, 2, shade(L.tie, -0.25));
     R(g, -8, -19, 16, 7, '#20160a'); R(g, -8, -19, 16, 1, goldL); A.text(g, 'DON', -5, -18, '#fff3b0');
@@ -418,7 +536,7 @@
     g.translate(sway, bob);
     // the face, on the top floors
     R(g, -13, -H + 1, 26, 24, goldL); R(g, -13, -H + 1, 26, 1, '#fff6cf');
-    g.save(); g.translate(0, dy); face(g, p, { skin: goldL, brow: goldD, ring: 0, squint: true, plain: false }); g.restore();
+    g.save(); g.translate(0, dy); face(g, p, { skin: goldL, brow: goldD, ring: 0.8, squint: true, plain: false, grot: 1 }); g.restore();
     // the roof: the swoop, and a mast where the crown was
     const hair = L.hair, hairL = shade(hair, 0.3), hairD = shade(hair, -0.22);
     for (let i = 0; i < 9; i++) {
@@ -481,10 +599,20 @@
     ellipse(g, Math.round(cx + r * 1.02), Math.round(cy - r * 0.7), Math.round(r * 0.2), Math.round(r * 0.16), hairD);
     ellipse(g, Math.round(cx - r * 0.3), Math.round(cy - r * 1.14), Math.round(r * 0.5), Math.max(1, Math.round(r * 0.1)), hairL);
     for (let i = 0; i < 5; i++) { const x = Math.round(cx - r * 0.8 + i * r * 0.38), h = 2 + ((i + fl) % 3) * Math.max(1, Math.round(k)); R(g, x, Math.round(cy - r * 1.3) - h, Math.max(1, Math.round(k)), h, i % 2 ? hair : hairL); }
-    // his face
+    // his face. Every so often the mouth opens wider than the planet and something goes in.
+    const meal = r >= 24 ? f % 300 : -1, gape = meal >= 170 && meal < 230 ? Math.min(1, (meal - 170) / 25) : 0;
+    const q = meal >= 230 && meal < 250 ? Object.assign({}, p, { mouth: (meal >> 2) & 1 ? 'open' : 'flat' }) : meal >= 250 && meal < 290 ? Object.assign({}, p, { mouth: 'smile', eyes: 'happy' }) : p;
     g.save(); g.translate(cx, Math.round(cy - 1 * k) + Math.round(41 * k) + (p.bob || 0)); g.scale(k, k);
-    face(g, p, { skin: base, brow: '#fff1b8', ring: 0.5, squint: true, dark: '#5a1818' });
+    face(g, q, { skin: base, brow: '#fff1b8', ring: 0.7, squint: true, dark: '#5a1818', grot: 1 });
     g.restore();
+    if (gape > 0) {
+      const mw = Math.round(r * (0.3 + 0.85 * gape)), mh = Math.round(r * (0.15 + 0.5 * gape)), my = cy + Math.round(4 * k) + Math.round(mh * 0.6) + (p.bob || 0); // the jaw drops below the planet
+      ellipse(g, cx, my, mw + 2, mh + 2, '#c8323c'); ellipse(g, cx, my, mw, mh, '#2a0806');
+      for (let x = cx - mw + 2; x < cx + mw - 2; x += 4) { R(g, x, my - mh + 1, 2, 3, '#f2c84a'); R(g, x + 2, my + mh - 3, 2, 3, '#f2c84a'); }
+      ellipse(g, cx + 2, my + Math.round(mh * 0.5), Math.round(mw * 0.4), Math.max(1, Math.round(mh * 0.3)), '#d8646b');
+      const t2 = Math.min(1, (meal - 175) / 50); // a small moon, on its way in
+      if (t2 > 0 && t2 < 1) { const mx2 = Math.round(cx - r * 1.7 * (1 - t2)), my2 = Math.round(my - r * 0.6 * (1 - t2) * (1 - t2)); ellipse(g, mx2, my2, 3, 3, '#d9d4c7'); R(g, mx2 - 1, my2 - 1, 1, 1, '#ffffff'); R(g, mx2 + 1, my2 + 1, 1, 1, '#a9a49a'); }
+    }
     ring(true); orbit(true);
     // two small moons do what his hands did
     const hand = function (h) { return [Math.round(cx + h[0] * 2.4 * k * 0.5), Math.round(cy - k + (h[1] + 41) * 1.4 * k * 0.5)]; };
@@ -507,6 +635,20 @@
     const cloud = [[56, 16, 64, 12, 'rgba(240,179,58,0.5)'], [76, 12, 68, 9, 'rgba(255,214,90,0.62)'], [118, 23, 42, 10, 'rgba(240,179,58,0.55)'], [144, 36, 15, 9, 'rgba(255,214,90,0.55)'], [62, 9, 46, 4, 'rgba(255,246,207,0.72)'], [106, 16, 36, 3, 'rgba(255,246,207,0.6)'], [40, 21, 30, 3, 'rgba(200,140,40,0.5)'], [124, 29, 26, 2, 'rgba(200,140,40,0.5)']];
     for (const c of cloud) ellipse(g, c[0], c[1], c[2], c[3], c[4]);
     for (let i = 0; i < 26; i++) { const x = 8 + ((i * 37) % 146), y = 4 + ((i * 11) % 24) + (x > 110 ? 10 : 0); R(g, x, y, 1, 1, tw(i) ? '#ffffff' : '#fff1b8'); }
+    // the stars are eyes now, and every one of them is looking at you
+    const eyes = [[10, 44], [22, 62], [8, 84], [20, 100], [36, 112], [138, 50], [150, 68], [140, 88], [152, 104], [124, 112], [30, 30], [130, 32], [46, 100], [114, 98], [6, 26], [154, 24]];
+    eyes.forEach(function (e, i) {
+      const big = i % 3 === 0;
+      if ((f + i * 17) % 97 < 3) { R(g, e[0] - 2, e[1], big ? 6 : 5, 1, '#e8ecff'); return; }
+      R(g, e[0] - 1, e[1] - 1, 3, 1, '#e8ecff'); R(g, e[0] - 2, e[1], big ? 6 : 5, 1, '#ffffff'); R(g, e[0] - 1, e[1] + 1, 3, 1, '#e8ecff');
+      R(g, e[0], e[1], big ? 2 : 1, 1, INK); if (big) R(g, e[0] - 1, e[1], 1, 1, '#274a8a');
+    });
+    // and mouths, everywhere, taking turns to say it
+    const mouths = [[24, 76], [136, 76], [54, 106], [108, 106], [40, 20], [120, 16]], talker = Math.floor(f / 40) % mouths.length;
+    mouths.forEach(function (m, i) {
+      if (i === talker && f % 40 < 30) { R(g, m[0] - 3, m[1] - 1, 7, 3, '#f08a9a'); R(g, m[0] - 2, m[1], 5, 1, '#3a0f2a'); R(g, m[0] - 2, m[1] - 1, 1, 1, '#f2c84a'); R(g, m[0] + 2, m[1] - 1, 1, 1, '#f2c84a'); A.textC(g, 'TREMENDOUS', Math.max(21, Math.min(139, m[0])), m[1] - 8, '#f2c84a'); }
+      else { R(g, m[0] - 2, m[1] - 1, 5, 1, '#ffc2cc'); R(g, m[0] - 3, m[1], 7, 1, '#f08a9a'); R(g, m[0] - 1, m[1], 2, 1, '#3a0f2a'); R(g, m[0] - 2, m[1] + 1, 5, 1, '#c86070'); }
+    });
     // brows and eyes
     const ey = 51 + bob, brow = '#ffd84a';
     for (const s of [-1, 1]) {
@@ -528,11 +670,16 @@
     // the mouth
     const mx = 81, my = 77 + bob, lip = '#f08a9a', dark = '#3a0f2a';
     switch (p.mouth) {
-      case 'open': ellipse(g, mx, my, 12, 8, lip); ellipse(g, mx, my, 10, 6, dark); R(g, mx - 7, my - 5, 14, 2, '#ffffff'); R(g, mx - 3, my + 3, 6, 2, '#d8646b'); break;
-      case 'smile': for (let i = -17; i <= 17; i++) R(g, mx + i, my - 3 + Math.round((1 - (i * i) / 289) * 6), 1, 3, lip); R(g, mx - 11, my + 1, 22, 2, '#ffffff'); break;
+      case 'open': ellipse(g, mx, my, 15, 10, lip); ellipse(g, mx, my, 13, 8, dark); for (let x = mx - 10; x <= mx + 9; x += 3) { R(g, x, my - 7, 2, 3, '#f2c84a'); R(g, x + 1, my + 5, 2, 2, '#f2c84a'); } R(g, mx - 4, my + 2, 8, 3, '#d8646b'); break;
+      case 'smile': for (let i = -19; i <= 19; i++) R(g, mx + i, my - 3 + Math.round((1 - (i * i) / 361) * 6), 1, 4, lip); for (let i = -13; i <= 12; i++) R(g, mx + i, my + 1, 1, 2, i % 3 ? '#f2c84a' : '#fffbe8'); break;
       case 'frown': for (let i = -14; i <= 14; i++) R(g, mx + i, my + 3 - Math.round((1 - (i * i) / 196) * 5), 1, 3, lip); break;
       case 'flat': R(g, mx - 13, my, 26, 3, lip); break;
-      default: ellipse(g, mx, my, 11, 5, lip); R(g, mx - 7, my, 14, 2, dark); R(g, mx - 5, my - 4, 10, 1, '#ffc2cc'); R(g, mx - 13, my, 2, 2, lip); R(g, mx + 11, my, 2, 2, lip); break; // the pout
+      default: { // the pout, the size of a weather system: two great lips pushed forward round a small hole
+        ellipse(g, mx, my - 3, 15, 5, lip); ellipse(g, mx, my + 3, 13, 5, '#d8606e'); ellipse(g, mx, my, 5, 2, dark);
+        R(g, mx - 10, my - 7, 20, 1, '#ffc2cc'); R(g, mx - 6, my + 7, 12, 1, '#b04858');
+        for (const c of [[-11, -2, -8, -1], [11, -2, 8, -1], [-10, 3, -7, 2], [10, 3, 7, 2], [-4, -6, -3, -4], [4, -6, 3, -4], [-3, 6, -2, 4], [3, 6, 2, 4]]) R(g, mx + c[0], my + c[1], 1, 1, '#b04858'), R(g, mx + c[2], my + c[3], 1, 1, '#b04858');
+        break;
+      }
     }
     // the tie: a river of red stars, running off the bottom of everything
     const tie = L.tie;
@@ -567,6 +714,10 @@
     if (o.face < 0 && look.form === 'man') ctx.scale(-1, 1);
     for (const d of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.drawImage(sil, -OX + d[0], -OY + d[1]);
     ctx.drawImage(spr, -OX, -OY);
+    if (look.lumps > 0 && !o.lying && !o.noShadow) { // flakes of gold leaf, coming off him as he moves
+      const f = pose.f || 0;
+      for (let i = 0; i < 5; i++) R(ctx, -18 + ((i * 13 + Math.floor(f * 0.4)) % 36), -58 + ((Math.floor(f * 0.7) + i * 17) % 58), 1, 1, i % 2 ? GOLD_L : GOLD);
+    }
     ctx.restore();
   };
 
@@ -594,7 +745,8 @@
     if (look.form === 'all') return [81, 77];
     if (look.form === 'planet') return [at, A.FLOOR - 38];
     if (look.form === 'tower') return [at, A.FLOOR + 17 - look.H];
-    return [at, A.FLOOR - 36];
+    if (look.hairMouth) return [at + Math.round(look.lean * 0.5), A.FLOOR - 52 - Math.round(look.hh * 0.52) + 10 - (look.dangle || 0)]; // the hair eats first
+    return [at, A.FLOOR - 36 - (look.dangle || 0)];
   };
 
   // Where a tap lands on him: 'hair', 'body' or null. x, y in screen pixels; at is where he stands.
@@ -697,14 +849,34 @@
       // far off over the lawn, his towers going up as he buys more
       [[22, 17, 4], [41, 13, 5], [3, 11, 4], [33, 15, 3]].forEach(function (t, i) { if (i < mine) { goldBlock(g, x + t[0], base - 9 - t[1], t[2], t[1], night); R(g, x + t[0] + (t[2] >> 1), base - 11 - t[1], 1, 2, GOLD_D); } });
       R(g, x, base - 9, w, 9, night ? '#17402a' : '#4f9c4a'); R(g, x, base - 10, w, 1, night ? '#205236' : '#6cb85e');
+
       R(g, x + 12, base - 30, 4, 22, night ? '#b9bdd0' : '#f4f1e6'); R(g, x + 13, base - 32, 2, 2, night ? '#b9bdd0' : '#f4f1e6');
       for (const tx of [2, 30, 43]) { ellipse(g, x + tx + 3, base - 13, 4, 4, night ? '#12331f' : '#2f7a3a'); R(g, x + tx + 3, base - 9, 1, 3, '#4a3320'); }
     }
-    if (env.decor.ballroom) {
+    if (env.built && env.built.wing) { // the ballroom that would not fit, now that the wing is gone
+      const bx = x + w - 34, top = base - 26;
+      R(g, bx, top + 6, 34, 20, GOLD_L); R(g, bx - 1, top + 3, 36, 3, GOLD); R(g, bx + 4, top - 2, 26, 5, GOLD); R(g, bx + 10, top - 6, 14, 4, GOLD_L); R(g, bx + 15, top - 9, 4, 3, GOLD);
+      for (let i = 0; i < 8; i++) R(g, bx + 1 + i * 4, top + 7, 2, 19, '#fff6cf');
+      R(g, bx + 12, top + 15, 10, 11, night ? '#f6d86a' : '#c9a23a'); R(g, bx, base - 1, 34, 1, GOLD_D);
+    } else if (env.decor.ballroom) {
       const bx = x + w - 20;
       R(g, bx, base - 16, 20, 16, GOLD_L); R(g, bx - 1, base - 18, 22, 2, GOLD); R(g, bx + 3, base - 22, 14, 4, GOLD); R(g, bx + 7, base - 24, 6, 2, GOLD_L);
       for (let i = 0; i < 5; i++) R(g, bx + 1 + i * 4, base - 15, 2, 15, '#fff6cf');
       R(g, bx, base - 1, 20, 1, GOLD_D);
+    }
+    const B = env.built || {};
+    if (scene === 'oval') { // in front of it all: what he built for himself (see the briefings with min 47)
+      if (B.arch) { // the arch: bigger than the other one
+        const ax = x + 22, top = base - 29, c = night ? '#a8832a' : GOLD;
+        R(g, ax, top, 17, 5, c); R(g, ax, top, 17, 1, GOLD_L); R(g, ax - 1, top + 5, 19, 1, GOLD_D);
+        R(g, ax + 1, top + 6, 4, 14, c); R(g, ax + 12, top + 6, 4, 14, c); R(g, ax + 1, top + 6, 1, 14, GOLD_L); R(g, ax + 15, top + 6, 1, 14, GOLD_D);
+        R(g, ax + 5, top + 6, 7, 2, c); R(g, ax + 5, top + 8, 1, 1, c); R(g, ax + 11, top + 8, 1, 1, c);
+        A.text(g, 'DON', ax + 3, top, night ? '#3a2a08' : GOLD_D);
+      }
+      if (B.pool) { // the reflecting pool, fixed: gold at the bottom, and only him in it
+        R(g, x + 1, base - 5, w - 2, 5, GOLD_D); R(g, x + 2, base - 4, w - 4, 3, night ? '#6b5a26' : '#e9c85a');
+        R(g, x + 13, base - 4, 3, 3, '#f39a4a'); R(g, x + 12, base - 4, 5, 1, '#ffe07a'); R(g, x + 6, base - 3, 2, 1, '#fff6cf'); R(g, x + 33, base - 2, 3, 1, '#fff6cf'); R(g, x + 44, base - 3, 2, 1, '#fff6cf');
+      }
     }
   }
 
@@ -911,6 +1083,12 @@
     const f = env.frame || 0, L = env.look || {}, night = bigSky(g, env.hour, f, 108);
     const far = night ? '#171d42' : '#9fb2cf', near = night ? '#0f1330' : '#5d6f8f', near2 = night ? '#151a3c' : '#6c7fa1', lit = night ? '#f6d86a' : '#e6eef8';
     for (let i = 0; i < 32; i++) { const h = 6 + Math.floor(hash(i + 3) * 16); R(g, i * 5, 104 - h, 5, h + 4, far); }
+    if (env.built && env.built.arch) { // the arch, from his height: still bigger than the other one
+      const ax = 14, top = 58, c = night ? '#8a6a1c' : GOLD;
+      R(g, ax, top, 34, 8, c); R(g, ax, top, 34, 1, GOLD_L); R(g, ax + 2, top + 8, 8, 42, c); R(g, ax + 24, top + 8, 8, 42, c);
+      R(g, ax + 2, top + 8, 2, 42, GOLD_L); R(g, ax + 30, top + 8, 2, 42, GOLD_D); R(g, ax + 10, top + 8, 14, 3, c);
+      A.text(g, 'DON', ax + 11, top + 2, night ? '#3a2a08' : GOLD_D);
+    }
     const share = boughtView('skyline', env.holdings || 0);
     for (let x = 0, i = 0; x < A.W; i++) {
       const w = 6 + Math.floor(hash(i + 20) * 7), h = 8 + Math.floor(hash(i + 40) * 17);
@@ -979,6 +1157,14 @@
     R(g, tip, ty - 1, 2, 5, c); R(g, tip + 2, ty, 2, 3, c); R(g, tip + 4, ty + 1, 1, 1, c); // the point
   }
 
+  // From The Long Tie on, the tie has wrapped itself round the furniture: the desk, the flags, the TV.
+  function wrap(g, L, env) {
+    const c = L.tie, c2 = shade(c, 0.22), c3 = shade(c, -0.3), f = env.frame || 0;
+    for (let i = 0; i < 5; i++) { const x = 104 + i * 11 + ((f >> 4) % 2); for (let j = 0; j < 22; j++) R(g, x + Math.round(j * 0.35), 64 + j, 2, 1, j % 5 ? c : c2); } // round the desk
+    for (const fx2 of [46, 113]) for (let y = 30; y < 86; y += 6) { R(g, fx2 - 2, y, 5, 2, c); R(g, fx2 - 2, y, 5, 1, c2); R(g, fx2 + 2, y + 2, 1, 2, c3); } // up the flagpoles
+    if (env.decor && env.decor.tv) { R(g, 4, 25, 36, 2, c); R(g, 4, 25, 36, 1, c2); R(g, 20, 18, 2, 26, c); } // the TV, tied up like a parcel
+  }
+
   // Everything that goes in front of him: called after he is drawn.
   A.drawOver = function (g, env) {
     if (env.scene !== 'skyline') return;
@@ -992,7 +1178,17 @@
       const x = Math.round(((f * (0.12 + c * 0.05) + c * 75) % 210) - 30), y = 64 + c * 9, col = night ? 'rgba(170,180,220,0.55)' : 'rgba(255,255,255,0.78)';
       R(g, x, y, 18, 3, col); R(g, x + 3, y - 2, 10, 2, col); R(g, x + 6, y + 3, 8, 1, col);
     }
-    for (let k = 0; k < 2; k++) { // helicopters, for the pictures
+    const L = env.look || {};
+    if (L.kaiju && L.form === 'man') {
+      [[-15, '#d0182e'], [9, '#7ad1ff']].forEach(function (c) { R(g, at + c[0], A.FLOOR - 1, 7, 2, c[1]); R(g, at + c[0] + 1, A.FLOOR - 2, 2, 1, '#cfe7ff'); R(g, at + c[0] - 1, A.FLOOR, 1, 1, '#2a2a2a'); R(g, at + c[0] + 7, A.FLOOR, 1, 1, '#2a2a2a'); }); // flattened
+      const meal = f % 360;
+      if (meal < 140) { // the next one, coming in close for a picture
+        const t = meal / 140, mx = at + 1, my = A.FLOOR - 36;
+        const x = Math.round(at + 80 + (mx - at - 80) * t), y = Math.round(22 + (my - 22) * t * t);
+        R(g, x - 2, y, 5, 2, '#20242e'); R(g, x - 4, y, 2, 1, '#20242e'); R(g, x - 3, y - 1, 7, 1, f % 2 ? '#9aa1ab' : '#cfd4dc'); if (f % 10 < 5) R(g, x, y + 2, 1, 1, '#ff5a4a');
+      } else if (meal < 150) for (let i = 0; i < 4; i++) R(g, at - 4 + i * 3, A.FLOOR - 40 - i, 2, 1, 'rgba(240,240,240,0.8)');
+    }
+    for (let k = L.kaiju ? 1 : 0; k < 2; k++) { // helicopters, for the pictures
       const a = f / 18 + k * 3.1, x = Math.round(at + Math.cos(a) * 46), y = Math.round(28 + k * 18 + Math.sin(a * 2) * 3), fwd = Math.sin(a) < 0;
       R(g, x - 2, y, 5, 2, '#20242e'); R(g, x + (fwd ? -4 : 3), y, 2, 1, '#20242e'); R(g, x - 3, y - 1, 7, 1, f % 2 ? '#9aa1ab' : '#cfd4dc');
       if (f % 10 < 5) R(g, x, y + 2, 1, 1, '#ff5a4a');
@@ -1005,7 +1201,11 @@
     if (env.scene === 'space') { spaceScene(g, env); return; }
     if (env.scene === 'all') { allScene(g, env); return; }
     room(g, env);
-    if (L && L.form === 'man' && !env.resting) { if (L.level >= 70 && L.mane > 0) cracks(g, L); if (L.tieOut > 0) trail(g, L, env); }
+    if (L && L.form === 'man' && !env.resting) {
+      if (L.level >= 70 && L.mane > 0) cracks(g, L);
+      if (L.tieOut > 0) trail(g, L, env);
+      if (L.tieWrap) wrap(g, L, env);
+    }
   };
 
   A.drawTurkey = function (g, x, y, f) {

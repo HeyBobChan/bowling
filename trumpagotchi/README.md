@@ -36,11 +36,11 @@ npm run build:single # writes dist/trumpagotchi.html (about 220 KB)
 | **Five needs** | Food, Ego, Fun, Glow (hair and tan) and Energy fade in real time, including while the page is closed. |
 | **Tremendousness** | Every bit of care earns it; keeping all his needs above half earns more each hour. It never drops below the start of his current stage. |
 | **Ten stages of a man** | Regular Don, The Kid from Queens, The Developer, The Mogul, The TV Boss, The Candidate, The Nominee, The 45th (level 45, new oval office), The 47th (level 47), Tremendous Form (level 50). |
-| **Seven more of something else** | Past level 50 there is no president left to become, so his own features take over. Gold Standard (55, plated head to toe), The Hair (62, it has eyes now and makes the decisions), The Long Tie (70, it has been all the way round), The Biggest (78, he outgrows the office and stands in the city), The Tower (86, he and the building are one), The Orange Giant (93, a planet with moons), The Everything (100, a face in the sky, and the page turns gold). Each change comes on a little every level. |
-| **Six voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM, and from level 62 BEYOND. Every situation has lines in all six, about 850 in total, and each of the seven later forms has things to say about being what it is. |
-| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 92 briefings, so about three months pass before one comes round again. Fourteen of them only arrive once he is the thing they are about. |
+| **Seven more of something else** | Past level 50 there is no president left to become, so his own features take over, and they get grotesque. Gold Standard (55: lumpy gold leaf, gems in his face, drips, flakes, three chins), The Hair (62: it has eyes, then a mouth with teeth and more eyes; it eats his food before he can, and holds him off the floor like a puppet), The Long Tie (70: it comes out of his mouth, goes all the way round, and ties up the desk, the flags and the TV), The Biggest (78: he stands in the city, flattening cars and eating news helicopters), The Tower (86: bloated, every window a pouting mouth, gold running down it), The Orange Giant (93: a planet whose mouth opens wider than itself to eat its moons), The Everything (100: the stars are eyes that stare at you, the sky is full of mouths saying TREMENDOUS, and the page turns gold). His face caricatures itself level by level: the pout, the jowls, beady eyes, gold teeth. |
+| **Six voices** | Humble, Confident, Boastful, Tremendous, MAXIMUM, and from level 62 BEYOND. Every situation has lines in all six, about 850 in total, and each of the seven later forms has things to say about being what it is: the hair that ate his lunch, the helicopter, the moon. |
+| **Things to do** | Feed (the salad gets tariffed), praise (honesty gets you fired), groom, post (he drafts, you publish), golf, deal-making, rallies, a daily briefing that ends in a signed executive order. There are 96 briefings, so about three months pass before one comes round again. Eighteen of them only arrive once he gets there: after the comeback (level 47) he launches his own coin, has a friend fix the reflecting pool, builds an arch bigger than the other one and knocks down a wing to fit the ballroom, and the view from his window shows the last three; the other fourteen are about what he becomes. |
 | **Money** | He earns licensing income every hour, up to 12 hours while you are away. Spend it on twelve permanent pieces of office decor, each with a perk, and on acquisitions, which never run out: about 200 things from a gold stapler through golf courses, airlines and the weather to moons and, finally, ideas, each a little dearer than the last and each paying 1% more income for good. A list that is used up comes round again with numbers (Golf Course No. 2). He can take on two and a half more for every level, so a fortune buys a steady stream rather than everything at once. As he buys, the view from his window, and later the whole city, turns gold. The shop stays open while he sleeps or is out golfing; a purchase then waits for him quietly. |
-| **The long game** | Daily streaks, 100 executive orders to collect (one a day; sixteen can only be signed by what he becomes), 44 trophies, and 100 levels. At level 100, having been everything, he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
+| **The long game** | Daily streaks, 104 executive orders to collect (one a day; twenty wait for the comeback or for what he becomes), 52 trophies, and 100 levels. At level 100, having been everything, he can run for another term: back to level 1 with everything kept and 25% more of everything, as many times as you like. |
 | **The calendar** | Twenty special days, each with its own greeting, a one-off briefing and, mostly, something in the room: New Year, Groundhog Day, the big game, Valentine's, Presidents' Day, St. Patrick's (green tie), April Fools', Easter, National Hamberder Day, his birthday, the Fourth, Labor Day, Halloween, Thanksgiving week (the turkey pardon), Black Friday, all of December, New Year's Eve, any Friday the 13th, and February 29th. |
 | **Every device** | Optional cloud save: a secret keeper code puts the same pet on any phone or computer. No account. |
 | **If you vanish** | He sleeps through the night on his own. A day or two of neglect turns him humble; after three or four days he leaves a note and goes golfing, and you can win him back. He never dies. Humility undoes everything for as long as it lasts: a neglected planet is a small, reasonable man standing in the office again. |
@@ -300,7 +300,7 @@ tests/                simulation, API, alert, chat and hosting tests (Node), fou
 ## Tests
 
 ```bash
-npm test             # rules, balance and content (44), the cloud-save API and asking for a Don (13),
+npm test             # rules, balance and content (45), the cloud-save API and asking for a Don (13),
                      # time zones and alerts (14), Don's chat brain against the real API (15),
                      # hosting a Don for every keeper (9): plain Node
 npm run test:browser # headless Chromium: the first minutes, the shop and every later form (16 checks), two devices sharing a pet,
@@ -358,6 +358,10 @@ Everything he says, signs and is told is plain data in `js/content.js`:
 choices per briefing, no placeholder the game will not fill, a briefing and a greeting for
 every special day, and that every special day actually occurs.
 
-The voice stays affectionate and silly: the hair, the tie, the superlatives, the hamberders.
-Every line is invented. It does not quote him, and it stays away from real people other
-than him and from anything that is not funny in real life.
+Up to level 50 the voice stays affectionate and silly: the hair, the tie, the superlatives,
+the hamberders. Past it he is a mutation, and both the art and the voice go grotesque, but
+only through excess of his own traits: more gold, more hair, more mouth, more appetite, more
+ego. Never through injury, illness, gore or humiliation of the body. The briefings and orders
+may satirise things he has really done in public (his coin, the ballroom, the arch, the
+reflecting pool). Every line is still invented: it does not quote him, nothing in it is
+sexual, and it stays away from real people other than him.
