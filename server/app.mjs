@@ -1,6 +1,7 @@
 import express from 'express';
 import compression from 'compression';
 import { chanaRouter } from './chana-router.mjs';
+import { chanaQuizRouter } from './chana-quiz-router.mjs';
 import { rateLimit } from 'express-rate-limit';
 import { resolve } from 'node:path';
 import { cachedQuery } from './cached.mjs';
@@ -42,6 +43,8 @@ export function createServer({ store, staticDir = resolve(import.meta.dirname, '
     next();
   });
   // The /kids/ proxy CSP permits the leaderboard prefix for cross-origin requests.
+  // The quiz must come first: the timeline router answers everything under its prefix.
+  app.use(['/api/leaderboards/chana/quiz', '/api/chana/quiz'], chanaQuizRouter({ store, allowedOrigins }));
   app.use(['/api/leaderboards/chana', '/api/chana'], chanaRouter({ store, allowedOrigins }));
   app.use('/api', limiter(180));
   app.use('/api', express.json({ limit: '2kb', inflate: false }));
