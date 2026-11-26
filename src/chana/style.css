@@ -29,3 +29,8 @@ html.in-game,html.in-game body{overscroll-behavior-x:contain}.leave-dialog{max-w
 .review-guest p{font-size:.88rem;margin:4px 0 0;overflow-wrap:anywhere}
 .review-bonus{font-weight:700;color:#31543b;white-space:nowrap}
 .close-match{display:inline-block;font-size:.72rem;background:var(--soft);border-radius:999px;padding:2px 8px;margin-inline-start:8px;white-space:nowrap}
+
+/* Link to the second game (the quiz) on the start page. */
+.second-game{display:block;margin-top:22px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--white);text-decoration:none;line-height:1.5}
+.second-game strong{display:block;font-size:1.05rem}.second-game span{font-size:.85rem;color:var(--muted)}
+.second-game:hover{border-color:var(--green)}

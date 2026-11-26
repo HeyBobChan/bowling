@@ -1,0 +1,408 @@
+{
+ "_about": "Question bank of the second Chana game (the quiz). Private: served only through the quiz API, never as a static file. Sources per question in 'source'.",
+ "rounds": [
+  {
+   "id": "who",
+   "titleHe": "מי אמר?",
+   "introHe": "ציטוט על המסך. מי אמר אותו, או על מי הוא נכתב?",
+   "questions": [
+    {
+     "id": "who-1",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "איך מוצאים צבע במקום כל-כך מונוכרומטי? איך מציירים את הריק?",
+     "options": [
+      "ג'ורג'יה או'קיף",
+      "חנה גולדברג",
+      "מארק רותקו",
+      "וינסטון צ'רצ'יל"
+     ],
+     "answer": 1,
+     "revealHe": "חנה גולדברג, על התערוכה \"אל המדבר\" (2016)",
+     "source": "site/data/series.json, slug to-the-desert (her website text, two consecutive lines); same two lines in the archive's 2017 website draft F00329 (Word text, lines 36-37, written 'כל כך' without hyphen)"
+    },
+    {
+     "id": "who-2",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "כל בוקר עם הקפה אני מקבלת מנה של שטיפת מוח, עוד לפני המילים מדברת אלי התמונה.",
+     "options": [
+      "גולדה מאיר",
+      "פרידה קאלו",
+      "חנה גולדברג",
+      "רחל המשוררת"
+     ],
+     "answer": 2,
+     "revealHe": "חנה גולדברג, על העבודה \"מחר יעטפו בזה דגים\" (2013)",
+     "source": "F04649 (her statement for the work 'מחר יעטפו בזה דגים', file dated 10.1.2013; Word text layer)"
+    },
+    {
+     "id": "who-3",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "האמנות שלי מכסה יותר משהיא חושפת.",
+     "options": [
+      "פבלו פיקאסו",
+      "בנימין נתניהו",
+      "רמברנדט",
+      "חנה גולדברג"
+     ],
+     "answer": 3,
+     "revealHe": "חנה גולדברג, בראיון ל\"שבת\", 2025",
+     "source": "F00030 p1 (publisher's PDF spread; printed p17, first column; read on a 4000 px render)"
+    },
+    {
+     "id": "who-4",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "למה לדעתך אלוהים ברא את העולם? … הוא פחד מהכאוס. הוא היה צריך קצת סדר.",
+     "options": [
+      "חנה גולדברג",
+      "אלברט איינשטיין",
+      "דוד בן-גוריון",
+      "וודי אלן"
+     ],
+     "answer": 0,
+     "revealHe": "חנה גולדברג, בראיון לג'רוזלם פוסט, 2025 (בתרגום)",
+     "source": "F00006 p5 (publisher's PDF; printed p7, second column)"
+    },
+    {
+     "id": "who-5",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אני אפילו לא מסוגלת ליצור סצנת חוף פשוטה בלי שחצי אחד יתעמת עם השני.",
+     "options": [
+      "פרידה קאלו",
+      "חנה גולדברג",
+      "גולדה מאיר",
+      "יאיוי קוסאמה"
+     ],
+     "answer": 1,
+     "revealHe": "חנה גולדברג, בראיון לג'רוזלם ריפורט, 2008 (בתרגום)",
+     "source": "F00004 p3 (scan; printed p38, second column; 'can-not' is hyphenated across a line)"
+    },
+    {
+     "id": "who-6",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "המכחול הוא הקרדום בו אני חופרת אל מתחת לפני השטח, מנסה לראות מבעד לברור והמוסכם.",
+     "options": [
+      "ג'ורג'יה או'קיף",
+      "לאה גולדברג",
+      "חנה גולדברג",
+      "פרידה קאלו"
+     ],
+     "answer": 2,
+     "revealHe": "חנה גולדברג, הצהרת אמנית, 2010",
+     "source": "F00259 (her artist statement 'הצהרת אמן', 2010; Word text layer, no page image)"
+    },
+    {
+     "id": "who-7",
+     "type": "choice",
+     "promptHe": "על מי זה נכתב?",
+     "quoteHe": "עורבים בודדים, כבדים ונייחים, מנותקים לחלוטין מסביבתם, אבודים במרחב בלתי מוגדר…",
+     "options": [
+      "וינסנט ואן גוך",
+      "חנה גולדברג",
+      "אדגר אלן פו",
+      "אלפרד היצ'קוק"
+     ],
+     "answer": 1,
+     "revealHe": "הארץ, 2014, על התערוכה \"הקלו המים\" של חנה גולדברג",
+     "source": "F00021 (754x852 scan, read enlarged; opening sentence of the column item)"
+    },
+    {
+     "id": "who-8",
+     "type": "choice",
+     "promptHe": "על מי זה נכתב?",
+     "quoteHe": "הנופים חורפיים, מרובי עננים, קודרים ודרמטיים, אך בו זמנית גם שואפים אל הנשגב.",
+     "options": [
+      "ויליאם טרנר",
+      "קספר דוד פרידריך",
+      "חנה גולדברג",
+      "ג'ון קונסטבל"
+     ],
+     "answer": 2,
+     "revealHe": "יוסי וקסמן, אוצר התערוכה \"עבים סתר לו, ולא יראה\" של חנה גולדברג (2025)",
+     "source": "site/data/series.json, slug thick-clouds-veil-him (note_by Yossi Waxman); the identical sentence is in the press communiqué F06206 (Word text, line 12)"
+    },
+    {
+     "id": "who-9",
+     "type": "choice",
+     "promptHe": "על מי זה נכתב?",
+     "quoteHe": "לאמנית אשה… יש את האומץ להתריס מתוך המסורת.",
+     "options": [
+      "פרידה קאלו",
+      "גליקל מהמלן",
+      "נעמי שמר",
+      "חנה גולדברג"
+     ],
+     "answer": 3,
+     "revealHe": "עוזי צור, הארץ, 2017, על חנה גולדברג",
+     "source": "F02249 (Word file holding a 1301x2090 scan of the printed column; middle column, last sentence of the paragraph on 'אנה הקדושה')"
+    },
+    {
+     "id": "who-10",
+     "type": "choice",
+     "promptHe": "על מי זה נכתב?",
+     "quoteHe": "סודות, הסתרה, תוהו ובוהו וכאוס, הם הנושאים שמלווים את עבודתה… מאז ומתמיד.",
+     "options": [
+      "חנה גולדברג",
+      "לואיז בורז'ואה",
+      "אגתה כריסטי",
+      "פרידה קאלו"
+     ],
+     "answer": 0,
+     "revealHe": "נאוה ט׳ ברזני, \"שבת\", 2025, על חנה גולדברג",
+     "source": "F00030 p1 (publisher's PDF spread; printed p17, first column; read on a 4000 px render)"
+    }
+   ]
+  },
+  {
+   "id": "closeup",
+   "titleHe": "תקריב",
+   "introHe": "פרט קטן מתוך ציור של חנה. מאיזו תערוכה הוא?",
+   "questions": [
+    {
+     "id": "closeup-1",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/954d6f026703d0fd.webp",
+     "crop": {
+      "size": "238.1% 341.9%",
+      "position": "51.7% 25.4%"
+     },
+     "options": [
+      "הקלו המים",
+      "מתח גבוה",
+      "אל המדבר",
+      "אמהוּת"
+     ],
+     "answer": 0,
+     "revealHe": "הקלו המים, 2014",
+     "source": "server/chana-catalogue.json"
+    },
+    {
+     "id": "closeup-2",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/863b5b17831494a2.webp",
+     "crop": {
+      "size": "384.6% 214.1%",
+      "position": "8.1% 82.6%"
+     },
+     "options": [
+      "אמהוּת",
+      "אמאמנית",
+      "קוים לדמותי",
+      "ימים אשר אין בהם חפץ"
+     ],
+     "answer": 1,
+     "revealHe": "אמאמנית, 2019",
+     "source": "server/chana-catalogue.json"
+    },
+    {
+     "id": "closeup-3",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/091dcd99613cdaf2.webp",
+     "crop": {
+      "size": "416.7% 430.1%",
+      "position": "81.6% 78.2%"
+     },
+     "options": [
+      "מגש הזהב",
+      "ירושלים של מעלה",
+      "שולחן ערוך",
+      "תערוכה צנועה"
+     ],
+     "answer": 2,
+     "revealHe": "שולחן ערוך, 2003",
+     "source": "server/chana-catalogue.json"
+    },
+    {
+     "id": "closeup-4",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/0891ca814d2d54cd.webp",
+     "crop": {
+      "size": "357.1% 237.5%",
+      "position": "97.2% 3.5%"
+     },
+     "options": [
+      "קוים לדמותי",
+      "פני השטח",
+      "הקלו המים",
+      "מתח גבוה"
+     ],
+     "answer": 3,
+     "revealHe": "מתח גבוה, 2010",
+     "source": "server/chana-catalogue.json"
+    },
+    {
+     "id": "closeup-5",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/7315a235d646025c.webp",
+     "crop": {
+      "size": "454.5% 279.3%",
+      "position": "53.8% 12.5%"
+     },
+     "options": [
+      "תערוכה צנועה",
+      "בשיא פריחתי",
+      "אמהוּת",
+      "עבים סתר לו, ולא יראה"
+     ],
+     "answer": 1,
+     "revealHe": "בשיא פריחתי, 2007",
+     "source": "server/chana-catalogue.json"
+    },
+    {
+     "id": "closeup-6",
+     "type": "choice",
+     "promptHe": "מאיזו תערוכה הפרט הזה?",
+     "image": "art/chana/be5d3be2a3971202.webp",
+     "crop": {
+      "size": "384.6% 279.0%",
+      "position": "0.0% 0.0%"
+     },
+     "options": [
+      "שולחן ערוך",
+      "הסתר פנים Take 2",
+      "מגש הזהב",
+      "בשיא פריחתי"
+     ],
+     "answer": 2,
+     "revealHe": "מגש הזהב, 2017–2018",
+     "source": "server/chana-catalogue.json"
+    }
+   ]
+  },
+  {
+   "id": "english",
+   "titleHe": "באנגלית, בבקשה",
+   "introHe": "השם שחנה נתנה לתערוכה באנגלית. מה השם בעברית?",
+   "questions": [
+    {
+     "id": "english-1",
+     "type": "choice",
+     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
+     "titleHe": "Exposed",
+     "options": [
+      "הסתר פנים",
+      "אמאמנית",
+      "פני השטח",
+      "קוים לדמותי"
+     ],
+     "answer": 1,
+     "revealHe": "אמאמנית · Exposed, 2019",
+     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
+    },
+    {
+     "id": "english-2",
+     "type": "choice",
+     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
+     "titleHe": "Open Table",
+     "options": [
+      "מגש הזהב",
+      "תערוכה צנועה",
+      "שולחן ערוך",
+      "ירושלים של מעלה"
+     ],
+     "answer": 2,
+     "revealHe": "שולחן ערוך · Open Table, 2003",
+     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
+    },
+    {
+     "id": "english-3",
+     "type": "choice",
+     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
+     "titleHe": "My Line",
+     "options": [
+      "קוים לדמותי",
+      "מתח גבוה",
+      "אל המדבר",
+      "פני השטח"
+     ],
+     "answer": 0,
+     "revealHe": "קוים לדמותי · My Line, 2018",
+     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
+    },
+    {
+     "id": "english-4",
+     "type": "choice",
+     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
+     "titleHe": "Surface",
+     "options": [
+      "הקלו המים",
+      "הסתר פנים",
+      "אמאמנית",
+      "פני השטח"
+     ],
+     "answer": 3,
+     "revealHe": "פני השטח · Surface, 2015",
+     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
+    },
+    {
+     "id": "english-5",
+     "type": "choice",
+     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
+     "titleHe": "Days In Which You Find No Delight",
+     "options": [
+      "עבים סתר לו, ולא יראה",
+      "ימים אשר אין בהם חפץ",
+      "בשיא פריחתי",
+      "הקלו המים"
+     ],
+     "answer": 1,
+     "revealHe": "ימים אשר אין בהם חפץ · Days In Which You Find No Delight, 2023",
+     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
+    }
+   ]
+  },
+  {
+   "id": "headline",
+   "titleHe": "הכותרת האמיתית",
+   "introHe": "כל אחד כותב בטלפון כותרת שעיתון היה יכול לתת לכתבה על חנה. אחר כך מצביעים: איזו מהן אמיתית?",
+   "questions": [
+    {
+     "id": "headline-1",
+     "type": "write",
+     "promptHe": "איזו כותרת נתן העיתון לכתבה על חנה?",
+     "contextHe": "מוסף \"שבת\", 2025 · כתבה על התערוכה \"עבים סתר לו, ולא יראה\"",
+     "answerHe": "שבר ענן",
+     "revealHe": "מוסף \"שבת\" (מקור ראשון), 2025",
+     "source": "F00030 p1 (publisher's PDF spread; printed p16)"
+    },
+    {
+     "id": "headline-2",
+     "type": "write",
+     "promptHe": "איזו כותרת נתן העיתון לכתבה על חנה?",
+     "contextHe": "מגזין \"נשים\", 2017 · עמוד שבו חנה כותבת על עבודתה",
+     "answerHe": "בועטת",
+     "revealHe": "מגזין \"נשים\", 2017",
+     "source": "F00031 p1 (agency slip: 12/2017, p10). The article under it is her own first-person text"
+    },
+    {
+     "id": "headline-3",
+     "type": "write",
+     "promptHe": "איזו כותרת נתן העיתון לכתבה על חנה?",
+     "contextHe": "עיתון מקומי בבילפלד, גרמניה, 2011 · על דיוקנאות שציירה שם (הכותרת בתרגום מגרמנית)",
+     "answerHe": "פנים עם סיפורים",
+     "revealHe": "Gesichter mit Geschichten — עיתון מקומי בבילפלד, 2011",
+     "source": "F00017 (scan of the clipping). The article is about painting Holocaust survivors and German seniors; use the headline only"
+    },
+    {
+     "id": "headline-4",
+     "type": "write",
+     "promptHe": "איזו כותרת נתן העיתון לכתבה על חנה?",
+     "contextHe": "העיתון Dagen, נורווגיה, 2020 (הכותרת בתרגום מנורווגית)",
+     "answerHe": "אמנית דתייה שמותחת את הגבולות",
+     "revealHe": "Religiøs kunstner som tøyer grensene — Dagen, נורווגיה, 2020",
+     "source": "F00014 p1 (publisher's PDF; printed p16); translated from Norwegian"
+    }
+   ]
+  }
+ ]
+}

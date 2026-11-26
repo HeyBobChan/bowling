@@ -102,3 +102,36 @@ remain the recovery mechanism. Test physical iPhone/Android gestures at the venu
 
 Run `npm run test:chana-navigation` for cancellation, real exit, direct-entry
 fallback, modal dismissal, reload, results cleanup, and link handling.
+
+## Second game: the quiz
+
+A quiz for after the timeline game, on the same page: **משחק שני: החידון** on the
+start page, or `/chana?quiz` (`?quiz&host` for the big screen). The host opens a quiz
+room; guests scan its QR code or type its seven-digit code. Each question is on the
+big screen, everyone answers on their phone, and the host reveals the answer: the
+right option lights up, the names under each option show who picked it, and each
+phone shows its own points. Guests may join late and may change an answer until the
+reveal. There is no time limit and no speed bonus.
+
+Rounds (in `server/chana-quiz.json`, with the source of every question):
+**מי אמר?** (her words, critics on her, and famous people), **מאיפה השם?** (where her
+exhibition titles come from), **תקריב** (a detail of a painting: which exhibition?),
+**באנגלית, בבקשה** (her English titles) and **הכותרת האמיתית** (guests write a headline
+for a real article about her, then vote for the real one among everyone's inventions).
+The host can skip any round from its title screen. A right answer earns 10 points;
+in the headline round, finding the real headline earns 10 and each guest fooled by
+your invention earns you 5. The table is shown after every round.
+
+Implementation: `server/chana-quiz-game.mjs` (steps, scoring, what a browser may see),
+`server/chana-quiz-api.mjs`, `server/chana-quiz-router.mjs` (mounted under
+`/api/leaderboards/chana/quiz`, ahead of the timeline router, so the `/kids/` CSP and
+CORS rules already cover it), and `src/chana/quiz.js` + `quiz.css`, loaded only for
+`?quiz`. The answers stay on the server: a browser receives the correct option,
+other guests' picks and scores only after the host's reveal.
+
+No schema change: the quiz uses `chana_rooms` and `chana_players` with the existing
+grants. Quiz rooms have seven-digit codes (the timeline only accepts six) and a host
+hash prefixed `quiz:`, so neither game opens the other's rooms; `review_index` is the
+quiz step and `guesses_json` holds a guest's answers. Host steps carry the step they
+were pressed on, so a double tap advances once. `npm run test:server` includes
+`server/test/chana-quiz.test.mjs`, which also plays a question as the restricted role.
