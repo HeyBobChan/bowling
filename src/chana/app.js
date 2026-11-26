@@ -2,6 +2,7 @@ import './style.css';
 import qrcode from './qrcode.mjs';
 import { enableArtDragging } from './drag.js';
 import { createNavigationGuard } from './navigation-guard.js';
+import { startQuiz } from './quiz.js';
 const GAME_URL=new URL('./chana',location.href);
 const API_ROOT=import.meta.env.VITE_LEADERBOARD_API_ORIGIN?new URL('/api/leaderboards/chana',import.meta.env.VITE_LEADERBOARD_API_ORIGIN).href:new URL('./api/leaderboards/chana',location.href).href;
 const $=s=>document.querySelector(s), app=$('#app'),modal=$('#modal');
@@ -250,7 +251,7 @@ modal.addEventListener('click',e=>{if(e.target===modal){const r=modal.getBoundin
 modal.addEventListener('close',()=>{if(state?.room.phase==='playing'&&state.me&&!state.me.submitted){const grid=$('#art-grid');if(grid)grid.innerHTML=local.order.map(card).join('');}});
 async function init(){
  // The second game (the quiz) lives on this page too, behind ?quiz.
- if(url.searchParams.has('quiz')){const {startQuiz}=await import('./quiz.js');return startQuiz();}
+ if(url.searchParams.has('quiz'))return startQuiz();
  const hostToken=new URLSearchParams(location.hash.slice(1)).get('host');
  const s=hostToken&&/^\d{6}$/.test(roomParam)?{code:roomParam,token:hostToken,role:'host'}:roomParam?(get('chana-session-player-'+roomParam)||(get('chana-pending-player-'+roomParam)?{code:roomParam,token:get('chana-pending-player-'+roomParam),role:'player'}:null)):null;
  if(s){try{await enter(await request('/rooms/'+s.code,{token:s.token}),s);return;}catch(e){toast(e.message);}}

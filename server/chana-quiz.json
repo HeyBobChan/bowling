@@ -39,6 +39,21 @@
     {
      "id": "who-3",
      "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אז אם אלה העובדות, והן אכן העובדות, איפה צריך לשרטט את הקו האדום? את הקו האדום צריך לשרטט בדיוק כאן.",
+     "options": [
+      "בנימין נתניהו",
+      "חנה גולדברג",
+      "פבלו פיקאסו",
+      "וינסטון צ'רצ'יל"
+     ],
+     "answer": 0,
+     "revealHe": "בנימין נתניהו, בעצרת האו\"ם, 2012, בתרגום (ואז שרטט קו אדום על ציור של פצצה)",
+     "source": "Speech to the UN General Assembly, New York, 27 September 2012 (the cartoon-bomb speech; he then drew the line with a red marker). Wording of the official text as reproduced by Jewish Virtual Library (same words in the Washington Examiner's full text). As delivered it differs slightly: NPR's excerpt has 'A red line should be drawn right here' | https://jewishvirtuallibrary.org/prime-minister-netanyahu-speech-at-opening-of-the-67th-united-nations-general-assembly-september-2012"
+    },
+    {
+     "id": "who-4",
+     "type": "choice",
      "promptHe": "על מי זה נכתב?",
      "quoteHe": "עורבים בודדים, כבדים ונייחים, מנותקים לחלוטין מסביבתם, אבודים במרחב בלתי מוגדר…",
      "options": [
@@ -50,21 +65,6 @@
      "answer": 1,
      "revealHe": "הארץ, 2014, על התערוכה \"הקלו המים\" של חנה גולדברג",
      "source": "F00021 (754x852 scan, read enlarged; opening sentence of the column item)"
-    },
-    {
-     "id": "who-4",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "אז איפה צריך לשרטט את הקו האדום? את הקו האדום צריך לשרטט בדיוק כאן.",
-     "options": [
-      "בנימין נתניהו",
-      "חנה גולדברג",
-      "פבלו פיקאסו",
-      "וינסטון צ'רצ'יל"
-     ],
-     "answer": 0,
-     "revealHe": "בנימין נתניהו, בעצרת האו\"ם, 2012, בתרגום (ואז שרטט קו אדום על ציור של פצצה)",
-     "source": "Speech to the UN General Assembly, New York, 27 September 2012 (the cartoon-bomb speech: he then drew the line with a red marker). Transcript on Jewish Virtual Library; same words in the Washington Examiner's full text | https://jewishvirtuallibrary.org/prime-minister-netanyahu-speech-at-opening-of-the-67th-united-nations-general-assembly-september-2012"
     },
     {
      "id": "who-5",
@@ -94,10 +94,25 @@
      ],
      "answer": 0,
      "revealHe": "וינסנט ואן גוך, במכתב לאחיו תאו, 1889, כשצייר דיוקן עצמי, בתרגום",
-     "source": "Letter 800 to Theo van Gogh, Saint-Remy-de-Provence, 5-6 September 1889, written while he worked on two self-portraits (his spelling 'connaitre' kept) | https://web.archive.org/web/2024/https://vangoghletters.org/vg/letters/let800/letter.html"
+     "source": "Letter 800 to Theo van Gogh, Saint-Remy-de-Provence, 5-6 September 1889, written while he worked on two self-portraits (his spelling 'connaitre' kept). Original text and translation in the Van Gogh Letters edition (Van Gogh Museum / Huygens ING); the live site now needs JavaScript, so the URL is the Wayback Machine copy of the print view | https://web.archive.org/web/20241108125238/https://vangoghletters.org/vg/letters/let800/print.html"
     },
     {
      "id": "who-7",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "רציתי לצייר את המדבר ולא ידעתי איך. אני תמיד חושבת שאני לא מסוגלת להישאר איתו מספיק זמן.",
+     "options": [
+      "חנה גולדברג",
+      "ג'ורג'יה או'קיף",
+      "פרידה קאלו",
+      "גולדה מאיר"
+     ],
+     "answer": 1,
+     "revealHe": "ג'ורג'יה או'קיף, 1939, בתרגום",
+     "source": "'About Myself', her statement in the catalogue of her exhibition at An American Place, New York, signed January 1939; transcribed in the Georgia O'Keeffe Museum's 'In Her Words' collection | https://access-ok.okeeffemuseum.org/in-her-words/"
+    },
+    {
+     "id": "who-8",
      "type": "choice",
      "promptHe": "על מי זה נכתב?",
      "quoteHe": "הנופים חורפיים, מרובי עננים, קודרים ודרמטיים, אך בו זמנית גם שואפים אל הנשגב.",
@@ -110,21 +125,6 @@
      "answer": 2,
      "revealHe": "יוסי וקסמן, אוצר התערוכה \"עבים סתר לו, ולא יראה\" של חנה גולדברג (2025)",
      "source": "site/data/series.json, slug thick-clouds-veil-him (note_by Yossi Waxman); the identical sentence is in the press communiqué F06206 (Word text, line 12)"
-    },
-    {
-     "id": "who-8",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "אינני יכול להעמיד פנים שאני ניטרלי כלפי הצבעים. אני שמח עם המבריקים, ובאמת מצטער בשביל החומים המסכנים.",
-     "options": [
-      "וינסנט ואן גוך",
-      "בנימין נתניהו",
-      "חנה גולדברג",
-      "וינסטון צ'רצ'יל"
-     ],
-     "answer": 3,
-     "revealHe": "וינסטון צ'רצ'יל, \"ציור כתחביב\", בתרגום",
-     "source": "Painting as a Pastime (essay first printed in The Strand Magazine, Dec 1921-Jan 1922; book 1948). One continuous essay, no chapters. Checked in the FadedPage e-text of the Cornerstone Library reprint (1965) of the 1950 McGraw-Hill edition | https://www.fadedpage.com/showbook.php?pid=20170480"
     },
     {
      "id": "who-9",
@@ -145,16 +145,16 @@
      "id": "who-10",
      "type": "choice",
      "promptHe": "מי אמר?",
-     "quoteHe": "רציתי לצייר את המדבר ולא ידעתי איך. אני תמיד חושבת שאני לא מסוגלת להישאר איתו מספיק זמן.",
+     "quoteHe": "אינני יכול להעמיד פנים שאני ניטרלי כלפי הצבעים. אני שמח עם המבריקים, ובאמת מצטער בשביל החומים המסכנים.",
      "options": [
+      "וינסנט ואן גוך",
+      "בנימין נתניהו",
       "חנה גולדברג",
-      "ג'ורג'יה או'קיף",
-      "פרידה קאלו",
-      "גולדה מאיר"
+      "וינסטון צ'רצ'יל"
      ],
-     "answer": 1,
-     "revealHe": "ג'ורג'יה או'קיף, 1939, בתרגום",
-     "source": "'About Myself', her statement in the catalogue of her exhibition at An American Place, New York, signed January 1939; transcribed in the Georgia O'Keeffe Museum's 'In Her Words' collection | https://access-ok.okeeffemuseum.org/in-her-words/"
+     "answer": 3,
+     "revealHe": "וינסטון צ'רצ'יל, \"ציור כתחביב\", בתרגום",
+     "source": "Painting as a Pastime (essay first printed in The Strand Magazine, Dec 1921-Jan 1922; book 1948). One continuous essay, no chapters. Checked in the FadedPage e-text of the Cornerstone Library reprint (1965) of the 1950 McGraw-Hill edition | https://www.fadedpage.com/showbook.php?pid=20170480"
     },
     {
      "id": "who-11",
@@ -169,7 +169,7 @@
      ],
      "answer": 2,
      "revealHe": "דוד בן-גוריון, \"דרומה\", 1955",
-     "source": "'דרומה' (1955), in חזון ודרך vol. 5, p. 302, as cited on Hebrew Wikiquote; the same sentence (word order 'המדבר עלול לחסל') is quoted in a gov.il publication on the 7th government. Not checked in the book itself | https://he.wikiquote.org/wiki/%D7%93%D7%95%D7%93_%D7%91%D7%9F-%D7%92%D7%95%D7%A8%D7%99%D7%95%D7%9F"
+     "source": "'דרומה' (1955), in חזון ודרך vol. 5, p. 302, as cited on Hebrew Wikiquote. A web search also showed the sentence (word order 'המדבר עלול לחסל') in a gov.il PDF, which could not be opened. Not checked in the book itself | https://he.wikiquote.org/wiki/%D7%93%D7%95%D7%93_%D7%91%D7%9F-%D7%92%D7%95%D7%A8%D7%99%D7%95%D7%9F"
     },
     {
      "id": "who-12",
@@ -500,21 +500,6 @@
      "answer": 3,
      "revealHe": "פני השטח · Surface, 2015",
      "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
-    },
-    {
-     "id": "english-5",
-     "type": "choice",
-     "promptHe": "כך קראה חנה לתערוכה באנגלית. מה שמה בעברית?",
-     "titleHe": "Days In Which You Find No Delight",
-     "options": [
-      "עבים סתר לו, ולא יראה",
-      "ימים אשר אין בהם חפץ",
-      "בשיא פריחתי",
-      "הקלו המים"
-     ],
-     "answer": 1,
-     "revealHe": "ימים אשר אין בהם חפץ · Days In Which You Find No Delight, 2023",
-     "source": "chanagoldberg.com English titles (site/data/series.json in the archive project)"
     }
    ]
   },
@@ -544,11 +529,11 @@
     {
      "id": "headline-3",
      "type": "write",
-     "promptHe": "איזו כותרת נתן העיתון לכתבה על חנה?",
-     "contextHe": "עיתון מקומי בבילפלד, גרמניה, 2011 · על דיוקנאות שציירה שם (הכותרת בתרגום מגרמנית)",
-     "answerHe": "פנים עם סיפורים",
-     "revealHe": "Gesichter mit Geschichten — עיתון מקומי בבילפלד, 2011",
-     "source": "F00017 (scan of the clipping). The article is about painting Holocaust survivors and German seniors; use the headline only"
+     "promptHe": "איזו כותרת נתן העיתון לביקורת?",
+     "contextHe": "הארץ, 2025 · ביקורת על תערוכה קבוצתית על שולחן השבת, ובה גם עבודות של חנה",
+     "answerHe": "אבירי השולחן",
+     "revealHe": "הארץ, גלריה, 2025",
+     "source": "F00009 p1 (photographed page; printed p38). Group-show review, one paragraph on her"
     },
     {
      "id": "headline-4",

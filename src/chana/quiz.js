@@ -231,46 +231,6 @@ async function copy(text) {
   try { await navigator.clipboard.writeText(text); toast('הקישור הועתק.'); } catch { toast(text); }
 }
 
-document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-quiz]');
-  if (!t || t.disabled) return;
-  const a = t.dataset.quiz;
-  if (a === 'create') create();
-  if (a === 'resume') { const last = get('chana-quiz-last'); if (last) resume(last); }
-  if (a === 'start') hostAction('start');
-  if (a === 'next' || a === 'skip') hostAction(a, { from: Number(t.dataset.from) });
-  if (a === 'remove') { const p = state.players.find((x) => x.id === t.dataset.player); if (p && confirm(`להסיר את ${p.name}?`)) hostAction('remove', { playerId: p.id }); }
-  if (a === 'answer') sendAnswer(state.stage.kind === 'open' ? Number(t.dataset.value) : t.dataset.value);
-  if (a === 'fullscreen') { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
-  if (a === 'copy-join') copy(GAME_URL.origin + GAME_URL.pathname + '?quiz=' + state.room.code);
-  if (a === 'copy-host') copy(location.href);
-});
-document.addEventListener('input', (e) => { if (e.target.id === 'quiz-text' && state?.stage?.question) drafts[state.stage.question.id] = e.target.value; });
-document.addEventListener('submit', async (e) => {
-  if (e.target.id === 'quiz-join-form') {
-    e.preventDefault(); if (busy) return;
-    const form = e.target, f = new FormData(form), code = String(f.get('code')).trim(), name = String(f.get('name')).trim();
-    if (!/^\d{7}$/.test(code)) { form.querySelector('.form-error').textContent = 'קוד החידון מורכב משבע ספרות.'; return; }
-    busy = true; const submit = form.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = 'מצטרפים…';
-    const existing = get('chana-quiz-session-player-' + code);
-    const token = existing?.token || get('chana-quiz-pending-' + code) || crypto.randomUUID();
-    put('chana-quiz-pending-' + code, token);
-    try { const data = await request(`/rooms/${code}/join`, { method: 'POST', body: { name, playerToken: token }, token: null }); busy = false; enter(data, { code, token, role: 'player' }); }
-    catch (error) { form.querySelector('.form-error').textContent = error.message; submit.disabled = false; submit.textContent = 'הצטרפות'; busy = false; }
-  }
-  if (e.target.id === 'quiz-write-form') {
-    e.preventDefault();
-    const text = String(new FormData(e.target).get('text')).trim();
-    if (text) { await sendAnswer(text); }
-  }
-});
-document.addEventListener('keydown', (e) => {
-  if (session?.role !== 'host' || state?.room.phase !== 'playing' || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-  if (['ArrowLeft', 'PageDown'].includes(e.key)) { e.preventDefault(); hostAction('next', { from: state.room.step }); }
-});
-document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
-window.addEventListener('online', poll);
-
 async function create() {
   if (busy) return; busy = true;
   const token = crypto.randomUUID();
@@ -282,7 +242,51 @@ async function resume(s) {
   catch (e) { toast(e.message); home(); }
 }
 
+// Listeners are attached only when the quiz is the page's game.
+function listen() {
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-quiz]');
+    if (!t || t.disabled) return;
+    const a = t.dataset.quiz;
+    if (a === 'create') create();
+    if (a === 'resume') { const last = get('chana-quiz-last'); if (last) resume(last); }
+    if (a === 'start') hostAction('start');
+    if (a === 'next' || a === 'skip') hostAction(a, { from: Number(t.dataset.from) });
+    if (a === 'remove') { const p = state.players.find((x) => x.id === t.dataset.player); if (p && confirm(`להסיר את ${p.name}?`)) hostAction('remove', { playerId: p.id }); }
+    if (a === 'answer') sendAnswer(state.stage.kind === 'open' ? Number(t.dataset.value) : t.dataset.value);
+    if (a === 'fullscreen') { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
+    if (a === 'copy-join') copy(GAME_URL.origin + GAME_URL.pathname + '?quiz=' + state.room.code);
+    if (a === 'copy-host') copy(location.href);
+  });
+  document.addEventListener('input', (e) => { if (e.target.id === 'quiz-text' && state?.stage?.question) drafts[state.stage.question.id] = e.target.value; });
+  document.addEventListener('submit', async (e) => {
+    if (e.target.id === 'quiz-join-form') {
+      e.preventDefault(); if (busy) return;
+      const form = e.target, f = new FormData(form), code = String(f.get('code')).trim(), name = String(f.get('name')).trim();
+      if (!/^\d{7}$/.test(code)) { form.querySelector('.form-error').textContent = 'קוד החידון מורכב משבע ספרות.'; return; }
+      busy = true; const submit = form.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = 'מצטרפים…';
+      const existing = get('chana-quiz-session-player-' + code);
+      const token = existing?.token || get('chana-quiz-pending-' + code) || crypto.randomUUID();
+      put('chana-quiz-pending-' + code, token);
+      try { const data = await request(`/rooms/${code}/join`, { method: 'POST', body: { name, playerToken: token }, token: null }); busy = false; enter(data, { code, token, role: 'player' }); }
+      catch (error) { form.querySelector('.form-error').textContent = error.message; submit.disabled = false; submit.textContent = 'הצטרפות'; busy = false; }
+    }
+    if (e.target.id === 'quiz-write-form') {
+      e.preventDefault();
+      const text = String(new FormData(e.target).get('text')).trim();
+      if (text) { await sendAnswer(text); }
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (session?.role !== 'host' || state?.room.phase !== 'playing' || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    if (['ArrowLeft', 'PageDown'].includes(e.key)) { e.preventDefault(); hostAction('next', { from: state.room.step }); }
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+  window.addEventListener('online', poll);
+}
+
 export async function startQuiz() {
+  listen();
   document.title = 'חנה גולדברג — החידון';
   const code = url.searchParams.get('quiz') || '', hostToken = new URLSearchParams(location.hash.slice(1)).get('host');
   let s = null;
