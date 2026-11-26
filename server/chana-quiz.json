@@ -25,79 +25,19 @@
      "id": "who-2",
      "type": "choice",
      "promptHe": "מי אמר?",
-     "quoteHe": "כל בוקר עם הקפה אני מקבלת מנה של שטיפת מוח, עוד לפני המילים מדברת אלי התמונה.",
+     "quoteHe": "כשאגיע לגן עדן, אקדיש חלק ניכר ממיליון השנים הראשונות שלי לציור, וכך ארד לעומקו של העניין.",
      "options": [
-      "גולדה מאיר",
-      "פרידה קאלו",
       "חנה גולדברג",
-      "רחל המשוררת"
+      "פבלו פיקאסו",
+      "וינסטון צ'רצ'יל",
+      "דוד בן-גוריון"
      ],
      "answer": 2,
-     "revealHe": "חנה גולדברג, על העבודה \"מחר יעטפו בזה דגים\" (2013)",
-     "source": "F04649 (her statement for the work 'מחר יעטפו בזה דגים', file dated 10.1.2013; Word text layer)"
+     "revealHe": "וינסטון צ'רצ'יל, \"ציור כתחביב\" (1921), בתרגום",
+     "source": "Painting as a Pastime (essay first printed in The Strand Magazine, Dec 1921-Jan 1922; book 1948). One continuous essay, no chapters. Checked in the FadedPage e-text of the Cornerstone Library reprint (1965) of the 1950 McGraw-Hill edition | https://www.fadedpage.com/showbook.php?pid=20170480"
     },
     {
      "id": "who-3",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "האמנות שלי מכסה יותר משהיא חושפת.",
-     "options": [
-      "פבלו פיקאסו",
-      "בנימין נתניהו",
-      "רמברנדט",
-      "חנה גולדברג"
-     ],
-     "answer": 3,
-     "revealHe": "חנה גולדברג, בראיון ל\"שבת\", 2025",
-     "source": "F00030 p1 (publisher's PDF spread; printed p17, first column; read on a 4000 px render)"
-    },
-    {
-     "id": "who-4",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "למה לדעתך אלוהים ברא את העולם? … הוא פחד מהכאוס. הוא היה צריך קצת סדר.",
-     "options": [
-      "חנה גולדברג",
-      "אלברט איינשטיין",
-      "דוד בן-גוריון",
-      "וודי אלן"
-     ],
-     "answer": 0,
-     "revealHe": "חנה גולדברג, בראיון לג'רוזלם פוסט, 2025 (בתרגום)",
-     "source": "F00006 p5 (publisher's PDF; printed p7, second column)"
-    },
-    {
-     "id": "who-5",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "אני אפילו לא מסוגלת ליצור סצנת חוף פשוטה בלי שחצי אחד יתעמת עם השני.",
-     "options": [
-      "פרידה קאלו",
-      "חנה גולדברג",
-      "גולדה מאיר",
-      "יאיוי קוסאמה"
-     ],
-     "answer": 1,
-     "revealHe": "חנה גולדברג, בראיון לג'רוזלם ריפורט, 2008 (בתרגום)",
-     "source": "F00004 p3 (scan; printed p38, second column; 'can-not' is hyphenated across a line)"
-    },
-    {
-     "id": "who-6",
-     "type": "choice",
-     "promptHe": "מי אמר?",
-     "quoteHe": "המכחול הוא הקרדום בו אני חופרת אל מתחת לפני השטח, מנסה לראות מבעד לברור והמוסכם.",
-     "options": [
-      "ג'ורג'יה או'קיף",
-      "לאה גולדברג",
-      "חנה גולדברג",
-      "פרידה קאלו"
-     ],
-     "answer": 2,
-     "revealHe": "חנה גולדברג, הצהרת אמנית, 2010",
-     "source": "F00259 (her artist statement 'הצהרת אמן', 2010; Word text layer, no page image)"
-    },
-    {
-     "id": "who-7",
      "type": "choice",
      "promptHe": "על מי זה נכתב?",
      "quoteHe": "עורבים בודדים, כבדים ונייחים, מנותקים לחלוטין מסביבתם, אבודים במרחב בלתי מוגדר…",
@@ -112,7 +52,52 @@
      "source": "F00021 (754x852 scan, read enlarged; opening sentence of the column item)"
     },
     {
-     "id": "who-8",
+     "id": "who-4",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אז איפה צריך לשרטט את הקו האדום? את הקו האדום צריך לשרטט בדיוק כאן.",
+     "options": [
+      "בנימין נתניהו",
+      "חנה גולדברג",
+      "פבלו פיקאסו",
+      "וינסטון צ'רצ'יל"
+     ],
+     "answer": 0,
+     "revealHe": "בנימין נתניהו, בעצרת האו\"ם, 2012, בתרגום (ואז שרטט קו אדום על ציור של פצצה)",
+     "source": "Speech to the UN General Assembly, New York, 27 September 2012 (the cartoon-bomb speech: he then drew the line with a red marker). Transcript on Jewish Virtual Library; same words in the Washington Examiner's full text | https://jewishvirtuallibrary.org/prime-minister-netanyahu-speech-at-opening-of-the-67th-united-nations-general-assembly-september-2012"
+    },
+    {
+     "id": "who-5",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "כל בוקר עם הקפה אני מקבלת מנה של שטיפת מוח, עוד לפני המילים מדברת אלי התמונה.",
+     "options": [
+      "גולדה מאיר",
+      "פרידה קאלו",
+      "חנה גולדברג",
+      "רחל המשוררת"
+     ],
+     "answer": 2,
+     "revealHe": "חנה גולדברג, על העבודה \"מחר יעטפו בזה דגים\" (2013)",
+     "source": "F04649 (her statement for the work 'מחר יעטפו בזה דגים', file dated 10.1.2013; Word text layer)"
+    },
+    {
+     "id": "who-6",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אומרים – וקל לי להאמין בזה – שקשה להכיר את עצמך. אבל גם לצייר את עצמך זה לא פשוט.",
+     "options": [
+      "וינסנט ואן גוך",
+      "חנה גולדברג",
+      "רמברנדט",
+      "פרידה קאלו"
+     ],
+     "answer": 0,
+     "revealHe": "וינסנט ואן גוך, במכתב לאחיו תאו, 1889, כשצייר דיוקן עצמי, בתרגום",
+     "source": "Letter 800 to Theo van Gogh, Saint-Remy-de-Provence, 5-6 September 1889, written while he worked on two self-portraits (his spelling 'connaitre' kept) | https://web.archive.org/web/2024/https://vangoghletters.org/vg/letters/let800/letter.html"
+    },
+    {
+     "id": "who-7",
      "type": "choice",
      "promptHe": "על מי זה נכתב?",
      "quoteHe": "הנופים חורפיים, מרובי עננים, קודרים ודרמטיים, אך בו זמנית גם שואפים אל הנשגב.",
@@ -127,34 +112,206 @@
      "source": "site/data/series.json, slug thick-clouds-veil-him (note_by Yossi Waxman); the identical sentence is in the press communiqué F06206 (Word text, line 12)"
     },
     {
-     "id": "who-9",
+     "id": "who-8",
      "type": "choice",
-     "promptHe": "על מי זה נכתב?",
-     "quoteHe": "לאמנית אשה… יש את האומץ להתריס מתוך המסורת.",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אינני יכול להעמיד פנים שאני ניטרלי כלפי הצבעים. אני שמח עם המבריקים, ובאמת מצטער בשביל החומים המסכנים.",
      "options": [
-      "פרידה קאלו",
-      "גליקל מהמלן",
-      "נעמי שמר",
-      "חנה גולדברג"
+      "וינסנט ואן גוך",
+      "בנימין נתניהו",
+      "חנה גולדברג",
+      "וינסטון צ'רצ'יל"
      ],
      "answer": 3,
-     "revealHe": "עוזי צור, הארץ, 2017, על חנה גולדברג",
-     "source": "F02249 (Word file holding a 1301x2090 scan of the printed column; middle column, last sentence of the paragraph on 'אנה הקדושה')"
+     "revealHe": "וינסטון צ'רצ'יל, \"ציור כתחביב\", בתרגום",
+     "source": "Painting as a Pastime (essay first printed in The Strand Magazine, Dec 1921-Jan 1922; book 1948). One continuous essay, no chapters. Checked in the FadedPage e-text of the Cornerstone Library reprint (1965) of the 1950 McGraw-Hill edition | https://www.fadedpage.com/showbook.php?pid=20170480"
+    },
+    {
+     "id": "who-9",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "למה לדעתך אלוהים ברא את העולם? … הוא פחד מהכאוס. הוא היה צריך קצת סדר.",
+     "options": [
+      "חנה גולדברג",
+      "אלברט איינשטיין",
+      "דוד בן-גוריון",
+      "וודי אלן"
+     ],
+     "answer": 0,
+     "revealHe": "חנה גולדברג, בראיון לג'רוזלם פוסט, 2025, בתרגום",
+     "source": "F00006 p5 (publisher's PDF; printed p7, second column)"
     },
     {
      "id": "who-10",
      "type": "choice",
-     "promptHe": "על מי זה נכתב?",
-     "quoteHe": "סודות, הסתרה, תוהו ובוהו וכאוס, הם הנושאים שמלווים את עבודתה… מאז ומתמיד.",
+     "promptHe": "מי אמר?",
+     "quoteHe": "רציתי לצייר את המדבר ולא ידעתי איך. אני תמיד חושבת שאני לא מסוגלת להישאר איתו מספיק זמן.",
      "options": [
       "חנה גולדברג",
-      "לואיז בורז'ואה",
-      "אגתה כריסטי",
-      "פרידה קאלו"
+      "ג'ורג'יה או'קיף",
+      "פרידה קאלו",
+      "גולדה מאיר"
+     ],
+     "answer": 1,
+     "revealHe": "ג'ורג'יה או'קיף, 1939, בתרגום",
+     "source": "'About Myself', her statement in the catalogue of her exhibition at An American Place, New York, signed January 1939; transcribed in the Georgia O'Keeffe Museum's 'In Her Words' collection | https://access-ok.okeeffemuseum.org/in-her-words/"
+    },
+    {
+     "id": "who-11",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אם המדינה לא תחסל את המדבר – עלול המדבר לחסל את המדינה.",
+     "options": [
+      "חנה גולדברג",
+      "בנימין נתניהו",
+      "דוד בן-גוריון",
+      "גולדה מאיר"
+     ],
+     "answer": 2,
+     "revealHe": "דוד בן-גוריון, \"דרומה\", 1955",
+     "source": "'דרומה' (1955), in חזון ודרך vol. 5, p. 302, as cited on Hebrew Wikiquote; the same sentence (word order 'המדבר עלול לחסל') is quoted in a gov.il publication on the 7th government. Not checked in the book itself | https://he.wikiquote.org/wiki/%D7%93%D7%95%D7%93_%D7%91%D7%9F-%D7%92%D7%95%D7%A8%D7%99%D7%95%D7%9F"
+    },
+    {
+     "id": "who-12",
+     "type": "choice",
+     "promptHe": "מי אמר?",
+     "quoteHe": "אני עדיין לומד.",
+     "options": [
+      "מיכלאנג'לו",
+      "פרנסיסקו גויה",
+      "וינסטון צ'רצ'יל",
+      "פבלו פיקאסו"
+     ],
+     "answer": 1,
+     "revealHe": "פרנסיסקו גויה, כתב יד על רישום של זקן על שני מקלות, בשנות השבעים לחייו. (לרוב מייחסים את המשפט בטעות למיכלאנג'לו)",
+     "source": "Inscription in his own hand (black chalk, top right) on the drawing 'Aún aprendo', Bordeaux Album G no. 54, c. 1824-1828, Museo del Prado D4151; drawn in his late seventies, an old man on two canes. Catalogue entry of the Fundación Goya en Aragón | https://fundaciongoyaenaragon.es/eng/obra/aun-aprendo-g-54/1753"
+    }
+   ]
+  },
+  {
+   "id": "titles",
+   "titleHe": "מאיפה השם?",
+   "introHe": "לשמות התערוכות של חנה יש מקור. מאיפה הוא?",
+   "questions": [
+    {
+     "id": "title-1",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "עבים סתר לו, ולא יראה",
+     "options": [
+      "ספר תהלים",
+      "ספר איוב",
+      "קהלת",
+      "ספר ישעיהו"
+     ],
+     "answer": 1,
+     "revealHe": "איוב כב, יד: \"עבים סתר לו ולא יראה, וחוג שמים יתהלך\"",
+     "source": "Job 22:14"
+    },
+    {
+     "id": "title-2",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "הקלו המים",
+     "options": [
+      "קריעת ים סוף",
+      "ספר יונה",
+      "סיפור המבול",
+      "שיר של נעמי שמר"
+     ],
+     "answer": 2,
+     "revealHe": "בראשית ח, ח: \"וישלח את היונה מאתו, לראות הקלו המים מעל פני האדמה\"",
+     "source": "Genesis 8:8"
+    },
+    {
+     "id": "title-3",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "קוים לדמותי",
+     "options": [
+      "ספר משלי",
+      "ביטוי עברי",
+      "שיר של רחל המשוררת",
+      "התלמוד"
+     ],
+     "answer": 1,
+     "revealHe": "\"קווים לדמותו של…\": הכותרת הקבועה לרשימה ביוגרפית קצרה",
+     "source": "idiom (second worker)"
+    },
+    {
+     "id": "title-4",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "ימים אשר אין בהם חפץ",
+     "options": [
+      "קהלת",
+      "משלי",
+      "מגילת איכה",
+      "שיר השירים"
      ],
      "answer": 0,
-     "revealHe": "נאוה ט׳ ברזני, \"שבת\", 2025, על חנה גולדברג",
-     "source": "F00030 p1 (publisher's PDF spread; printed p17, first column; read on a 4000 px render)"
+     "revealHe": "קהלת יב, א: \"…עד אשר לא יבאו ימי הרעה, והגיעו שנים אשר תאמר אין לי בהם חפץ\"",
+     "source": "Ecclesiastes 12:1 (title says days, the verse years)"
+    },
+    {
+     "id": "title-5",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "הסתר פנים",
+     "options": [
+      "ספר תהלים",
+      "ספר הזוהר",
+      "ספר דברים",
+      "שיר של ביאליק"
+     ],
+     "answer": 2,
+     "revealHe": "דברים לא, יח: \"ואנכי הסתר אסתיר פני ביום ההוא\"",
+     "source": "Deuteronomy 31:18"
+    },
+    {
+     "id": "title-6",
+     "type": "choice",
+     "promptHe": "ממה מורכב השם?",
+     "titleHe": "אמאמנית",
+     "options": [
+      "אמן + אמונה",
+      "אמת + אמנות",
+      "אמא + מנה",
+      "אמא + אמנית"
+     ],
+     "answer": 3,
+     "revealHe": "אמא + אמנית במילה אחת",
+     "source": "her own text: \"קו התפר שלי כאם וכאמנית\""
+    },
+    {
+     "id": "title-7",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "ירושלים של מעלה",
+     "options": [
+      "שיר של נעמי שמר",
+      "התלמוד",
+      "ספר מלכים",
+      "רבי יהודה הלוי"
+     ],
+     "answer": 1,
+     "revealHe": "תלמוד בבלי, תענית ה ע\"א: \"לא אבוא בירושלים של מעלה עד שאבוא לירושלים של מטה\"",
+     "source": "Bavli Ta'anit 5a"
+    },
+    {
+     "id": "title-8",
+     "type": "choice",
+     "promptHe": "מאיפה השם של התערוכה?",
+     "titleHe": "שולחן ערוך",
+     "options": [
+      "הרמב\"ם",
+      "רבי יוסף קארו",
+      "רש\"י",
+      "הבעל שם טוב"
+     ],
+     "answer": 1,
+     "revealHe": "ספר ההלכה של רבי יוסף קארו (צפת, המאה ה-16), וגם שולחן שבת ערוך",
+     "source": "Shulchan Aruch, Joseph Karo"
     }
    ]
   },

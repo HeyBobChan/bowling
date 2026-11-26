@@ -88,3 +88,4 @@
 .q-host .q-stage{min-height:0}
 .q-host.game-main{padding-top:24px;padding-bottom:24px}
 @media(max-width:900px){.q-layout{grid-template-columns:1fr}.q-visual .q-crop.big{margin:0 auto}}
+.q-host .q-source{font-size:clamp(1.05rem,1.7vw,1.6rem);color:var(--ink);line-height:1.5}
